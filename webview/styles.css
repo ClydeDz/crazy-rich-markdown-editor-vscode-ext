@@ -1,0 +1,1555 @@
+:root {
+  --rme-max-width: 820px;
+  --rme-border: var(--vscode-editorWidget-border, var(--vscode-widget-border, rgba(128, 128, 128, 0.35)));
+  --rme-muted: var(--vscode-descriptionForeground, rgba(128, 128, 128, 0.9));
+  --rme-code-bg: var(--vscode-textCodeBlock-background, rgba(128, 128, 128, 0.15));
+  --rme-rule: var(--vscode-textSeparator-foreground, rgba(128, 128, 128, 0.35));
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+  font-family: var(--vscode-font-family, system-ui, sans-serif);
+}
+
+/* The page keeps room above a heading that a link scrolls to, so the stats bar does not hide it. */
+html {
+  scroll-padding-top: 36px;
+}
+
+html.rme-no-bar {
+  scroll-padding-top: 0;
+}
+
+/* The line, word and character counts. The bar stays at the top while the text scrolls under it. */
+.rme-stats {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  box-sizing: border-box;
+  padding: 4px 16px;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 18px;
+  white-space: nowrap;
+  color: var(--rme-muted);
+  background: var(--vscode-editor-background);
+  border-bottom: 1px solid var(--rme-rule);
+  user-select: none;
+}
+
+.rme-stats[hidden],
+.rme-stat[hidden] {
+  display: none;
+}
+
+.rme-stat {
+  flex: none;
+}
+
+/* A long list of names gets shorter before anything else does. */
+.rme-stat[data-stat='authors'] {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The buttons at the end of the bar. The negative margins keep the last text in line with the right edge,
+   and bring two buttons close to each other. */
+.rme-stats-button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  padding: 0 6px;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.rme-stats-button:last-child {
+  margin-right: -6px;
+}
+
+.rme-stats-button + .rme-stats-button {
+  margin-left: -10px;
+}
+
+.rme-stats-button:hover {
+  color: var(--vscode-foreground, inherit);
+  background: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.2));
+}
+
+.rme-stats-button:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder, currentColor);
+  outline-offset: -1px;
+}
+
+.rme-stats-button svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+/* On a narrow editor the counts matter more than the date. */
+@media (max-width: 700px) {
+  .rme-stat[data-stat='modified'] {
+    display: none;
+  }
+}
+
+/* On a very narrow editor the buttons keep their icons and lose their text. */
+@media (max-width: 500px) {
+  .rme-stats-button-label {
+    display: none;
+  }
+}
+
+#app {
+  max-width: var(--rme-max-width);
+  margin: 0 auto;
+  /* The left side has room for the handle of a block. */
+  padding: 32px 32px 40vh 48px;
+  box-sizing: border-box;
+}
+
+#editor {
+  position: relative;
+}
+
+/* ---------- Writing surface ---------- */
+
+.ProseMirror {
+  outline: none;
+  font-size: 15px;
+  line-height: 1.7;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  min-height: 50vh;
+}
+
+.ProseMirror > *:first-child {
+  margin-top: 0;
+}
+
+.ProseMirror p {
+  margin: 0 0 0.9em;
+}
+
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6 {
+  line-height: 1.3;
+  font-weight: 600;
+  margin: 1.6em 0 0.6em;
+}
+
+.ProseMirror h1 {
+  font-size: 2em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--rme-rule);
+}
+.ProseMirror h2 {
+  font-size: 1.55em;
+  padding-bottom: 0.25em;
+  border-bottom: 1px solid var(--rme-rule);
+}
+.ProseMirror h3 {
+  font-size: 1.25em;
+}
+.ProseMirror h4 {
+  font-size: 1.05em;
+}
+.ProseMirror h5 {
+  font-size: 0.95em;
+}
+.ProseMirror h6 {
+  font-size: 0.9em;
+  color: var(--rme-muted);
+}
+
+.ProseMirror a {
+  color: var(--vscode-textLink-foreground);
+  text-decoration: none;
+  cursor: text;
+}
+.ProseMirror a:hover {
+  color: var(--vscode-textLink-activeForeground, var(--vscode-textLink-foreground));
+  text-decoration: underline;
+}
+
+.ProseMirror strong {
+  font-weight: 700;
+}
+
+.ProseMirror code {
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.9em;
+  background: var(--rme-code-bg);
+  color: var(--vscode-textPreformat-foreground, inherit);
+  padding: 0.12em 0.4em;
+  border-radius: 4px;
+}
+
+.ProseMirror pre {
+  tab-size: 2;
+  background: var(--rme-code-bg);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin: 0 0 1em;
+  overflow-x: auto;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.ProseMirror pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+}
+
+.ProseMirror blockquote {
+  margin: 0 0 1em;
+  padding: 0.2em 1em;
+  border-left: 4px solid var(--vscode-textBlockQuote-border, var(--rme-rule));
+  background: var(--vscode-textBlockQuote-background, transparent);
+  color: var(--vscode-editor-foreground);
+}
+.ProseMirror blockquote > *:last-child {
+  margin-bottom: 0;
+}
+
+.ProseMirror hr {
+  border: 0;
+  border-top: 1px solid var(--rme-rule);
+  margin: 1.8em 0;
+}
+.ProseMirror hr.ProseMirror-selectednode {
+  border-top-color: var(--vscode-focusBorder);
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  margin: 0 0 1em;
+  padding-left: 1.6em;
+}
+.ProseMirror li > p,
+.ProseMirror li > div > p {
+  margin-bottom: 0.3em;
+}
+.ProseMirror li > ul,
+.ProseMirror li > ol {
+  margin-bottom: 0;
+}
+
+.ProseMirror ul[data-type='taskList'] {
+  list-style: none;
+  padding-left: 0.2em;
+}
+.ProseMirror ul[data-type='taskList'] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55em;
+}
+.ProseMirror ul[data-type='taskList'] li > label {
+  flex: 0 0 auto;
+  margin-top: 0.3em;
+  user-select: none;
+}
+.ProseMirror ul[data-type='taskList'] li > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ProseMirror ul[data-type='taskList'] li[data-checked='true'] > div {
+  color: var(--rme-muted);
+  text-decoration: line-through;
+}
+.ProseMirror ul[data-type='taskList'] input[type='checkbox'] {
+  cursor: pointer;
+  accent-color: var(--vscode-checkbox-selectBackground, var(--vscode-button-background));
+  margin: 0;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+.ProseMirror img.ProseMirror-selectednode {
+  outline: 2px solid var(--vscode-focusBorder);
+}
+
+.ProseMirror .tableWrapper {
+  overflow-x: auto;
+  margin: 0 0 1em;
+}
+.ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+}
+.ProseMirror th,
+.ProseMirror td {
+  border: 1px solid var(--rme-rule);
+  padding: 6px 10px;
+  vertical-align: top;
+  text-align: left;
+  position: relative;
+  min-width: 3em;
+}
+.ProseMirror th {
+  background: var(--vscode-textBlockQuote-background, rgba(128, 128, 128, 0.12));
+  font-weight: 600;
+}
+.ProseMirror td p,
+.ProseMirror th p {
+  margin: 0;
+}
+.ProseMirror .selectedCell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--vscode-editor-selectionBackground, rgba(38, 79, 120, 0.6));
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.ProseMirror p.is-empty::before,
+.ProseMirror h1.is-empty::before,
+.ProseMirror h2.is-empty::before,
+.ProseMirror h3.is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--vscode-input-placeholderForeground, var(--rme-muted));
+}
+
+.ProseMirror ::selection {
+  background: var(--vscode-editor-selectionBackground);
+}
+
+/* ---------- Raw blocks (HTML and link definitions) ---------- */
+
+.rme-raw {
+  margin: 0 0 1em;
+  padding: 6px 10px 8px;
+  border: 1px dashed var(--rme-border);
+  border-radius: 6px;
+  background: var(--rme-code-bg);
+}
+.rme-raw:focus-within {
+  border-color: var(--vscode-focusBorder);
+}
+.rme-raw.is-selected {
+  outline: 2px solid var(--vscode-focusBorder);
+  outline-offset: 1px;
+}
+.rme-raw-label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--rme-muted);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  user-select: none;
+}
+.rme-raw-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  color: var(--vscode-editor-foreground);
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* A raw block with a language (MDX) has a colored copy of its text behind a text box with clear text. */
+.rme-raw-field {
+  position: relative;
+}
+.rme-raw.has-colors .rme-raw-label {
+  /* A component name keeps its case. */
+  text-transform: none;
+  font-family: var(--vscode-editor-font-family, monospace);
+}
+.rme-raw-input.has-colors {
+  position: relative;
+  color: transparent;
+  caret-color: var(--vscode-editor-foreground);
+}
+.rme-raw-input::placeholder {
+  color: var(--rme-muted);
+  opacity: 0.8;
+}
+.rme-raw-input.has-colors::selection {
+  color: transparent;
+  /* The colored copy of the text is behind the text box. A selection that is not clear would hide it. */
+  background: color-mix(in srgb, var(--vscode-editor-selectionBackground, #264f78) 45%, transparent);
+}
+/* The prefix `.rme-raw` makes this rule stronger than `.ProseMirror pre`, which has a padding and a margin. */
+.rme-raw .rme-raw-colors {
+  border-radius: 0;
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  color: var(--vscode-editor-foreground);
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  pointer-events: none;
+}
+.rme-raw .rme-raw-colors code {
+  font: inherit;
+  background: none;
+  padding: 0;
+}
+
+/* ---------- Front matter ---------- */
+
+.rme-frontmatter {
+  margin: 0 0 1.4em;
+  border: 1px solid var(--rme-border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: var(--rme-muted);
+  font-size: 12px;
+}
+.rme-frontmatter[hidden] {
+  display: none;
+}
+.rme-frontmatter summary {
+  cursor: pointer;
+  user-select: none;
+}
+.rme-frontmatter {
+  position: relative;
+}
+/* The field has the border and the background. The colored text sits behind a field with clear text. */
+.rme-frontmatter-field {
+  position: relative;
+  margin-top: 8px;
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border, var(--rme-border));
+  border-radius: 4px;
+}
+.rme-frontmatter-field:focus-within {
+  border-color: var(--vscode-focusBorder);
+}
+.rme-frontmatter textarea,
+.rme-frontmatter-colors {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 8px 10px;
+  border: 0;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  tab-size: 2;
+}
+.rme-frontmatter textarea {
+  position: relative;
+  resize: none;
+  overflow: hidden;
+  color: transparent;
+  caret-color: var(--vscode-input-foreground);
+  background: transparent;
+  outline: none;
+}
+.rme-frontmatter textarea::selection {
+  color: transparent;
+  /* The colored copy of the text is behind the text box. A selection that is not clear would hide it. */
+  background: color-mix(in srgb, var(--vscode-editor-selectionBackground, #264f78) 45%, transparent);
+}
+.rme-frontmatter-colors {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: var(--vscode-input-foreground);
+  background: transparent;
+  pointer-events: none;
+}
+.rme-frontmatter-colors code {
+  font: inherit;
+  background: none;
+  padding: 0;
+}
+/* The trash button sits in the space at the left of the page, like the handle of a block. */
+.rme-frontmatter-trash {
+  position: absolute;
+  top: 4px;
+  left: -34px;
+  opacity: 0;
+}
+.rme-frontmatter-trash::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -14px;
+  width: 14px;
+}
+.rme-frontmatter:hover .rme-frontmatter-trash,
+.rme-frontmatter:focus-within .rme-frontmatter-trash {
+  opacity: 1;
+}
+
+/* ---------- Floating toolbar ---------- */
+
+.rme-toolbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  width: max-content;
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--rme-border);
+  background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+  color: var(--vscode-editorWidget-foreground, var(--vscode-foreground));
+  box-shadow: 0 4px 16px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.36));
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  user-select: none;
+  font-family: var(--vscode-font-family, system-ui, sans-serif);
+  font-size: 12px;
+}
+
+.rme-actions,
+.rme-link-form {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+/* In a narrow editor the buttons wrap onto a second row, so the toolbar stays inside the window. */
+.rme-actions {
+  flex-wrap: wrap;
+}
+.rme-toolbar {
+  max-width: calc(100vw - 16px);
+  box-sizing: border-box;
+}
+.rme-link-form {
+  display: none;
+}
+.rme-toolbar.is-link-mode .rme-actions {
+  display: none;
+}
+.rme-toolbar.is-link-mode .rme-link-form {
+  display: flex;
+}
+
+.rme-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.rme-btn-text {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.rme-btn:hover {
+  background: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.2));
+}
+.rme-btn:active {
+  background: var(--vscode-toolbar-activeBackground, rgba(128, 128, 128, 0.3));
+}
+.rme-btn:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: -1px;
+}
+.rme-btn.is-active {
+  background: var(--vscode-inputOption-activeBackground, rgba(0, 127, 212, 0.4));
+  color: var(--vscode-inputOption-activeForeground, inherit);
+  border-color: var(--vscode-inputOption-activeBorder, transparent);
+}
+
+.rme-divider {
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+  background: var(--rme-border);
+  flex: 0 0 auto;
+}
+
+.rme-link-input {
+  width: min(240px, calc(100vw - 150px));
+  height: 28px;
+  box-sizing: border-box;
+  padding: 0 8px;
+  border: 1px solid var(--vscode-input-border, var(--rme-border));
+  border-radius: 5px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+.rme-link-input:focus {
+  border-color: var(--vscode-focusBorder);
+}
+.rme-link-input::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+/* ---------- Slash menu ---------- */
+
+.rme-slash {
+  position: fixed;
+  z-index: 100;
+  width: 280px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 4px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  border: 1px solid var(--vscode-editorSuggestWidget-border, var(--rme-border));
+  background: var(--vscode-editorSuggestWidget-background, var(--vscode-editorWidget-background));
+  color: var(--vscode-editorSuggestWidget-foreground, var(--vscode-foreground));
+  box-shadow: 0 4px 16px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.36));
+  font-family: var(--vscode-font-family, system-ui, sans-serif);
+}
+
+.rme-slash-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.rme-slash-item.is-selected {
+  background: var(--vscode-editorSuggestWidget-selectedBackground, var(--vscode-list-activeSelectionBackground));
+  color: var(--vscode-editorSuggestWidget-selectedForeground, var(--vscode-list-activeSelectionForeground));
+}
+
+.rme-slash-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  border: 1px solid var(--rme-border);
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.rme-slash-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.rme-slash-title {
+  font-size: 13px;
+}
+.rme-slash-description {
+  font-size: 11px;
+  opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rme-slash-empty {
+  padding: 8px 10px;
+  color: var(--rme-muted);
+  font-size: 12px;
+}
+
+/* ---------- Underline, subscript and superscript ---------- */
+
+.ProseMirror u {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ProseMirror sub,
+.ProseMirror sup {
+  line-height: 0;
+  font-size: 0.75em;
+}
+
+/* ---------- HTML inside a line of text ---------- */
+
+.rme-html-inline {
+  padding: 0 4px;
+  border: 1px dashed var(--rme-border);
+  border-radius: 4px;
+  background: var(--rme-code-bg);
+  color: var(--rme-muted);
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.85em;
+  white-space: pre-wrap;
+}
+.rme-html-inline.is-comment {
+  font-style: italic;
+}
+.rme-html-inline.ProseMirror-selectednode {
+  outline: 2px solid var(--vscode-focusBorder);
+}
+
+/* ---------- Video ---------- */
+
+.rme-video {
+  margin: 0 0 1em;
+}
+.rme-video video {
+  display: block;
+  max-width: 100%;
+  border-radius: 6px;
+  background: #000;
+}
+.rme-video.is-selected video,
+.rme-video.ProseMirror-selectednode video {
+  outline: 2px solid var(--vscode-focusBorder);
+}
+.rme-video-caption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  color: var(--rme-muted);
+  font-size: 12px;
+}
+.rme-video-caption svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ---------- Alerts ---------- */
+
+.rme-alert {
+  --rme-alert-color: #4493f8;
+  margin: 0 0 1em;
+  padding: 8px 16px 8px 14px;
+  border-left: 4px solid var(--rme-alert-color);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--rme-alert-color) 9%, transparent);
+}
+.rme-alert-tip {
+  --rme-alert-color: #3fb950;
+}
+.rme-alert-important {
+  --rme-alert-color: #ab7df8;
+}
+.rme-alert-warning {
+  --rme-alert-color: #d29922;
+}
+.rme-alert-caution {
+  --rme-alert-color: #f85149;
+}
+body.vscode-light .rme-alert,
+body.vscode-high-contrast-light .rme-alert {
+  --rme-alert-color: #0969da;
+}
+body.vscode-light .rme-alert-tip,
+body.vscode-high-contrast-light .rme-alert-tip {
+  --rme-alert-color: #1a7f37;
+}
+body.vscode-light .rme-alert-important,
+body.vscode-high-contrast-light .rme-alert-important {
+  --rme-alert-color: #8250df;
+}
+body.vscode-light .rme-alert-warning,
+body.vscode-high-contrast-light .rme-alert-warning {
+  --rme-alert-color: #9a6700;
+}
+body.vscode-light .rme-alert-caution,
+body.vscode-high-contrast-light .rme-alert-caution {
+  --rme-alert-color: #cf222e;
+}
+.rme-alert-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+  color: var(--rme-alert-color);
+  font-size: 14px;
+  font-weight: 600;
+  user-select: none;
+}
+.rme-alert-icon {
+  display: inline-flex;
+}
+.rme-alert-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0 2px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  outline: none;
+}
+.rme-alert-select:hover,
+.rme-alert-select:focus-visible {
+  background: color-mix(in srgb, var(--rme-alert-color) 18%, transparent);
+}
+.rme-alert-select option {
+  background: var(--vscode-dropdown-background, var(--vscode-editorWidget-background));
+  color: var(--vscode-dropdown-foreground, var(--vscode-foreground));
+}
+.rme-alert-body > :last-child {
+  margin-bottom: 0;
+}
+.rme-alert-body {
+  white-space: pre-wrap;
+}
+
+/* ---------- Code block ---------- */
+
+.rme-code {
+  position: relative;
+  margin: 0 0 1em;
+}
+.rme-code pre {
+  margin: 0;
+  padding-top: 30px;
+}
+.rme-code-header {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  z-index: 1;
+  user-select: none;
+}
+.rme-code-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--rme-muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0.75;
+}
+.rme-code.has-language .rme-code-lang {
+  opacity: 1;
+}
+.rme-code:hover .rme-code-lang,
+.rme-code.is-picking .rme-code-lang,
+.rme-code-lang:focus-visible {
+  opacity: 1;
+  border-color: var(--rme-border);
+  background: var(--vscode-editorWidget-background, transparent);
+  color: var(--vscode-foreground);
+}
+.rme-code-chevron {
+  display: inline-flex;
+}
+.rme-code-chevron svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ---------- Language picker ---------- */
+
+.rme-picker {
+  position: fixed;
+  z-index: 100;
+  width: 240px;
+  box-sizing: border-box;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid var(--vscode-editorSuggestWidget-border, var(--rme-border));
+  background: var(--vscode-editorSuggestWidget-background, var(--vscode-editorWidget-background));
+  color: var(--vscode-editorSuggestWidget-foreground, var(--vscode-foreground));
+  box-shadow: 0 4px 16px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.36));
+  font-family: var(--vscode-font-family, system-ui, sans-serif);
+}
+.rme-picker-input {
+  width: 100%;
+  height: 26px;
+  box-sizing: border-box;
+  margin-bottom: 4px;
+  padding: 0 8px;
+  border: 1px solid var(--vscode-input-border, var(--rme-border));
+  border-radius: 5px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  font: inherit;
+  font-size: 12px;
+  outline: none;
+}
+.rme-picker-input:focus {
+  border-color: var(--vscode-focusBorder);
+}
+.rme-picker-list {
+  max-height: 240px;
+  overflow-y: auto;
+}
+.rme-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.rme-picker-item.is-selected {
+  background: var(--vscode-editorSuggestWidget-selectedBackground, var(--vscode-list-activeSelectionBackground));
+  color: var(--vscode-editorSuggestWidget-selectedForeground, var(--vscode-list-activeSelectionForeground));
+}
+.rme-picker-check {
+  width: 14px;
+  flex: 0 0 auto;
+  text-align: center;
+  font-size: 12px;
+}
+.rme-picker-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rme-picker-hint {
+  flex: 0 0 auto;
+  font-size: 11px;
+  opacity: 0.6;
+}
+.rme-picker-empty {
+  padding: 8px;
+  color: var(--rme-muted);
+  font-size: 12px;
+}
+
+/* ---------- More menu in the toolbar ---------- */
+
+.rme-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  min-width: 230px;
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--rme-border);
+  background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+  box-shadow: 0 4px 16px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.36));
+}
+.rme-menu[hidden] {
+  display: none;
+}
+.rme-menu .rme-divider {
+  width: auto;
+  height: 1px;
+  margin: 4px 0;
+}
+.rme-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.rme-menu-item:hover {
+  background: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.2));
+}
+.rme-menu-item.is-active {
+  background: var(--vscode-inputOption-activeBackground, rgba(0, 127, 212, 0.4));
+  color: var(--vscode-inputOption-activeForeground, inherit);
+}
+.rme-menu-icon {
+  display: inline-flex;
+  width: 16px;
+}
+.rme-menu-hint {
+  margin-left: auto;
+  opacity: 0.6;
+  font-size: 11px;
+}
+
+/* ---------- Syntax colors ---------- */
+/* VS Code puts one of these classes on the body: vscode-dark, vscode-light, vscode-high-contrast. */
+
+.ProseMirror pre code,
+.rme-frontmatter pre code,
+.rme-raw pre code {
+  --hljs-comment: #6a9955;
+  --hljs-keyword: #569cd6;
+  --hljs-string: #ce9178;
+  --hljs-number: #b5cea8;
+  --hljs-function: #dcdcaa;
+  --hljs-type: #4ec9b0;
+  --hljs-variable: #9cdcfe;
+  --hljs-meta: #c586c0;
+  --hljs-regexp: #d16969;
+  --hljs-addition: #b5cea8;
+  --hljs-deletion: #ce9178;
+}
+body.vscode-light .ProseMirror pre code,
+body.vscode-high-contrast-light .ProseMirror pre code,
+body.vscode-light .rme-frontmatter pre code,
+body.vscode-high-contrast-light .rme-frontmatter pre code,
+body.vscode-light .rme-raw pre code,
+body.vscode-high-contrast-light .rme-raw pre code {
+  --hljs-comment: #008000;
+  --hljs-keyword: #0000ff;
+  --hljs-string: #a31515;
+  --hljs-number: #098658;
+  --hljs-function: #795e26;
+  --hljs-type: #267f99;
+  --hljs-variable: #001080;
+  --hljs-meta: #af00db;
+  --hljs-regexp: #811f3f;
+  --hljs-addition: #098658;
+  --hljs-deletion: #a31515;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: var(--hljs-comment);
+  font-style: italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-doctag,
+.hljs-name,
+.hljs-tag {
+  color: var(--hljs-keyword);
+}
+.hljs-string,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-selector-attr,
+.hljs-selector-pseudo {
+  color: var(--hljs-string);
+}
+.hljs-number {
+  color: var(--hljs-number);
+}
+.hljs-title,
+.hljs-title.function_,
+.hljs-section {
+  color: var(--hljs-function);
+}
+.hljs-type,
+.hljs-title.class_,
+.hljs-built_in,
+.hljs-class .hljs-title {
+  color: var(--hljs-type);
+}
+.hljs-variable,
+.hljs-attr,
+.hljs-attribute,
+.hljs-params,
+.hljs-property,
+.hljs-selector-id,
+.hljs-selector-class {
+  color: var(--hljs-variable);
+}
+.hljs-meta,
+.hljs-meta .hljs-keyword,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-link {
+  color: var(--hljs-meta);
+}
+.hljs-regexp {
+  color: var(--hljs-regexp);
+}
+.hljs-addition {
+  color: var(--hljs-addition);
+}
+.hljs-deletion {
+  color: var(--hljs-deletion);
+}
+.hljs-emphasis {
+  font-style: italic;
+}
+.hljs-strong {
+  font-weight: 700;
+}
+
+/* ---------- Footnotes ---------- */
+
+.ProseMirror .rme-fn-ref {
+  display: inline-block;
+  margin: 0 1px;
+  color: var(--vscode-textLink-foreground);
+  font-size: 0.75em;
+  line-height: 0;
+  vertical-align: super;
+  cursor: pointer;
+}
+.ProseMirror .rme-fn-ref::before {
+  content: attr(data-n);
+}
+.ProseMirror .rme-fn-ref.ProseMirror-selectednode {
+  outline: 2px solid var(--vscode-focusBorder);
+  border-radius: 2px;
+}
+.ProseMirror .rme-fn-def {
+  position: relative;
+  margin: 0 0 0.5em;
+  padding-left: 1.9em;
+  font-size: 0.92em;
+}
+.ProseMirror .rme-fn-def:not(.rme-fn-def + .rme-fn-def) {
+  margin-top: 1.6em;
+  padding-top: 0.8em;
+  border-top: 1px solid var(--rme-rule);
+}
+.ProseMirror .rme-fn-def::before {
+  content: attr(data-n) '.';
+  position: absolute;
+  left: 0;
+  color: var(--rme-muted);
+}
+.ProseMirror .rme-fn-def.is-unused::before {
+  content: '?';
+  color: var(--vscode-editorWarning-foreground, var(--rme-muted));
+}
+.ProseMirror .rme-fn-def > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- Emoji and color swatches ---------- */
+
+.ProseMirror .rme-emoji {
+  font-size: 1.15em;
+  line-height: 1;
+  cursor: default;
+}
+.ProseMirror .rme-emoji.ProseMirror-selectednode {
+  outline: 2px solid var(--vscode-focusBorder);
+  border-radius: 3px;
+}
+.rme-emoji-menu {
+  width: 240px;
+}
+.rme-emoji-menu .rme-slash-icon {
+  border: 0;
+  font-size: 18px;
+}
+.ProseMirror .rme-swatch {
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  margin-right: 0.35em;
+  border: 1px solid var(--rme-border);
+  border-radius: 50%;
+  vertical-align: -0.05em;
+}
+
+/* ---------- Math ---------- */
+
+.ProseMirror .rme-math {
+  display: inline-block;
+  cursor: pointer;
+}
+.ProseMirror .rme-math .katex {
+  font-size: 1.05em;
+}
+.ProseMirror .rme-math.is-error .rme-math-view,
+.ProseMirror .rme-math-block.is-error .rme-math-view {
+  color: var(--vscode-editorError-foreground, #f14c4c);
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.9em;
+}
+.ProseMirror .rme-math.ProseMirror-selectednode,
+.ProseMirror .rme-math-block.ProseMirror-selectednode {
+  outline: 2px solid var(--vscode-focusBorder);
+  border-radius: 3px;
+}
+.rme-math-input {
+  box-sizing: border-box;
+  border: 1px solid var(--vscode-focusBorder);
+  border-radius: 4px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.9em;
+  outline: none;
+}
+input.rme-math-input {
+  min-width: 4ch;
+  padding: 1px 4px;
+}
+.ProseMirror .rme-math-block {
+  margin: 0 0 1em;
+  padding: 6px 10px;
+  border-radius: 6px;
+  overflow-x: auto;
+  text-align: center;
+  cursor: pointer;
+}
+.ProseMirror .rme-math-block.is-editing {
+  background: var(--rme-code-bg);
+  text-align: left;
+}
+.ProseMirror .rme-math-block.is-error .rme-math-view {
+  text-align: left;
+  white-space: pre-wrap;
+}
+/* The display rule below would show the field even when it has the hidden attribute. */
+.rme-math-input[hidden] {
+  display: none;
+}
+textarea.rme-math-input {
+  display: block;
+  width: 100%;
+  padding: 6px 8px;
+  resize: none;
+  overflow: hidden;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.ProseMirror .rme-math-block.is-editing .rme-math-view {
+  margin-top: 8px;
+}
+
+/* ---------- Picture under a `mermaid` or `math` code block ---------- */
+
+.rme-code-preview {
+  padding: 12px;
+  border-top: 1px dashed var(--rme-border);
+  border-radius: 0 0 6px 6px;
+  background: var(--rme-code-bg);
+  overflow-x: auto;
+  text-align: center;
+}
+.rme-code-preview svg {
+  max-width: 100%;
+  height: auto;
+}
+.rme-code-preview.is-error {
+  color: var(--vscode-editorError-foreground, #f14c4c);
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 12px;
+  text-align: left;
+  white-space: pre-wrap;
+}
+.rme-code:has(.rme-code-preview:not([hidden])) pre {
+  border-radius: 6px 6px 0 0;
+}
+
+/* ---------- The window with the keyboard shortcuts ---------- */
+
+.rme-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.rme-modal-backdrop[hidden] {
+  display: none;
+}
+
+.rme-modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 760px;
+  max-height: 100%;
+  overflow: hidden;
+  color: var(--vscode-editorWidget-foreground, var(--vscode-editor-foreground));
+  background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+  border: 1px solid var(--rme-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.4));
+  outline: none;
+}
+
+.rme-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 12px 20px;
+  border-bottom: 1px solid var(--rme-rule);
+}
+
+.rme-modal-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.rme-modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  color: var(--rme-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.rme-modal-close:hover {
+  color: var(--vscode-foreground, inherit);
+  background: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.2));
+}
+
+.rme-modal-close:focus-visible,
+.rme-modal-link:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder, currentColor);
+  outline-offset: 1px;
+}
+
+.rme-modal-close svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.rme-modal-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px 28px;
+  padding: 16px 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.rme-shortcut-group-title {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rme-muted);
+}
+
+.rme-shortcut-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rme-shortcut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.rme-shortcut-label {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.rme-shortcut-note {
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--rme-muted);
+}
+
+.rme-shortcut-keys {
+  display: inline-flex;
+  flex: none;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px 6px;
+}
+
+.rme-shortcut-way {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.rme-shortcut-or {
+  font-size: 11px;
+  color: var(--rme-muted);
+}
+
+.rme-modal kbd {
+  box-sizing: border-box;
+  min-width: 22px;
+  padding: 1px 6px;
+  font: 11px/16px var(--vscode-font-family, system-ui, sans-serif);
+  text-align: center;
+  color: var(--vscode-keybindingLabel-foreground, inherit);
+  background: var(--vscode-keybindingLabel-background, rgba(128, 128, 128, 0.17));
+  border: 1px solid var(--vscode-keybindingLabel-border, rgba(128, 128, 128, 0.4));
+  border-bottom-color: var(--vscode-keybindingLabel-bottomBorder, rgba(128, 128, 128, 0.5));
+  border-radius: 3px;
+  box-shadow: inset 0 -1px 0 var(--vscode-keybindingLabel-bottomBorder, rgba(128, 128, 128, 0.5));
+}
+
+.rme-modal-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 10px 20px;
+  font-size: 12px;
+  color: var(--rme-muted);
+  border-top: 1px solid var(--rme-rule);
+}
+
+.rme-modal-link {
+  color: var(--vscode-textLink-foreground, #3794ff);
+  text-decoration: none;
+}
+
+.rme-modal-link:hover {
+  color: var(--vscode-textLink-activeForeground, var(--vscode-textLink-foreground, #3794ff));
+  text-decoration: underline;
+}
+
+/* A tab is two columns wide. The browser default is eight. */
+.rme-math-input {
+  tab-size: 2;
+}
+
+/* ---------- Handle of a block: grip and trash button ---------- */
+
+.rme-block-handle {
+  position: absolute;
+  left: -44px;
+  /* The padding closes the gap between the handle and the text, so the pointer never leaves the handle on its way. */
+  padding-right: 4px;
+  z-index: 2;
+  display: flex;
+  gap: 0;
+  user-select: none;
+}
+.rme-block-handle[hidden] {
+  display: none;
+}
+.rme-block-handle-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--rme-muted);
+  cursor: pointer;
+}
+.rme-block-handle-button svg {
+  width: 14px;
+  height: 14px;
+}
+.rme-block-grip {
+  cursor: grab;
+}
+.rme-block-handle-button:hover,
+.rme-block-handle-button:focus-visible {
+  background: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.2));
+  color: var(--vscode-foreground);
+}
+.rme-block-trash:hover {
+  color: var(--vscode-errorForeground, #f14c4c);
+}
+
+/* The line that shows where a dragged block lands. The default drop cursor of the editor would show a place inside a list. */
+.rme-block-drop-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  margin-top: -1px;
+  border-radius: 1px;
+  background: var(--vscode-focusBorder, #3794ff);
+  pointer-events: none;
+  z-index: 2;
+}
+.rme-block-drop-line[hidden] {
+  display: none;
+}
+.rme-block-dragging .prosemirror-dropcursor-block,
+.rme-block-dragging .prosemirror-dropcursor-inline {
+  display: none !important;
+}

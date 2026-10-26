@@ -1,0 +1,586 @@
+{
+  "formsNote": "Each 'forms' list holds the syntax forms that the GitHub page documents for that section. The examples in this file are written for this project, and a test checks that each example uses every form of its section. The page text is not copied.",
+  "pageSections": [
+    "Headings",
+    "Styling text",
+    "Quoting text",
+    "Quoting code",
+    "Supported color models",
+    "Links",
+    "Section links",
+    "Relative links",
+    "Custom anchors",
+    "Line breaks",
+    "Images",
+    "Lists",
+    "Task lists",
+    "Mentioning people and teams",
+    "Referencing issues and pull requests",
+    "Referencing external resources",
+    "Uploading assets",
+    "Using emojis",
+    "Paragraphs",
+    "Footnotes",
+    "Alerts",
+    "Hiding content with comments",
+    "Ignoring Markdown formatting",
+    "Disabling Markdown rendering"
+  ],
+  "notes": {
+    "Uploading assets": "These are not Markdown syntax. Paste, drop and the file picker copy a file to the asset folder. The suite in test/vscode/suite.cjs tests them in a real VS Code webview.",
+    "Disabling Markdown rendering": "This is a button in the GitHub web page, not syntax. In this editor the </> button and the command richMarkdown.openSource show the raw file."
+  },
+  "sections": [
+    {
+      "section": "Headings",
+      "markdown": "# One\n\n## Two\n\n### Three\n\n#### Four\n\n##### Five\n\n###### Six",
+      "expect": {
+        "nodes": {
+          "heading": 6
+        },
+        "marks": {},
+        "dom": {
+          "h1": 1,
+          "h2": 1,
+          "h3": 1,
+          "h4": 1,
+          "h5": 1,
+          "h6": 1
+        }
+      },
+      "forms": [
+        "# ",
+        "## ",
+        "### ",
+        "#### ",
+        "##### ",
+        "###### "
+      ]
+    },
+    {
+      "section": "Styling text",
+      "markdown": "**bold** or __bold__, *italic* or _italic_, ~~strike~~, **bold and _nested italic_**, ***all bold and italic***\n\nH<sub>2</sub>O, x<sup>2</sup>, and <ins>underlined</ins>.",
+      "expect": {
+        "nodes": {},
+        "marks": {
+          "bold": 5,
+          "italic": 4,
+          "strike": 1,
+          "subscript": 1,
+          "superscript": 1,
+          "underline": 1
+        },
+        "dom": {
+          "strong": 4,
+          "em": 4,
+          "s": 1,
+          "sub": 1,
+          "sup": 1,
+          "u": 1
+        }
+      },
+      "forms": [
+        "**",
+        "__",
+        "_",
+        "*",
+        "~~",
+        "***",
+        "<sub>",
+        "<sup>",
+        "<ins>"
+      ],
+      "roundtrip": "**bold** or **bold**, *italic* or *italic*, ~~strike~~, **bold and *nested italic***, ***all bold and italic***\n\nH<sub>2</sub>O, x<sup>2</sup>, and <ins>underlined</ins>."
+    },
+    {
+      "section": "Quoting text",
+      "markdown": "> A quote.\n>\n> > A nested quote.",
+      "expect": {
+        "nodes": {
+          "blockquote": 2
+        },
+        "marks": {},
+        "dom": {
+          "blockquote": 2
+        }
+      },
+      "forms": [
+        "> "
+      ]
+    },
+    {
+      "section": "Quoting code",
+      "markdown": "Use `git status` here.\n\nUse `` `code` `` with backticks.\n\n```\nplain block\n```\n\n```js\nconst a = 1;\n```\n\n````md\n```js\nnested\n```\n````",
+      "expect": {
+        "nodes": {
+          "codeBlock": 3
+        },
+        "marks": {
+          "code": 2
+        },
+        "dom": {
+          ".rme-code": 3,
+          "code:not(pre code)": 2
+        },
+        "values": [
+          {
+            "selector": ".rme-code-lang",
+            "of": "text",
+            "list": [
+              "Plain text",
+              "JavaScript",
+              "Markdown"
+            ]
+          }
+        ]
+      },
+      "forms": [
+        "`",
+        "``",
+        "```"
+      ]
+    },
+    {
+      "section": "Supported color models",
+      "markdown": "`#0969DA` and `rgb(9,105,218)` and `hsl(212,92%,43%)`",
+      "expect": {
+        "nodes": {},
+        "marks": {
+          "code": 3
+        },
+        "dom": {
+          ".rme-swatch": 3
+        }
+      },
+      "forms": [
+        "`#",
+        "`rgb(",
+        "`hsl("
+      ]
+    },
+    {
+      "section": "Links",
+      "markdown": "[GitHub](https://github.com), [with title](https://example.com \"A title\") and https://docs.github.com",
+      "expect": {
+        "nodes": {},
+        "marks": {
+          "link": 3
+        },
+        "values": [
+          {
+            "selector": "a",
+            "of": "href",
+            "list": [
+              "https://github.com",
+              "https://example.com",
+              "https://docs.github.com"
+            ]
+          },
+          {
+            "selector": "a",
+            "of": "text",
+            "list": [
+              "GitHub",
+              "with title",
+              "https://docs.github.com"
+            ]
+          }
+        ]
+      },
+      "forms": [
+        "[",
+        "](",
+        "https://docs.github.com"
+      ]
+    },
+    {
+      "section": "Section links",
+      "markdown": "## Target heading\n\n## Same name\n\n## Same name\n\nJump to [the target](#target-heading), [first](#same-name) and [second](#same-name-1).",
+      "expect": {
+        "nodes": {
+          "heading": 3
+        },
+        "marks": {
+          "link": 3
+        },
+        "values": [
+          {
+            "selector": "a",
+            "of": "href",
+            "list": [
+              "#target-heading",
+              "#same-name",
+              "#same-name-1"
+            ]
+          }
+        ]
+      },
+      "forms": [
+        "](#"
+      ]
+    },
+    {
+      "section": "Relative links",
+      "markdown": "[a](docs/CONTRIBUTING.md), [b](/README.md), [c](./guide.md), [d](../up.md)",
+      "expect": {
+        "nodes": {},
+        "marks": {
+          "link": 4
+        },
+        "values": [
+          {
+            "selector": "a",
+            "of": "href",
+            "list": [
+              "docs/CONTRIBUTING.md",
+              "/README.md",
+              "./guide.md",
+              "../up.md"
+            ]
+          }
+        ]
+      },
+      "forms": [
+        "](docs/",
+        "](/",
+        "](./",
+        "](../"
+      ]
+    },
+    {
+      "section": "Custom anchors",
+      "markdown": "<a name=\"my-anchor\"></a>Anchored paragraph.\n\nJump [back](#my-anchor).",
+      "expect": {
+        "nodes": {
+          "htmlInline": 1
+        },
+        "marks": {
+          "link": 1
+        },
+        "values": [
+          {
+            "selector": ".rme-html-inline",
+            "of": "text",
+            "list": [
+              "<a name=\"my-anchor\"></a>"
+            ]
+          }
+        ]
+      },
+      "forms": [
+        "<a name="
+      ]
+    },
+    {
+      "section": "Line breaks",
+      "markdown": "Two spaces  \nbreak\n\nBackslash\\\nbreak\n\nTag<br/>break\n\nNew paragraph.",
+      "roundtrip": "Two spaces  \nbreak\n\nBackslash  \nbreak\n\nTag  \nbreak\n\nNew paragraph.",
+      "expect": {
+        "nodes": {
+          "hardBreak": 3
+        },
+        "marks": {},
+        "dom": {
+          "br:not(.ProseMirror-trailingBreak)": 3
+        }
+      },
+      "forms": [
+        "  \n",
+        "\\\n",
+        "<br/>",
+        "\n\n"
+      ]
+    },
+    {
+      "section": "Images",
+      "markdown": "![alt text](assets/pic.png)\n\n<picture>\n  <source media=\"(prefers-color-scheme: dark)\" srcset=\"dark.png\">\n  <img alt=\"fallback\" src=\"light.png\">\n</picture>",
+      "expect": {
+        "nodes": {
+          "image": 1,
+          "htmlBlock": 1
+        },
+        "marks": {},
+        "dom": {
+          ".rme-raw": 1
+        }
+      },
+      "forms": [
+        "![",
+        "<picture>"
+      ]
+    },
+    {
+      "section": "Lists",
+      "markdown": "- a\n- b\n  - nested\n\n1. one\n2. two\n   1. nested ordered",
+      "expect": {
+        "nodes": {
+          "bulletList": 2,
+          "orderedList": 2,
+          "listItem": 6
+        },
+        "marks": {},
+        "dom": {
+          "ul": 2,
+          "ol": 2,
+          "li": 6
+        }
+      },
+      "forms": [
+        "- ",
+        "1. ",
+        "  - "
+      ]
+    },
+    {
+      "section": "Lists (other markers)",
+      "markdown": "* star one\n* star two\n\nBetween the lists.\n\n+ plus one\n+ plus two",
+      "roundtrip": "- star one\n- star two\n\nBetween the lists.\n\n- plus one\n- plus two",
+      "expect": {
+        "nodes": {
+          "bulletList": 2,
+          "listItem": 4
+        },
+        "marks": {},
+        "dom": {
+          "ul": 2
+        }
+      },
+      "forms": [
+        "* ",
+        "+ "
+      ]
+    },
+    {
+      "section": "Task lists",
+      "markdown": "- [ ] todo\n- [x] done\n  - [x] nested done",
+      "expect": {
+        "nodes": {
+          "taskList": 2,
+          "taskItem": 3
+        },
+        "marks": {},
+        "dom": {
+          "li[data-checked]": 3,
+          "li[data-checked=\"true\"]": 2
+        }
+      },
+      "forms": [
+        "- [ ] ",
+        "- [x] "
+      ]
+    },
+    {
+      "section": "Mentioning people and teams",
+      "markdown": "Thanks @octocat and @github/docs-team.",
+      "expect": {
+        "nodes": {},
+        "marks": {},
+        "values": [
+          {
+            "selector": ".ProseMirror p",
+            "of": "text",
+            "list": [
+              "Thanks @octocat and @github/docs-team."
+            ]
+          }
+        ]
+      },
+      "forms": [
+        "@octocat",
+        "@github/docs-team"
+      ]
+    },
+    {
+      "section": "Referencing issues and pull requests",
+      "markdown": "See #26, GH-26 and octo-org/octo-repo#26.",
+      "expect": {
+        "nodes": {},
+        "marks": {},
+        "values": [
+          {
+            "selector": ".ProseMirror p",
+            "of": "text",
+            "list": [
+              "See #26, GH-26 and octo-org/octo-repo#26."
+            ]
+          }
+        ]
+      },
+      "forms": [
+        "#26",
+        "GH-26",
+        "octo-org/octo-repo#26"
+      ]
+    },
+    {
+      "section": "Referencing external resources",
+      "markdown": "Track JIRA-123 and ABC-9.",
+      "expect": {
+        "nodes": {},
+        "marks": {},
+        "values": [
+          {
+            "selector": ".ProseMirror p",
+            "of": "text",
+            "list": [
+              "Track JIRA-123 and ABC-9."
+            ]
+          }
+        ]
+      },
+      "forms": [
+        "JIRA-123"
+      ]
+    },
+    {
+      "section": "Using emojis",
+      "markdown": ":+1: :tada: :smile:",
+      "expect": {
+        "nodes": {
+          "emoji": 3
+        },
+        "marks": {},
+        "values": [
+          {
+            "selector": ".rme-emoji",
+            "of": "text",
+            "list": [
+              "👍",
+              "🎉",
+              "😄"
+            ]
+          }
+        ]
+      },
+      "forms": [
+        ":+1:"
+      ]
+    },
+    {
+      "section": "Paragraphs",
+      "markdown": "First paragraph.\n\nSecond paragraph.",
+      "expect": {
+        "nodes": {},
+        "marks": {},
+        "dom": {
+          ".ProseMirror p": 2
+        }
+      },
+      "forms": [
+        "\n\n"
+      ]
+    },
+    {
+      "section": "Footnotes",
+      "markdown": "Here is a note[^1] and another[^second].\n\n[^1]: The first note.\n\n[^second]: The second note.",
+      "expect": {
+        "nodes": {
+          "footnoteRef": 2,
+          "footnoteDefinition": 2
+        },
+        "marks": {},
+        "values": [
+          {
+            "selector": ".rme-fn-ref",
+            "of": "data-n",
+            "list": [
+              "1",
+              "2"
+            ]
+          },
+          {
+            "selector": ".rme-fn-def",
+            "of": "data-n",
+            "list": [
+              "1",
+              "2"
+            ]
+          }
+        ]
+      },
+      "forms": [
+        "[^1]",
+        "[^1]: "
+      ]
+    },
+    {
+      "section": "Alerts",
+      "markdown": "> [!NOTE]\n> Note text.\n\n> [!TIP]\n> Tip text.\n\n> [!IMPORTANT]\n> Important text.\n\n> [!WARNING]\n> Warning text.\n\n> [!CAUTION]\n> Caution text.",
+      "expect": {
+        "nodes": {
+          "alert": 5
+        },
+        "marks": {},
+        "values": [
+          {
+            "selector": ".rme-alert",
+            "of": "data-alert",
+            "list": [
+              "note",
+              "tip",
+              "important",
+              "warning",
+              "caution"
+            ]
+          }
+        ]
+      },
+      "forms": [
+        "[!NOTE]",
+        "[!TIP]",
+        "[!IMPORTANT]",
+        "[!WARNING]",
+        "[!CAUTION]"
+      ]
+    },
+    {
+      "section": "Hiding content with comments",
+      "markdown": "<!-- A hidden block comment -->\n\nVisible text <!-- inline comment --> continues.",
+      "expect": {
+        "nodes": {
+          "htmlBlock": 1,
+          "htmlInline": 1
+        },
+        "marks": {},
+        "values": [
+          {
+            "selector": ".rme-html-inline",
+            "of": "text",
+            "list": [
+              "<!-- inline comment -->"
+            ]
+          }
+        ]
+      },
+      "forms": [
+        "<!--",
+        "-->"
+      ]
+    },
+    {
+      "section": "Ignoring Markdown formatting",
+      "markdown": "Let's rename \\*our-new-project\\* to \\*our-old-project\\*.\n\n\\# not a heading\n\n1\\. not a list\n\nA \\_literal\\_ underscore pair.",
+      "expect": {
+        "nodes": {},
+        "marks": {},
+        "values": [
+          {
+            "selector": ".ProseMirror p",
+            "of": "text",
+            "list": [
+              "Let's rename *our-new-project* to *our-old-project*.",
+              "# not a heading",
+              "1. not a list",
+              "A _literal_ underscore pair."
+            ]
+          }
+        ]
+      },
+      "forms": [
+        "\\*",
+        "\\#",
+        "\\_"
+      ]
+    }
+  ]
+}

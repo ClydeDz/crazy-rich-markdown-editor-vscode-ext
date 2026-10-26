@@ -1,0 +1,35 @@
+---
+title: MDX sample
+description: Components, imports and expressions
+---
+
+import { Chart } from '../components/Chart'
+import Callout from './Callout.js'
+export const meta = { title: 'MDX sample', tags: ['a_b', '*x*'] }
+
+# MDX sample
+
+The editor keeps the parts of MDX as they are. Text like *this* is still rich text, and `{props.name}` stays code: {props.name}.
+
+<Callout type="warning">
+  Be *careful* here. This is the **children** of a component.
+</Callout>
+
+<Chart data={[1, 2, 3]} color="red" />
+
+<Tabs>
+
+<Tab label="One">
+
+Some **markdown** inside a component, with an empty line around it.
+
+</Tab>
+
+</Tabs>
+
+{/* A comment in MDX */}
+
+A list:
+
+- one
+- two with a <Badge>new</Badge> tag

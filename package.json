@@ -1,0 +1,167 @@
+{
+  "name": "crazy-rich-markdown-editor",
+  "displayName": "Crazy Rich Markdown Editor",
+  "description": "Edit Markdown files as rich text with a floating formatting toolbar. Supports GitHub Flavored Markdown, and keeps the code of MDX files as it is. The file stays raw Markdown on disk.",
+  "version": "0.15.2",
+  "publisher": "clydedsouza",
+  "packageManager": "yarn@1.22.22",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Notebooks",
+    "Formatters",
+    "Other"
+  ],
+  "keywords": [
+    "markdown",
+    "wysiwyg",
+    "rich text",
+    "editor",
+    "mdx"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "richMarkdown.editor",
+        "displayName": "Crazy Rich Markdown Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.md"
+          },
+          {
+            "filenamePattern": "*.markdown"
+          }
+        ],
+        "priority": "default"
+      },
+      {
+        "viewType": "richMarkdown.mdxEditor",
+        "displayName": "Crazy Rich Markdown Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.mdx"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
+    "commands": [
+      {
+        "command": "richMarkdown.openRich",
+        "title": "Open in Crazy Rich Markdown Editor",
+        "category": "Markdown"
+      },
+      {
+        "command": "richMarkdown.openSource",
+        "title": "Open Markdown Source (Raw Text)",
+        "category": "Markdown",
+        "icon": "$(code)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "richMarkdown.openSource",
+          "when": "activeCustomEditorId =~ /^richMarkdown\\./",
+          "group": "navigation"
+        },
+        {
+          "command": "richMarkdown.openRich",
+          "when": "(resourceLangId == markdown || resourceExtname == .mdx) && activeCustomEditorId !~ /^richMarkdown\\./",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "richMarkdown.openRich",
+          "when": "resourceLangId == markdown || resourceExtname == .mdx",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Crazy Rich Markdown Editor",
+      "properties": {
+        "richMarkdown.maxContentWidth": {
+          "type": "number",
+          "default": 820,
+          "minimum": 400,
+          "description": "Maximum width in pixels of the writing column."
+        },
+        "richMarkdown.showInfoBar": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Show the bar at the top of the editor. It shows the people who changed the file in Git, the time that the file was saved, and the number of lines, words and characters. When this setting is off, the editor does not run Git. To hide only the people from Git, use `#richMarkdown.showLastAuthors#`."
+        },
+        "richMarkdown.showLastAuthors": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "markdownDescription": "Show the people who changed the file in the last Git commits, in the bar at the top of the editor. The editor runs `git log` for the file. It does nothing when the file is not in a Git repository, when `#git.enabled#` is off, or when `#richMarkdown.showInfoBar#` is off."
+        },
+        "richMarkdown.assetFolder": {
+          "type": "string",
+          "default": "docs/images",
+          "scope": "resource",
+          "markdownDescription": "Folder where images and videos are copied when you insert, paste or drop them. A relative path starts at the folder of the Markdown file. Use `.` to save next to the file. These variables work: `${documentDirname}`, `${documentBasenameNoExtension}`, `${documentFileName}` and `${workspaceFolder}`. Example: `${workspaceFolder}/docs/images`."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p webview/tsconfig.json",
+    "test": "node --test \"test/*.test.mjs\"",
+    "package": "vsce package --yarn --no-dependencies --allow-missing-repository",
+    "vscode:prepublish": "yarn build --production",
+    "test:vscode": "yarn build && node test/vscode/run.mjs",
+    "capture:menu": "node scripts/capture-editor-menu.mjs",
+    "check:github-page": "node scripts/check-github-page.mjs",
+    "check:publish": "node scripts/check-publish.mjs",
+    "mutate": "node scripts/mutation-check.mjs",
+    "menu:single": "node scripts/set-menu-style.mjs single",
+    "menu:named": "node scripts/set-menu-style.mjs named"
+  },
+  "dependencies": {
+    "@floating-ui/dom": "^1.0.0",
+    "@tiptap/core": "^3.32.0",
+    "@tiptap/extension-bubble-menu": "^3.32.0",
+    "@tiptap/extension-code-block": "^3.32.0",
+    "@tiptap/extension-code-block-lowlight": "^3.32.0",
+    "@tiptap/extension-image": "^3.32.0",
+    "@tiptap/extension-list": "^3.32.0",
+    "@tiptap/extension-link": "^3.32.0",
+    "@tiptap/extension-placeholder": "^3.32.0",
+    "@tiptap/extension-subscript": "^3.32.0",
+    "@tiptap/extension-superscript": "^3.32.0",
+    "@tiptap/extension-table": "^3.32.0",
+    "@tiptap/extension-task-item": "^3.32.0",
+    "@tiptap/extension-task-list": "^3.32.0",
+    "@tiptap/extension-underline": "^3.32.0",
+    "@tiptap/extensions": "^3.32.0",
+    "@tiptap/markdown": "^3.32.0",
+    "@tiptap/pm": "^3.32.0",
+    "@tiptap/starter-kit": "^3.32.0",
+    "@tiptap/suggestion": "^3.32.0",
+    "highlight.js": "^11.12.0",
+    "katex": "^0.19.0",
+    "lowlight": "^3.3.0",
+    "mermaid": "^12.2.0"
+  },
+  "devDependencies": {
+    "@types/katex": "^0.16.8",
+    "@types/node": "^22.20.5",
+    "@types/vscode": "^1.85.0",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^4.0.0",
+    "esbuild": "^0.28.2",
+    "gemoji": "^8.1.0",
+    "jsdom": "^30.1.3",
+    "typescript": "^7.0.2"
+  }
+}
