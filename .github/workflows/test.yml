@@ -1,0 +1,75 @@
+# Tests, in two jobs:
+#   unit    Typecheck and unit tests (jsdom). Runs on every push to a pull request and on every push to main. It is fast.
+#   vscode  The tests in a real VS Code with a real webview (yarn test:vscode). Runs only on main, because it is slow.
+#           It also runs by hand: Actions > Tests > Run workflow. Run it by hand on a branch to try a change first.
+#
+# The VS Code job downloads VS Code (the version in VSCODE_VERSION) and runs it inside a virtual screen (xvfb).
+# It needs no Docker. It does not publish anything. Publishing is the job of publish.yml.
+
+name: Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # A new commit on a pull request stops the old run. A run on main always finishes.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # `stable` is the newest VS Code. Use a version number such as 1.95.3 to keep the tests on one version.
+  VSCODE_VERSION: stable
+
+jobs:
+  unit:
+    name: Typecheck and unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+
+      - run: yarn install --frozen-lockfile
+
+      - run: yarn typecheck
+
+      # Some tests read the examples of the GitHub Markdown page from the internet. They skip when the page is not reachable.
+      - run: yarn test
+
+  vscode:
+    name: Tests in VS Code
+    needs: unit
+    # Only on main, and by hand. Not on a pull request.
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+
+      - run: yarn install --frozen-lockfile
+
+      # test/vscode/run.mjs downloads VS Code into .vscode-test when it runs on CI. The cache saves the download.
+      - uses: actions/cache@v4
+        with:
+          path: .vscode-test
+          key: vscode-${{ runner.os }}-${{ env.VSCODE_VERSION }}
+
+      # VS Code needs a screen. xvfb is a virtual one. `yarn test:vscode` builds the extension first.
+      - name: Run the tests in VS Code
+        run: xvfb-run -a yarn test:vscode
