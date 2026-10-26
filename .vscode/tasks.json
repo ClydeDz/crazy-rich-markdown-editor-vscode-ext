@@ -1,0 +1,20 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "shell",
+      "command": "yarn build",
+      "group": "build",
+      "problemMatcher": [],
+      "label": "yarn: build"
+    },
+    {
+      "type": "shell",
+      "command": "yarn watch",
+      "isBackground": true,
+      "group": "build",
+      "problemMatcher": [],
+      "label": "yarn: watch"
+    }
+  ]
+}
