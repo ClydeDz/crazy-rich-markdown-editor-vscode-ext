@@ -17,9 +17,9 @@
    `"/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code" --install-extension <vsix> --force`
 5. Run **Developer: Reload Window** in VS Code. An old window can keep the older editor.
 
-## Marketplace (not done)
+## Marketplace and GitHub release
 
-- `publisher` in `package.json` is `local`. Change it before the first release, and set `VSCE_PAT`.
-- `.github/workflows/test.yml` runs the tests (unit on every pull request and on `main`, real VS Code on `main`). `.github/workflows/publish.yml` publishes from `main`. It is written for the repository where the user tests the extension.
+- Set `publisher` in `package.json` to the ID of your Marketplace publisher, and set the `VSCE_PAT` repository secret.
+- `.github/workflows/test.yml` runs the tests (unit on every pull request and on `main`, real VS Code on `main`). `.github/workflows/publish.yml` publishes new versions from `main` to the Marketplace, then creates a `v<version>` GitHub release with the VSIX. The publish job needs the repository's `contents: write` permission for the release.
 - `yarn check:publish` checks the package. The README must have no relative file links.
 - Placeholder links `creatorUrl` and `coffeeUrl` in `webview/about.ts` are for the user to change. An empty address hides the link.

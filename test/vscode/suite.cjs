@@ -12,7 +12,13 @@ const keyProbe = require("../key-probe.cjs");
 
 const root = path.resolve(__dirname, "..", "..");
 const workspace = process.env.RME_WORKSPACE;
+const DEFAULT_ASSET_FOLDER = "docs/images";
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const samePath = (left, right) => {
+  const a = path.resolve(left);
+  const b = path.resolve(right);
+  return process.platform === "win32" ? a.toLowerCase() === b.toLowerCase() : a === b;
+};
 
 async function waitFor(check, message, timeoutMs = 20000) {
   const start = Date.now();
@@ -564,8 +570,14 @@ test("local resource roots include the extension output and the document folder"
   const roots = fake.webview.options.localResourceRoots.map(
     (uri) => uri.fsPath,
   );
-  assert.ok(roots.includes(path.join(root, "dist")), roots.join());
-  assert.ok(roots.includes(workspace), roots.join());
+  assert.ok(
+    roots.some((uri) => samePath(uri, path.join(root, "dist"))),
+    roots.join(),
+  );
+  assert.ok(
+    roots.some((uri) => samePath(uri, workspace)),
+    roots.join(),
+  );
   assert.equal(fake.webview.options.enableScripts, true);
   fake.dispose();
 });
@@ -927,7 +939,10 @@ test("a pasted image is copied to the assets folder next to the document", async
   const items = await upload(fake, "image.png", "image/png", bytes(1, 2, 3));
   assert.equal(items.length, 1);
   assert.equal(items[0].kind, "image");
-  assert.match(items[0].src, /^assets\/image-\d{8}-\d{6}\.png$/);
+  assert.match(
+    items[0].src,
+    new RegExp(`^${DEFAULT_ASSET_FOLDER}/image-\\d{8}-\\d{6}\\.png$`),
+  );
   assert.equal(items[0].alt, "image");
   assert.deepEqual(
     [...fs.readFileSync(path.join(workspace, "paste", items[0].src))],
@@ -939,17 +954,19 @@ test("a pasted image is copied to the assets folder next to the document", async
 test("a dropped file keeps its name, and spaces become hyphens", async () => {
   const { fake } = await openWithProvider("drop/doc.md", "x\n");
   const items = await upload(fake, "Team Photo.JPG", "image/jpeg", bytes(9, 9));
-  assert.equal(items[0].src, "assets/Team-Photo.jpg");
+  assert.equal(items[0].src, `${DEFAULT_ASSET_FOLDER}/Team-Photo.jpg`);
   assert.equal(items[0].alt, "Team Photo");
-  assert.equal(exists("drop/assets/Team-Photo.jpg"), true);
+  assert.equal(exists(`drop/${DEFAULT_ASSET_FOLDER}/Team-Photo.jpg`), true);
   fake.dispose();
 });
 
 test("a video is saved and reported as a video", async () => {
   const { fake } = await openWithProvider("video/doc.md", "x\n");
   const items = await upload(fake, "demo.mp4", "video/mp4", bytes(7, 7, 7));
-  assert.deepEqual(items, [{ kind: "video", src: "assets/demo.mp4", alt: "" }]);
-  assert.equal(exists("video/assets/demo.mp4"), true);
+  assert.deepEqual(items, [
+    { kind: "video", src: `${DEFAULT_ASSET_FOLDER}/demo.mp4`, alt: "" },
+  ]);
+  assert.equal(exists(`video/${DEFAULT_ASSET_FOLDER}/demo.mp4`), true);
   fake.dispose();
 });
 
@@ -959,16 +976,20 @@ test("the same file is not saved twice, and other content gets a number", async 
   const same = await upload(fake, "a.png", "image/png", bytes(1, 1));
   const other = await upload(fake, "a.png", "image/png", bytes(2, 2, 2));
   const third = await upload(fake, "a.png", "image/png", bytes(3));
-  assert.equal(first[0].src, "assets/a.png");
-  assert.equal(same[0].src, "assets/a.png");
-  assert.equal(other[0].src, "assets/a-1.png");
-  assert.equal(third[0].src, "assets/a-2.png");
+  assert.equal(first[0].src, `${DEFAULT_ASSET_FOLDER}/a.png`);
+  assert.equal(same[0].src, `${DEFAULT_ASSET_FOLDER}/a.png`);
+  assert.equal(other[0].src, `${DEFAULT_ASSET_FOLDER}/a-1.png`);
+  assert.equal(third[0].src, `${DEFAULT_ASSET_FOLDER}/a-2.png`);
   assert.deepEqual(
-    fs.readdirSync(path.join(workspace, "dupes", "assets")).sort(),
+    fs.readdirSync(path.join(workspace, "dupes", DEFAULT_ASSET_FOLDER)).sort(),
     ["a-1.png", "a-2.png", "a.png"],
   );
   assert.deepEqual(
-    [...fs.readFileSync(path.join(workspace, "dupes/assets/a.png"))],
+    [
+      ...fs.readFileSync(
+        path.join(workspace, "dupes", DEFAULT_ASSET_FOLDER, "a.png"),
+      ),
+    ],
     [1, 1],
     "the first file is not changed",
   );
@@ -983,8 +1004,8 @@ test("a file name with folders cannot leave the asset folder", async () => {
     "image/png",
     bytes(5),
   );
-  assert.equal(items[0].src, "assets/escape.png");
-  assert.equal(exists("trap/assets/escape.png"), true);
+  assert.equal(items[0].src, `${DEFAULT_ASSET_FOLDER}/escape.png`);
+  assert.equal(exists(`trap/${DEFAULT_ASSET_FOLDER}/escape.png`), true);
   assert.equal(exists("escape.png"), false);
   fake.dispose();
 });
@@ -1011,7 +1032,11 @@ test("a file that is not an image or video is not saved", async () => {
   });
   await sleep(500);
   assert.equal(fake.of("insertMedia").length, 0);
-  assert.equal(exists("reject/assets"), false, "no folder was made");
+  assert.equal(
+    exists(`reject/${DEFAULT_ASSET_FOLDER}`),
+    false,
+    "no folder was made",
+  );
   fake.dispose();
 });
 
@@ -1086,7 +1111,11 @@ test("a file of 50 MB is saved, and a file of one byte more is refused with a wa
     assert.match(warnings.calls[0][0], /^"big\.png" is too large\.$/);
     await sleep(200);
     assert.equal(fake.of("insertMedia").length, 0);
-    assert.equal(exists("limit/assets"), false, "nothing was written");
+    assert.equal(
+      exists(`limit/${DEFAULT_ASSET_FOLDER}`),
+      false,
+      "nothing was written",
+    );
 
     fake.send({
       type: "saveAsset",
@@ -1099,9 +1128,11 @@ test("a file of 50 MB is saved, and a file of one byte more is refused with a wa
       "the file at the limit",
       60000,
     );
-    assert.equal(insert.items[0].src, "assets/edge.png");
+    assert.equal(insert.items[0].src, `${DEFAULT_ASSET_FOLDER}/edge.png`);
     assert.equal(
-      fs.statSync(path.join(workspace, "limit", "assets", "edge.png")).size,
+      fs.statSync(
+        path.join(workspace, "limit", DEFAULT_ASSET_FOLDER, "edge.png"),
+      ).size,
       50 * 1024 * 1024,
     );
     assert.equal(warnings.calls.length, 1, "no second warning");
@@ -1177,13 +1208,21 @@ test("the webview may load files from every workspace folder, also for a documen
   const roots = fake.webview.options.localResourceRoots.map(
     (uri) => uri.fsPath,
   );
-  assert.ok(roots.includes(workspace), `the workspace folder: ${roots.join()}`);
   assert.ok(
-    roots.includes(path.join(workspace, "roots3", "deep")),
+    roots.some((uri) => samePath(uri, workspace)),
+    `the workspace folder: ${roots.join()}`,
+  );
+  assert.ok(
+    roots.some((uri) => samePath(uri, path.join(workspace, "roots3", "deep"))),
     "the folder of the document",
   );
   assert.ok(
-    roots.includes(path.join(workspace, "roots3", "deep", "assets")),
+    roots.some((uri) =>
+      samePath(
+        uri,
+        path.join(workspace, "roots3", "deep", DEFAULT_ASSET_FOLDER),
+      ),
+    ),
     "the default asset folder",
   );
   assert.ok(
@@ -1393,12 +1432,12 @@ test("the settings button of the bar opens the settings of this extension, and o
   }
 });
 
-test("the editor name in the dropdown differs from the extension name", async () => {
+test("the editor and extension use the configured name", async () => {
   const extension = vscode.extensions.getExtension(
     "clydedsouza.crazy-rich-markdown-editor",
   );
   const editor = extension.packageJSON.contributes.customEditors[0];
-  assert.notEqual(editor.displayName, extension.packageJSON.displayName);
+  assert.equal(editor.displayName, extension.packageJSON.displayName);
 });
 
 // ---------- A real webview, driven from the test ----------
@@ -1771,10 +1810,14 @@ test("real webview: a pasted image is copied to the assets folder and shows in t
   assert.equal(result.prevented, true);
   await waitFor(
     () =>
-      /!\[image\]\(assets\/image-\d{8}-\d{6}\.png\)/.test(document.getText()),
+      new RegExp(
+        `!\\[image\\]\\(${DEFAULT_ASSET_FOLDER}/image-\\d{8}-\\d{6}\\.png\\)`,
+      ).test(document.getText()),
     "image link in the document",
   );
-  const link = /!\[image\]\((assets\/image-\d{8}-\d{6}\.png)\)/.exec(
+  const link = new RegExp(
+    `!\\[image\\]\\((${DEFAULT_ASSET_FOLDER}/image-\\d{8}-\\d{6}\\.png)\\)`,
+  ).exec(
     document.getText(),
   )[1];
   const saved = fs.readFileSync(path.join(workspace, "real", link));
@@ -1797,7 +1840,7 @@ test("real webview: a pasted image is copied to the assets folder and shows in t
     "the image loaded from the asset folder",
   );
   assert.ok(
-    media.images[0].src.includes("assets/"),
+    media.images[0].src.includes(`${DEFAULT_ASSET_FOLDER}/`),
     "the webview shows the file from the asset folder",
   );
   assert.ok(
@@ -1819,7 +1862,9 @@ test("real webview: a dropped video is copied to the assets folder and shows as 
     () =>
       document
         .getText()
-        .includes('<video src="assets/My-Clip.mp4" controls></video>'),
+        .includes(
+          `<video src="${DEFAULT_ASSET_FOLDER}/My-Clip.mp4" controls></video>`,
+        ),
     "video tag in the document",
   );
   await sleep(1500);
@@ -1830,16 +1875,22 @@ test("real webview: a dropped video is copied to the assets folder and shows as 
   );
   const text = document.getText();
   assert.ok(
-    text.indexOf('<video src="assets/My-Clip.mp4"') < text.indexOf("```ts"),
+    text.indexOf(
+      `<video src="${DEFAULT_ASSET_FOLDER}/My-Clip.mp4"`,
+    ) < text.indexOf("```ts"),
     "the video is where the file was dropped (at the first paragraph), not at the end of the document",
   );
   assert.equal(
-    fs.existsSync(path.join(workspace, "real", "assets", "My-Clip.mp4")),
+    fs.existsSync(
+      path.join(workspace, "real", DEFAULT_ASSET_FOLDER, "My-Clip.mp4"),
+    ),
     true,
   );
   const media = await run("media");
   assert.equal(media.videos.length, 1);
-  assert.ok(media.videos[0].includes("assets/My-Clip.mp4"));
+  assert.ok(
+    media.videos[0].includes(`${DEFAULT_ASSET_FOLDER}/My-Clip.mp4`),
+  );
 });
 
 test("real webview: a file dropped on the margin of the page is copied, and VS Code does not take the drop", async () => {
@@ -1858,11 +1909,16 @@ test("real webview: a file dropped on the margin of the page is copied, and VS C
   assert.equal(result.overPrevented, true);
   assert.equal(result.dropPrevented, true);
   await waitFor(
-    () => document.getText().includes("![Margin Pic](assets/Margin-Pic.png)"),
+    () =>
+      document
+        .getText()
+        .includes(`![Margin Pic](${DEFAULT_ASSET_FOLDER}/Margin-Pic.png)`),
     "image link in the document",
   );
   assert.equal(
-    fs.existsSync(path.join(workspace, "real", "assets", "Margin-Pic.png")),
+    fs.existsSync(
+      path.join(workspace, "real", DEFAULT_ASSET_FOLDER, "Margin-Pic.png"),
+    ),
     true,
   );
 });
@@ -1879,7 +1935,9 @@ test("real webview: a pasted text file is ignored", async () => {
   await sleep(500);
   assert.equal(document.getText(), before);
   assert.equal(
-    fs.existsSync(path.join(workspace, "real", "assets", "notes.txt")),
+    fs.existsSync(
+      path.join(workspace, "real", DEFAULT_ASSET_FOLDER, "notes.txt"),
+    ),
     false,
   );
 });
@@ -2535,6 +2593,26 @@ const SHADOWED_ON_PURPOSE = [
     "Mod-e",
     "workbench.action.quickOpen",
     "Inline code. On Windows and Linux, VS Code uses Ctrl+E for Quick Open as well as Ctrl+P",
+  ],
+  [
+    "Mod-b",
+    "markdown.editor.cursorLeft",
+    "Bold. VS Code's Linux Markdown editor uses Ctrl+B to move the cursor left",
+  ],
+  [
+    "Mod-e",
+    "markdown.editor.cursorLogicalLineEnd",
+    "Inline code. VS Code's Linux Markdown editor binds Ctrl+E to move to the line end",
+  ],
+  [
+    "Mod-e",
+    "workbench.action.quickOpenNavigateNextInFilePicker",
+    "Inline code. VS Code uses Ctrl+E to move through the Quick Open file picker",
+  ],
+  [
+    "Mod-k",
+    "markdown.editor.deleteLineRight",
+    "Link. VS Code's Linux Markdown editor uses Ctrl+K to delete to the line end",
   ],
   ["Mod-z", "undo", "Undo. The same meaning"],
   ["Mod-Shift-z", "redo", "Redo. The same meaning"],

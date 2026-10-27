@@ -40,12 +40,24 @@ jobs:
           node-version: 22
           cache: yarn
 
-      - run: yarn install --frozen-lockfile
+      - name: Install dependencies
+        run: |
+          echo "::group::Install dependencies"
+          yarn install --frozen-lockfile
+          echo "::endgroup::"
 
-      - run: yarn typecheck
+      - name: Typecheck
+        run: |
+          echo "::group::Typecheck"
+          yarn typecheck
+          echo "::endgroup::"
 
       # Some tests read the examples of the GitHub Markdown page from the internet. They skip when the page is not reachable.
-      - run: yarn test
+      - name: Unit tests
+        run: |
+          echo "::group::Unit tests"
+          yarn test
+          echo "::endgroup::"
 
   vscode:
     name: Tests in VS Code
@@ -62,7 +74,11 @@ jobs:
           node-version: 22
           cache: yarn
 
-      - run: yarn install --frozen-lockfile
+      - name: Install dependencies
+        run: |
+          echo "::group::Install dependencies"
+          yarn install --frozen-lockfile
+          echo "::endgroup::"
 
       # test/vscode/run.mjs downloads VS Code into .vscode-test when it runs on CI. The cache saves the download.
       - uses: actions/cache@v4
@@ -72,4 +88,7 @@ jobs:
 
       # VS Code needs a screen. xvfb is a virtual one. `yarn test:vscode` builds the extension first.
       - name: Run the tests in VS Code
-        run: xvfb-run -a yarn test:vscode
+        run: |
+          echo "::group::VS Code tests"
+          xvfb-run -a yarn test:vscode
+          echo "::endgroup::"

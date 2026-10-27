@@ -109,7 +109,22 @@ test('the workflow publishes the file that the build job made, and reads the tok
   for (const line of tokenLines) {
     assert.match(line, /VSCE_PAT: \$\{\{ secrets\.VSCE_PAT \}\}$/, line);
   }
-  assert.match(workflow, /^permissions:\n {2}contents: read$/m, 'the token of the workflow can only read');
+  assert.match(workflow, /^permissions:\n {2}contents: read$/m, 'the workflow defaults to read-only');
+  const publishJob = workflow.slice(workflow.indexOf('\n  publish:'));
+  assert.match(publishJob, /^    permissions:\n      contents: write$/m, 'only the publish job can create releases');
+});
+
+test('the workflow creates a versioned GitHub release with the VSIX after Marketplace publishing', () => {
+  const publishJob = workflow.slice(workflow.indexOf('\n  publish:'));
+  assert.match(publishJob, /run: yarn vsce publish --packagePath "\$VSIX"/);
+  const publishIndex = publishJob.indexOf('run: yarn vsce publish');
+  const releaseIndex = publishJob.indexOf('      - name: Create GitHub release');
+  assert.ok(releaseIndex > publishIndex, 'the release step follows Marketplace publishing');
+  const releaseStep = publishJob.slice(releaseIndex);
+  assert.match(releaseStep, /GH_TOKEN: \$\{\{ github\.token \}\}/);
+  assert.match(releaseStep, /node -p "require\('\.\/package\.json'\)\.version"/);
+  assert.match(releaseStep, /gh release create "\$TAG" "\$VSIX" --title "\$VERSION" --generate-notes/);
+  assert.match(releaseStep, /gh release upload "\$TAG" "\$VSIX" --clobber/);
 });
 
 test('every action in the workflow has a version', () => {

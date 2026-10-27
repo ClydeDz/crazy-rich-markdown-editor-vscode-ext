@@ -2,7 +2,7 @@
   "name": "crazy-rich-markdown-editor",
   "displayName": "Crazy Rich Markdown Editor",
   "description": "Edit Markdown files as rich text with a floating formatting toolbar. Supports GitHub Flavored Markdown, and keeps the code of MDX files as it is. The file stays raw Markdown on disk.",
-  "version": "0.15.2",
+  "version": "0.15.3",
   "publisher": "clydedsouza",
   "packageManager": "yarn@1.22.22",
   "license": "MIT",

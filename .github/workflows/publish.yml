@@ -1,16 +1,16 @@
 # Builds and tests the extension on every push and pull request.
-# A push to main also publishes the package to the Visual Studio Marketplace, when the version in package.json is new.
+# A push to main publishes a new version to the Visual Studio Marketplace and creates a GitHub release with the VSIX.
 #
 # Set up once:
 #   1. In package.json, set "publisher" to the ID of your Marketplace publisher. The value "local" cannot publish.
-#   2. Make an access token: https://dev.azure.com > User settings > Personal access tokens > New token.
+#   2. Make an access token: https://aex.dev.azure.com/ > Select an organisation > User settings > Personal access tokens > New token.
 #      Organization: All accessible organizations. Scope: Marketplace > Manage.
 #   3. Add the token as the repository secret VSCE_PAT (Settings > Secrets and variables > Actions).
 #   4. Optional: in Settings > Environments, open "marketplace" and add a required reviewer.
 #      Then a person must approve each release.
 #
 # To release: raise "version" in package.json, and merge the change to main.
-# A push to main with a version that the Marketplace already holds builds and tests only.
+# A push to main with a version that the Marketplace already holds ensures its GitHub release has the VSIX.
 
 name: Build and publish
 
@@ -63,6 +63,8 @@ jobs:
     # Only a push to main (or a manual run on main) publishes. A pull request never does.
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     environment:
       name: marketplace
     steps:
@@ -93,3 +95,16 @@ jobs:
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
           VSIX: ${{ steps.check.outputs.vsix }}
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VSIX: ${{ steps.check.outputs.vsix }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v${VERSION}"
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" "$VSIX" --clobber
+          else
+            gh release create "$TAG" "$VSIX" --title "$VERSION" --generate-notes
+          fi
