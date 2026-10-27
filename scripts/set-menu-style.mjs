@@ -43,7 +43,7 @@ export function applyMenuStyle(manifest, style) {
     editor.displayName = values.editorName;
   }
   for (const command of next.contributes.commands) {
-    if (command.command === 'richMarkdown.openRich') {
+    if (command.command === 'crazyRichMarkdown.openRich') {
       command.title = values.openTitle;
     }
   }

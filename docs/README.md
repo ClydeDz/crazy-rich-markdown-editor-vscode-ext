@@ -30,11 +30,11 @@ The bar stays at the top when you scroll. The counts change as you type. VS Code
 - Words: the words of the text that you see. The Markdown symbols and the front matter do not count. `e-mail` is one word. A lone `-` is not a word. Each Chinese, Japanese or Korean letter counts as a word.
 - Characters: the characters of the text that you see, with spaces. A line break does not count. Hold the pointer over the number to see the count without spaces.
 - Shortcuts: a button with a keyboard icon, left of the Settings button. Click it to open a window with every keyboard shortcut of the editor. See [The shortcuts window](#the-shortcuts-window).
-- Settings: a button with a gear icon at the right end of the bar. Click it to open the settings of this extension in VS Code. The list shows only the settings of this extension, so you do not need to search for them. The two buttons are part of the bar. When you turn the bar off, the buttons go too. Then use **File > Preferences > Settings** and search for `richMarkdown`.
+- Settings: a button with a gear icon at the right end of the bar. Click it to open the settings of this extension in VS Code. The list shows only the settings of this extension, so you do not need to search for them. The two buttons are part of the bar. When you turn the bar off, the buttons go too. Then use **File > Preferences > Settings** and search for `crazyRichMarkdown`.
 
 On an editor that is narrower than 700 pixels, the bar hides the date. The names get shorter before the counts do. On an editor that is narrower than 500 pixels, the two buttons show their icons and not their text.
 
-To hide the whole bar, set `richMarkdown.showInfoBar` to `false`. The change takes effect at once, without a reload. With the bar off, the editor does not count the text and does not run Git.
+To hide the whole bar, set `crazyRichMarkdown.showInfoBar` to `false`. The change takes effect at once, without a reload. With the bar off, the editor does not count the text and does not run Git.
 
 #### The shortcuts window
 
@@ -68,7 +68,7 @@ The editor runs `git log --follow` for the file, and reads the last 20 commits. 
 
 It uses the Git program that VS Code uses. It reads Git when the editor opens, when the editor shows again, and when the window gets focus. So a new commit shows without a reload. The editor does not use the network, and it does not change or save anything in the repository.
 
-To hide only the authors, set `richMarkdown.showLastAuthors` to `false`. The editor also does nothing when `git.enabled` is `false`.
+To hide only the authors, set `crazyRichMarkdown.showLastAuthors` to `false`. The editor also does nothing when `git.enabled` is `false`.
 
 ### The editor name in the dropdown
 
@@ -298,7 +298,7 @@ Characters such as `_`, `<`, `&` and `~` stay as you type them. The editor adds 
 
 MDX is Markdown with `import` and `export` lines, JSX components and `{expressions}`. The editor opens `.mdx` files with the same editor, and keeps the extra parts as they are.
 
-To open an MDX file, right-click it, choose **Open With...**, and choose **Crazy Rich Markdown Editor**. Or open the file and run **Markdown: Open in Crazy Rich Markdown Editor**. A `.mdx` file does not open in the editor by default, so your setup does not change.
+To open an MDX file, right-click it, choose **Open With...**, and choose **MDX Editor**. Or open the file and run **Markdown: Open in Crazy Rich Markdown Editor**. A `.mdx` file does not open in the editor by default, so your setup does not change.
 
 What you see:
 
@@ -324,10 +324,10 @@ A line that starts with `import` or `export` is read as code, as MDX does. A lin
 
 | Setting                        | Default  | Description                                                                                                                  |
 | ------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `richMarkdown.maxContentWidth` | `820`    | Maximum width in pixels of the writing column.                                                                               |
-| `richMarkdown.showInfoBar`     | `true`   | Show the bar at the top of the editor: the authors from Git, the time of the last save, and the lines, words and characters. |
-| `richMarkdown.showLastAuthors` | `true`   | Show the people who changed the file in the last Git commits, in the bar at the top.                                         |
-| `richMarkdown.assetFolder`     | `assets` | Folder for images and videos that you insert, paste or drop.                                                                 |
+| `crazyRichMarkdown.maxContentWidth` | `820`    | Maximum width in pixels of the writing column.                                                                               |
+| `crazyRichMarkdown.showInfoBar`     | `true`   | Show the bar at the top of the editor: the authors from Git, the time of the last save, and the lines, words and characters. |
+| `crazyRichMarkdown.showLastAuthors` | `true`   | Show the people who changed the file in the last Git commits, in the bar at the top.                                         |
+| `crazyRichMarkdown.assetFolder`      | `assets` | Folder for images and videos that you insert, paste or drop.                                                                 |
 
 ### The asset folder setting
 

@@ -12,7 +12,7 @@ export function activate(context: vscode.ExtensionContext): ExtensionApi {
   context.subscriptions.push(
     provider.register(),
 
-    vscode.commands.registerCommand('richMarkdown.openRich', async (uri?: vscode.Uri) => {
+    vscode.commands.registerCommand('crazyRichMarkdown.openRich', async (uri?: vscode.Uri) => {
       const target = uri ?? vscode.window.activeTextEditor?.document.uri;
       if (!target) {
         void vscode.window.showInformationMessage('Open a Markdown file first.');
@@ -21,7 +21,7 @@ export function activate(context: vscode.ExtensionContext): ExtensionApi {
       await vscode.commands.executeCommand('vscode.openWith', target, isMdxFile(target) ? MDX_VIEW_TYPE : VIEW_TYPE);
     }),
 
-    vscode.commands.registerCommand('richMarkdown.openSource', async () => {
+    vscode.commands.registerCommand('crazyRichMarkdown.openSource', async () => {
       await vscode.commands.executeCommand('workbench.action.reopenTextEditor');
     }),
   );

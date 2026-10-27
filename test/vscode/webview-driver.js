@@ -388,7 +388,7 @@
       }
     },
 
-    // Every chord that the editor handles, in every state of EDITOR_STATES, with both kinds of keyboard.
+    // Every chord that the editor handles, in every state and supported keyboard layout.
     async probeKeys() {
       const mac = /Mac/.test(navigator.platform);
       const applyState = (state) => {
@@ -412,7 +412,8 @@
       pm().focus();
       window.addEventListener('keydown', spy);
       try {
-        return probeChords({ states: EDITOR_STATES, applyState, send, mac });
+        const shapes = /Win/.test(navigator.platform) ? ['win'] : ['win', 'mac'];
+        return probeChords({ states: EDITOR_STATES, applyState, send, mac, shapes });
       } finally {
         window.removeEventListener('keydown', spy);
         // An open link field ends with a new, empty selection.

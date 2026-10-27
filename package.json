@@ -2,7 +2,7 @@
   "name": "crazy-rich-markdown-editor",
   "displayName": "Crazy Rich Markdown Editor",
   "description": "Edit Markdown files as rich text with a floating formatting toolbar. Supports GitHub Flavored Markdown, and keeps the code of MDX files as it is. The file stays raw Markdown on disk.",
-  "version": "0.15.4",
+  "version": "0.16.0",
   "publisher": "clydedsouza",
   "icon": "logo.png",
   "packageManager": "yarn@1.22.22",
@@ -27,8 +27,8 @@
   "contributes": {
     "customEditors": [
       {
-        "viewType": "richMarkdown.editor",
-        "displayName": "Crazy Rich Markdown Editor",
+        "viewType": "crazyRichMarkdown.editor",
+        "displayName": "Markdown Editor",
         "selector": [
           {
             "filenamePattern": "*.md"
@@ -40,8 +40,8 @@
         "priority": "default"
       },
       {
-        "viewType": "richMarkdown.mdxEditor",
-        "displayName": "Crazy Rich Markdown Editor",
+        "viewType": "crazyRichMarkdown.mdxEditor",
+        "displayName": "MDX Editor",
         "selector": [
           {
             "filenamePattern": "*.mdx"
@@ -52,12 +52,12 @@
     ],
     "commands": [
       {
-        "command": "richMarkdown.openRich",
+        "command": "crazyRichMarkdown.openRich",
         "title": "Open in Crazy Rich Markdown Editor",
         "category": "Markdown"
       },
       {
-        "command": "richMarkdown.openSource",
+        "command": "crazyRichMarkdown.openSource",
         "title": "Open Markdown Source (Raw Text)",
         "category": "Markdown",
         "icon": "$(code)"
@@ -66,19 +66,19 @@
     "menus": {
       "editor/title": [
         {
-          "command": "richMarkdown.openSource",
-          "when": "activeCustomEditorId =~ /^richMarkdown\\./",
+          "command": "crazyRichMarkdown.openSource",
+          "when": "activeCustomEditorId =~ /^crazyRichMarkdown\\./",
           "group": "navigation"
         },
         {
-          "command": "richMarkdown.openRich",
-          "when": "(resourceLangId == markdown || resourceExtname == .mdx) && activeCustomEditorId !~ /^richMarkdown\\./",
+          "command": "crazyRichMarkdown.openRich",
+          "when": "(resourceLangId == markdown || resourceExtname == .mdx) && !(activeCustomEditorId =~ /^crazyRichMarkdown\\./)",
           "group": "navigation"
         }
       ],
       "explorer/context": [
         {
-          "command": "richMarkdown.openRich",
+          "command": "crazyRichMarkdown.openRich",
           "when": "resourceLangId == markdown || resourceExtname == .mdx",
           "group": "navigation"
         }
@@ -87,24 +87,24 @@
     "configuration": {
       "title": "Crazy Rich Markdown Editor",
       "properties": {
-        "richMarkdown.maxContentWidth": {
+        "crazyRichMarkdown.maxContentWidth": {
           "type": "number",
           "default": 820,
           "minimum": 400,
           "description": "Maximum width in pixels of the writing column."
         },
-        "richMarkdown.showInfoBar": {
+        "crazyRichMarkdown.showInfoBar": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Show the bar at the top of the editor. It shows the people who changed the file in Git, the time that the file was saved, and the number of lines, words and characters. When this setting is off, the editor does not run Git. To hide only the people from Git, use `#richMarkdown.showLastAuthors#`."
+          "markdownDescription": "Show the bar at the top of the editor. It shows the people who changed the file in Git, the time that the file was saved, and the number of lines, words and characters. When this setting is off, the editor does not run Git. To hide only the people from Git, use `#crazyRichMarkdown.showLastAuthors#`."
         },
-        "richMarkdown.showLastAuthors": {
+        "crazyRichMarkdown.showLastAuthors": {
           "type": "boolean",
           "default": true,
           "scope": "resource",
-          "markdownDescription": "Show the people who changed the file in the last Git commits, in the bar at the top of the editor. The editor runs `git log` for the file. It does nothing when the file is not in a Git repository, when `#git.enabled#` is off, or when `#richMarkdown.showInfoBar#` is off."
+          "markdownDescription": "Show the people who changed the file in the last Git commits, in the bar at the top of the editor. The editor runs `git log` for the file. It does nothing when the file is not in a Git repository, when `#git.enabled#` is off, or when `#crazyRichMarkdown.showInfoBar#` is off."
         },
-        "richMarkdown.assetFolder": {
+        "crazyRichMarkdown.assetFolder": {
           "type": "string",
           "default": "docs/images",
           "scope": "resource",

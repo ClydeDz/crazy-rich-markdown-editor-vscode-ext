@@ -537,7 +537,7 @@ gitTest("the host sends no authors when the setting is off", async () => {
     "the author",
   );
   const settings = vscode.workspace.getConfiguration(
-    "richMarkdown",
+    "crazyRichMarkdown",
     document.uri,
   );
   const before = fake.of("fileInfo").length;
@@ -673,9 +673,11 @@ test("fast edits keep the newest text and send no stale update", async () => {
   const { document, fake } = await openWithProvider("fast.md", "");
   const texts = ["a\n", "ab\n", "abc\n", "abcd\n", "abcde\n", "abcdef\n"];
   for (const text of texts) fake.send({ type: "edit", text });
-  await waitFor(() => document.getText() === "abcdef\n", "final text");
+  const finalText =
+    document.eol === vscode.EndOfLine.CRLF ? "abcdef\r\n" : "abcdef\n";
+  await waitFor(() => document.getText() === finalText, "final text");
   await sleep(300);
-  assert.equal(document.getText(), "abcdef\n");
+  assert.equal(document.getText(), finalText);
   assert.equal(fake.of("update").length, 0, "no stale update");
   fake.dispose();
 });
@@ -729,7 +731,7 @@ test("a file with CRLF line endings keeps them after a webview edit", async () =
 
 test("the width setting reaches the webview", async () => {
   const { fake } = await openWithProvider("width.md", "x\n");
-  const config = vscode.workspace.getConfiguration("richMarkdown");
+  const config = vscode.workspace.getConfiguration("crazyRichMarkdown");
   await config.update(
     "maxContentWidth",
     640,
@@ -751,7 +753,7 @@ test("the width setting reaches the webview", async () => {
 });
 
 test("with the bar turned off, the host tells the webview and reads no file info", async () => {
-  const config = vscode.workspace.getConfiguration("richMarkdown");
+  const config = vscode.workspace.getConfiguration("crazyRichMarkdown");
   await config.update(
     "showInfoBar",
     false,
@@ -813,7 +815,7 @@ test("after dispose the host ignores further document changes", async () => {
 
 // ---------- Assets ----------
 
-const config = () => vscode.workspace.getConfiguration("richMarkdown");
+const config = () => vscode.workspace.getConfiguration("crazyRichMarkdown");
 const setAssetFolder = (value) =>
   config().update("assetFolder", value, vscode.ConfigurationTarget.Workspace);
 const bytes = (...values) => new Uint8Array(values);
@@ -928,9 +930,13 @@ test("helper: resolveAssetFolder reads the setting and its variables", () => {
     rel(assets.resolveAssetFolder("${documentDirname}/pics", doc)),
     "notes/pics",
   );
-  assert.equal(
-    assets.resolveAssetFolder("/tmp/rme-abs", doc).fsPath,
-    path.resolve("/tmp/rme-abs"),
+  const absoluteFolder = path.resolve(workspace, "..", "rme-abs");
+  assert.ok(
+    samePath(
+      assets.resolveAssetFolder(absoluteFolder, doc).fsPath,
+      absoluteFolder,
+    ),
+    "an absolute asset folder stays absolute",
   );
 });
 
@@ -1071,7 +1077,9 @@ test("the webview may load files from the asset folder, even outside the documen
       (uri) => uri.fsPath,
     );
     assert.ok(
-      roots.includes(path.join(workspace, "shared", "images")),
+      roots.some((uri) =>
+        samePath(uri, path.join(workspace, "shared", "images")),
+      ),
       roots.join(),
     );
     fake.dispose();
@@ -1246,10 +1254,17 @@ test("a link to a file opens that file: relative, in another folder, with escape
     await vscode.commands.executeCommand("workbench.action.closeAllEditors");
     fake.send({ type: "openLink", href });
     await waitFor(
-      () => activeTabPath() === expected,
+      () => {
+        const activePath = activeTabPath();
+        return activePath !== undefined && samePath(activePath, expected);
+      },
       `${href} to open ${expected}`,
     );
   };
+  await opens(
+    path.join(workspace, "links", "other.md"),
+    path.join(workspace, "links", "other.md"),
+  );
   await opens("other.md", path.join(workspace, "links", "other.md"));
   await opens(
     "sub%20dir/two.md",
@@ -1261,10 +1276,6 @@ test("a link to a file opens that file: relative, in another folder, with escape
   );
   await opens("other.md?plain=1", path.join(workspace, "links", "other.md"));
   await opens("../doc.md", path.join(workspace, "doc.md"));
-  await opens(
-    path.join(workspace, "links", "other.md"),
-    path.join(workspace, "links", "other.md"),
-  );
   await opens(
     "sub dir/two.md",
     path.join(workspace, "links", "sub dir", "two.md"),
@@ -1432,12 +1443,13 @@ test("the settings button of the bar opens the settings of this extension, and o
   }
 });
 
-test("the editor and extension use the configured name", async () => {
+test("the Markdown and MDX editors use their configured names", async () => {
   const extension = vscode.extensions.getExtension(
     "clydedsouza.crazy-rich-markdown-editor",
   );
-  const editor = extension.packageJSON.contributes.customEditors[0];
-  assert.equal(editor.displayName, extension.packageJSON.displayName);
+  const editors = extension.packageJSON.contributes.customEditors;
+  assert.equal(editors[0].displayName, "Markdown Editor");
+  assert.equal(editors[1].displayName, "MDX Editor");
 });
 
 // ---------- A real webview, driven from the test ----------
@@ -1491,6 +1503,8 @@ const REAL_DOC = [
 ].join("\n");
 
 let realWebview;
+const REAL_KEYBOARD_SHAPES =
+  process.platform === "win32" ? ["win"] : ["win", "mac"];
 
 /** Open a file in a new panel with a real webview, and the driver script in its page. */
 async function launchRealWebview(file, content) {
@@ -2410,7 +2424,7 @@ function canRunInWebview(when) {
     /Focus|Focused|Focussed|Visible|Shown|^editor|^textInput|^notebook|^inChat|^chatInput|^inQuickInput|^inSettings|^inSnippet|^inDebug|^inReference|^inKeybindings|^inlineChat|^inline|^inInline|^suggest|^parameterHints|^renameInput|^codeAction|^findWidget|^replace/;
   const ourEditor = {
     activeEditor: ["WebviewEditor", "workbench.editors.webviewEditor"],
-    activeCustomEditorId: ["richMarkdown.editor"],
+    activeCustomEditorId: ["crazyRichMarkdown.editor"],
   };
   return when.split("||").some((alternative) =>
     alternative.split("&&").every((atom) => {
@@ -2463,58 +2477,65 @@ async function probeRealKeys() {
   return probedKeys;
 }
 
-test("real webview: each formatting shortcut of the list does its job with a real keyboard, and VS Code does not see the key", async () => {
+test("real webview: each formatting shortcut works with each supported keyboard layout", async () => {
   const { run } = await startRealWebview();
   const lines = shortcuts
     .shortcutGroups()
     .slice(0, 4)
     .flatMap((group) => group.items);
   let checked = 0;
-  for (const line of lines) {
-    if (line.label === "Link") continue; // The test of Cmd or Ctrl plus K opens the link field.
-    const format = keyProbe.FORMAT_OF[line.label];
-    assert.ok(format, `the test knows the format of "${line.label}"`);
-    for (const chord of line.keys) {
-      for (const shape of ["win", "mac"]) {
-        const result = await run("formatChord", { chord, shape });
-        const where = `${line.label}, ${chord}, ${shape} keyboard`;
-        assert.deepEqual(
-          result.before,
-          [],
-          `${where}: nothing is on before the key`,
-        );
-        assert.equal(
-          result.handled,
-          true,
-          `${where}: the editor handles the key`,
-        );
-        assert.deepEqual(
-          result.afterFirst,
-          [format],
-          `${where}: the key turns on ${format}, and nothing else`,
-        );
-        assert.deepEqual(
-          result.afterSecond,
-          [],
-          `${where}: the same key turns it off`,
-        );
-        assert.equal(
-          result.reachedWindow,
-          0,
-          `${where}: VS Code does not see the key, so its own command does not run`,
-        );
-        checked++;
+  try {
+    for (const line of lines) {
+      if (line.label === "Link") continue; // The test of Cmd or Ctrl plus K opens the link field.
+      const format = keyProbe.FORMAT_OF[line.label];
+      assert.ok(format, `the test knows the format of "${line.label}"`);
+      for (const chord of line.keys) {
+        for (const shape of REAL_KEYBOARD_SHAPES) {
+          const result = await run("formatChord", { chord, shape });
+          const where = `${line.label}, ${chord}, ${shape} keyboard`;
+          assert.deepEqual(
+            result.before,
+            [],
+            `${where}: nothing is on before the key`,
+          );
+          assert.equal(
+            result.handled,
+            true,
+            `${where}: the editor handles the key`,
+          );
+          assert.deepEqual(
+            result.afterFirst,
+            [format],
+            `${where}: the key turns on ${format}, and nothing else`,
+          );
+          assert.deepEqual(
+            result.afterSecond,
+            [],
+            `${where}: the same key turns it off`,
+          );
+          assert.equal(
+            result.reachedWindow,
+            0,
+            `${where}: VS Code does not see the key, so its own command does not run`,
+          );
+          checked++;
+        }
       }
     }
+    assert.equal(
+      checked,
+      15 * REAL_KEYBOARD_SHAPES.length,
+      "fifteen formats for each supported keyboard layout",
+    );
+  } finally {
+    await restoreRealDocument();
   }
-  assert.equal(checked, 30, "fifteen formats, two keyboards");
-  await restoreRealDocument();
 });
 
 test("real webview: the keys that VS Code needs for the whole window reach VS Code, and the editor does not change the text", async () => {
   const { run } = await startRealWebview();
   for (const [chord, what] of keyProbe.KEYS_FOR_VS_CODE) {
-    for (const shape of ["win", "mac"]) {
+    for (const shape of REAL_KEYBOARD_SHAPES) {
       const result = await run("keyReach", { chord, shape });
       assert.equal(
         result.handled,
@@ -2536,7 +2557,7 @@ test("real webview: the keys that VS Code needs for the whole window reach VS Co
   await restoreRealDocument();
 });
 
-test("real webview: the editor handles every listed key with both keyboards, and no other key except the keys of ordinary text editing", async () => {
+test("real webview: the editor handles every listed key with supported keyboard layouts, and no other key except ordinary text editing keys", async () => {
   const handled = await probeRealKeys();
   // The toolbar is part of this page, so the key for a link is handled here, and a menu or VS Code handles the other keys.
   const outside = new Set(
@@ -2555,7 +2576,9 @@ test("real webview: the editor handles every listed key with both keyboards, and
     "a listed key that the editor does not handle",
   );
   assert.deepEqual(
-    [...listed].filter((key) => handled[key] && handled[key].length < 2),
+    [...listed].filter(
+      (key) => handled[key] && handled[key].length < REAL_KEYBOARD_SHAPES.length,
+    ),
     [],
     "a listed key that works only on one kind of keyboard",
   );
@@ -2715,7 +2738,7 @@ test("real webview: the bar goes away when the setting is off, and comes back wh
   assert.equal(before.hidden, false);
   assert.ok(before.height > 0);
 
-  const settings = vscode.workspace.getConfiguration("richMarkdown");
+  const settings = vscode.workspace.getConfiguration("crazyRichMarkdown");
   await settings.update(
     "showInfoBar",
     false,
@@ -2970,8 +2993,8 @@ test("the extension activates and exposes its API", async () => {
   await extension.activate();
   assert.equal(typeof extension.exports.getStats, "function");
   const commands = await vscode.commands.getCommands(true);
-  assert.ok(commands.includes("richMarkdown.openRich"));
-  assert.ok(commands.includes("richMarkdown.openSource"));
+  assert.ok(commands.includes("crazyRichMarkdown.openRich"));
+  assert.ok(commands.includes("crazyRichMarkdown.openSource"));
 });
 
 test("a Markdown file opens in the rich editor by default and the webview starts", async () => {
@@ -2989,7 +3012,7 @@ test("a Markdown file opens in the rich editor by default and the webview starts
       ? active
       : undefined;
   }, "custom editor tab");
-  assert.equal(tab.input.viewType, "richMarkdown.editor");
+  assert.equal(tab.input.viewType, "crazyRichMarkdown.editor");
   assert.equal(tab.input.uri.fsPath, uri.fsPath);
 
   // The webview posts `ready` at the end of its script. This proves that the bundle ran under the CSP.
@@ -3029,13 +3052,13 @@ test("an outside change reaches the real webview without an edit coming back", a
 
 test("the source command switches to the text editor and the rich command switches back", async () => {
   const uri = vscode.Uri.file(path.join(workspace, "doc.md"));
-  await vscode.commands.executeCommand("richMarkdown.openSource");
+  await vscode.commands.executeCommand("crazyRichMarkdown.openSource");
   await waitFor(() => {
     const active = vscode.window.tabGroups.activeTabGroup.activeTab;
     return active && active.input instanceof vscode.TabInputText;
   }, "text editor tab");
 
-  await vscode.commands.executeCommand("richMarkdown.openRich", uri);
+  await vscode.commands.executeCommand("crazyRichMarkdown.openRich", uri);
   await waitFor(() => {
     const active = vscode.window.tabGroups.activeTabGroup.activeTab;
     return active && active.input instanceof vscode.TabInputCustom;
@@ -3068,7 +3091,10 @@ test("hiding the editor and showing it again keeps the page: it does not load ag
   await sleep(500);
   await vscode.commands.executeCommand("vscode.open", uri);
   await waitFor(
-    () => activeTabPath() === file,
+    () => {
+      const activePath = activeTabPath();
+      return activePath !== undefined && samePath(activePath, file);
+    },
     "the rich editor to show again",
   );
   await sleep(1500);
@@ -3093,10 +3119,13 @@ test("the rich command without an argument opens the file of the active text edi
       vscode.TabInputText,
     "the text editor",
   );
-  await vscode.commands.executeCommand("richMarkdown.openRich");
+  await vscode.commands.executeCommand("crazyRichMarkdown.openRich");
   await waitFor(() => {
     const input = vscode.window.tabGroups.activeTabGroup.activeTab?.input;
-    return input instanceof vscode.TabInputCustom && input.uri.fsPath === file;
+    return (
+      input instanceof vscode.TabInputCustom &&
+      samePath(input.uri.fsPath, file)
+    );
   }, "the rich editor for the same file");
   await vscode.commands.executeCommand("workbench.action.closeAllEditors");
 });
@@ -3105,7 +3134,11 @@ test("the rich command without a Markdown file shows a message", async () => {
   const messages = spy(vscode.window, "showInformationMessage");
   try {
     await vscode.commands.executeCommand("workbench.action.closeAllEditors");
-    await vscode.commands.executeCommand("richMarkdown.openRich");
+    await waitFor(
+      () => vscode.window.activeTextEditor === undefined,
+      "there is no active text editor",
+    );
+    await vscode.commands.executeCommand("crazyRichMarkdown.openRich");
     assert.equal(messages.calls.length, 1);
     assert.equal(messages.calls[0][0], "Open a Markdown file first.");
   } finally {

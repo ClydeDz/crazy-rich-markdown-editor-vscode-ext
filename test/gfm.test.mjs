@@ -98,6 +98,9 @@ test('GitHub page: the two sections that are not Markdown syntax are covered ano
     assert.ok(suite.includes(name), name);
   }
   const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
-  assert.ok(manifest.contributes.commands.some((command) => command.command === 'richMarkdown.openSource'));
+  assert.ok(
+    manifest.contributes.commands.some((command) => command.command === 'crazyRichMarkdown.openSource'),
+    'the source command uses the crazyRichMarkdown prefix',
+  );
   assert.ok(fixture.notes['Uploading assets'] && fixture.notes['Disabling Markdown rendering']);
 });

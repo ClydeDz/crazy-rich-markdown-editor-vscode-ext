@@ -28,7 +28,7 @@
   ],
   "notes": {
     "Uploading assets": "These are not Markdown syntax. Paste, drop and the file picker copy a file to the asset folder. The suite in test/vscode/suite.cjs tests them in a real VS Code webview.",
-    "Disabling Markdown rendering": "This is a button in the GitHub web page, not syntax. In this editor the </> button and the command richMarkdown.openSource show the raw file."
+    "Disabling Markdown rendering": "This is a button in the GitHub web page, not syntax. In this editor the </> button and the command crazyRichMarkdown.openSource show the raw file."
   },
   "sections": [
     {

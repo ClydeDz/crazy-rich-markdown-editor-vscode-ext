@@ -138,7 +138,19 @@ test('the single style shows the editor name once in the menu', () => {
   assert.equal(single.displayName, 'Built-in');
   assert.equal(menuItemText(single), 'Crazy Rich Markdown Editor');
   assert.ok(single.description.startsWith('Crazy Rich Markdown Editor:'), 'the real name is in the description');
-  assert.equal(single.contributes.commands.find((c) => c.command === 'richMarkdown.openRich').title, 'Open in Crazy Rich Markdown Editor');
+  const command = single.contributes.commands.find((c) => c.command === 'crazyRichMarkdown.openRich');
+  assert.ok(command, 'the rich-editor command uses the crazyRichMarkdown prefix');
+  assert.equal(command.title, 'Open in Crazy Rich Markdown Editor');
+});
+
+test('settings use the crazyRichMarkdown prefix', () => {
+  const names = Object.keys(manifest.contributes.configuration.properties);
+  assert.deepEqual(names, [
+    'crazyRichMarkdown.maxContentWidth',
+    'crazyRichMarkdown.showInfoBar',
+    'crazyRichMarkdown.showLastAuthors',
+    'crazyRichMarkdown.assetFolder',
+  ]);
 });
 
 test('the named style shows two different names in the menu', () => {
@@ -161,8 +173,9 @@ test('a style changes only the names, and the two styles switch back and forth',
 
 test('package.json uses the configured editor and extension names in the menu', () => {
   assert.equal(manifest.displayName, 'Crazy Rich Markdown Editor');
-  assert.equal(manifest.contributes.customEditors[0].displayName, 'Crazy Rich Markdown Editor');
-  assert.equal(menuItemText(manifest), 'Crazy Rich Markdown Editor - Crazy Rich Markdown Editor');
+  assert.equal(manifest.contributes.customEditors[0].displayName, 'Markdown Editor');
+  assert.equal(manifest.contributes.customEditors[1].displayName, 'MDX Editor');
+  assert.equal(menuItemText(manifest), 'Markdown Editor - Crazy Rich Markdown Editor');
   assert.ok(manifest.description.startsWith('Edit Markdown files as rich text'));
 });
 
@@ -183,6 +196,6 @@ test('the menu style script run without a style shows the style that is on, and 
   const before = readFileSync(manifestFile, 'utf8');
   const result = spawnSync(process.execPath, ['scripts/set-menu-style.mjs'], { cwd: projectRoot, encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stdout, 'Now: menu item "Crazy Rich Markdown Editor - Crazy Rich Markdown Editor". Use "single" or "named" to change it.\n');
+  assert.equal(result.stdout, 'Now: menu item "Markdown Editor - Crazy Rich Markdown Editor". Use "single" or "named" to change it.\n');
   assert.equal(readFileSync(manifestFile, 'utf8'), before);
 });
