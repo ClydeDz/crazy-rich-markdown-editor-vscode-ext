@@ -25,7 +25,7 @@ Tick a box only when you ran the check and it passed. Leave a box open and say w
 
 - [ ] I used Yarn. There is no `package-lock.json`, and `yarn.lock` names only `registry.yarnpkg.com`
 - [ ] The README and `docs/` match the change
-- [ ] `yarn package` still makes a package of 29 files (no `docs/`, `.claude/` or `.vsix` files inside)
+- [ ] `yarn package` still makes a package of 30 files (no `docs/`, `.claude/` or `.vsix` files inside)
 - [ ] No placeholder or secret was added (`webview/about.ts` links stay as the owner set them)
 
 ## Not done or not checked
