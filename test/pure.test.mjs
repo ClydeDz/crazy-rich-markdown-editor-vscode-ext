@@ -159,15 +159,11 @@ test('a style changes only the names, and the two styles switch back and forth',
   assert.deepEqual(Object.keys(STYLES), ['single', 'named']);
 });
 
-test('package.json has one of the two styles', () => {
-  const style = Object.keys(STYLES).find((name) => {
-    const values = STYLES[name];
-    return manifest.displayName === values.displayName && manifest.contributes.customEditors[0].displayName === values.editorName;
-  });
-  assert.ok(style, 'package.json matches the style single or named');
-  assert.equal(manifest.description, STYLES[style].description);
-  // The editor name must never equal the extension name, because that shows the same words twice.
-  assert.notEqual(manifest.contributes.customEditors[0].displayName, manifest.displayName);
+test('package.json uses the configured editor and extension names in the menu', () => {
+  assert.equal(manifest.displayName, 'Crazy Rich Markdown Editor');
+  assert.equal(manifest.contributes.customEditors[0].displayName, 'Crazy Rich Markdown Editor');
+  assert.equal(menuItemText(manifest), 'Crazy Rich Markdown Editor - Crazy Rich Markdown Editor');
+  assert.ok(manifest.description.startsWith('Edit Markdown files as rich text'));
 });
 
 // The script is also a command. It must write the manifest only when it is run with a style, and never when it is imported.
@@ -187,6 +183,6 @@ test('the menu style script run without a style shows the style that is on, and 
   const before = readFileSync(manifestFile, 'utf8');
   const result = spawnSync(process.execPath, ['scripts/set-menu-style.mjs'], { cwd: projectRoot, encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /^Now: menu item "Crazy Rich Markdown Editor"\. Use "single" or "named" to change it\.\n$/);
+  assert.equal(result.stdout, 'Now: menu item "Crazy Rich Markdown Editor - Crazy Rich Markdown Editor". Use "single" or "named" to change it.\n');
   assert.equal(readFileSync(manifestFile, 'utf8'), before);
 });

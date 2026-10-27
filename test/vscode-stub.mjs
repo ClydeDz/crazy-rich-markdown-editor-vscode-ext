@@ -33,6 +33,9 @@ export class Uri {
   }
 
   get fsPath() {
+    if (process.platform === 'win32' && /^\/[a-zA-Z]:\//.test(this.path)) {
+      return this.path.slice(1).replace(/\//g, '\\');
+    }
     return this.path;
   }
 
@@ -52,20 +55,20 @@ export const workspace = {
   },
   fs: {
     async stat(uri) {
-      const stats = await fs.stat(uri.path);
+      const stats = await fs.stat(uri.fsPath);
       return { size: stats.size, mtime: stats.mtimeMs, ctime: stats.ctimeMs, type: stats.isDirectory() ? 2 : 1 };
     },
     async createDirectory(uri) {
-      await fs.mkdir(uri.path, { recursive: true });
+      await fs.mkdir(uri.fsPath, { recursive: true });
     },
     async writeFile(uri, bytes) {
-      await fs.writeFile(uri.path, bytes);
+      await fs.writeFile(uri.fsPath, bytes);
     },
     async readFile(uri) {
-      return new Uint8Array(await fs.readFile(uri.path));
+      return new Uint8Array(await fs.readFile(uri.fsPath));
     },
     async copy(source, target, options = {}) {
-      await fs.copyFile(source.path, target.path, options.overwrite ? 0 : constants.COPYFILE_EXCL);
+      await fs.copyFile(source.fsPath, target.fsPath, options.overwrite ? 0 : constants.COPYFILE_EXCL);
     },
   },
 };

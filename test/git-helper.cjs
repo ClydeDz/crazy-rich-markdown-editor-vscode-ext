@@ -12,11 +12,15 @@ function gitAvailable() {
 
 /** Git without the settings of the user (a global setting can turn on commit signing, which would stop a test). */
 function git(directory, args, env = {}) {
-  return execFileSync('git', ['-c', 'commit.gpgsign=false', '-c', `core.hooksPath=${os.devNull}`, ...args], {
+  const hooksPath = path.join(directory, '.empty-hooks');
+  const globalConfig = path.join(directory, '.empty-gitconfig');
+  fs.mkdirSync(hooksPath, { recursive: true });
+  fs.writeFileSync(globalConfig, '');
+  return execFileSync('git', ['-c', 'commit.gpgsign=false', '-c', `core.hooksPath=${hooksPath}`, ...args], {
     cwd: directory,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
-    env: { ...process.env, GIT_CONFIG_GLOBAL: os.devNull, GIT_CONFIG_NOSYSTEM: '1', ...env },
+    env: { ...process.env, GIT_CONFIG_GLOBAL: globalConfig, GIT_CONFIG_NOSYSTEM: '1', ...env },
   });
 }
 

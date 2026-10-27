@@ -13,9 +13,10 @@ const assets = await loadModule('src/assets.ts', 'assets', { vscode: true });
 /** Each case works in a folder of its own in the temporary directory. */
 async function inTempFolder(body) {
   const folder = mkdtempSync(path.join(tmpdir(), 'rme-assets-'));
-  globalThis.__rmeWorkspaceFolders = [{ uri: Uri.file(folder) }];
+  const folderUri = Uri.file(folder);
+  globalThis.__rmeWorkspaceFolders = [{ uri: folderUri }];
   try {
-    await body(folder);
+    await body(folder, folderUri);
   } finally {
     globalThis.__rmeWorkspaceFolders = [];
     rmSync(folder, { recursive: true, force: true });
@@ -130,9 +131,9 @@ test('resolveAssetFolder reads the setting, and the folder is relative to the do
 });
 
 test('resolveAssetFolder fills in the variables', () => {
-  return inTempFolder((folder) => {
-    const doc = Uri.file(`${folder}/notes/guide.md`);
-    const rel = (setting) => path.posix.relative(folder, assets.resolveAssetFolder(setting, doc).path);
+  return inTempFolder((folder, folderUri) => {
+    const doc = Uri.joinPath(folderUri, 'notes', 'guide.md');
+    const rel = (setting) => path.posix.relative(folderUri.path, assets.resolveAssetFolder(setting, doc).path);
     assert.equal(rel('${documentDirname}/pics'), 'notes/pics');
     assert.equal(rel('${documentBasenameNoExtension}.assets'), 'notes/guide.assets');
     assert.equal(rel('media/${documentBasenameNoExtension}'), 'notes/media/guide');
@@ -165,9 +166,9 @@ test('resolveAssetFolder keeps an absolute path, and reads a Windows drive path'
 
 test('saveAsset makes the folder, writes the file, and returns its address', () =>
   inTempFolder(async (folder) => {
-    const target = await assets.saveAsset(Uri.file(`${folder}/a/b/assets`), 'pic.png', bytes(1, 2, 3));
-    assert.equal(target.path, `${folder}/a/b/assets/pic.png`);
-    assert.deepEqual([...readFileSync(target.path)], [1, 2, 3]);
+    const target = await assets.saveAsset(Uri.file(path.join(folder, 'a', 'b', 'assets')), 'pic.png', bytes(1, 2, 3));
+    assert.equal(target.path, Uri.file(path.join(folder, 'a', 'b', 'assets', 'pic.png')).path);
+    assert.deepEqual([...readFileSync(target.fsPath)], [1, 2, 3]);
   }),
 );
 
@@ -200,8 +201,8 @@ test('copyAsset copies a file from another folder into the asset folder, with a 
     mkdirSync(`${folder}/photos`);
     writeFileSync(`${folder}/photos/My Pic (1).PNG`, bytes(4, 5, 6));
     const copied = await assets.copyAsset(Uri.file(`${folder}/assets`), Uri.file(`${folder}/photos/My Pic (1).PNG`));
-    assert.equal(copied.path, `${folder}/assets/My-Pic-(1).png`);
-    assert.deepEqual([...readFileSync(copied.path)], [4, 5, 6]);
+    assert.equal(copied.path, Uri.file(path.join(folder, 'assets', 'My-Pic-(1).png')).path);
+    assert.deepEqual([...readFileSync(copied.fsPath)], [4, 5, 6]);
     assert.equal(existsSync(`${folder}/photos/My Pic (1).PNG`), true, 'the original stays');
   }),
 );
@@ -230,7 +231,7 @@ test('copyAsset uses a copy again when the same file is picked twice, and number
     assert.equal(path.basename(first.path), 'pic.png');
     assert.equal(path.basename(again.path), 'pic.png');
     assert.equal(path.basename(other.path), 'pic-1.png', 'same name and same size, other content');
-    assert.deepEqual([...readFileSync(other.path)], [3, 4]);
+    assert.deepEqual([...readFileSync(other.fsPath)], [3, 4]);
   }),
 );
 

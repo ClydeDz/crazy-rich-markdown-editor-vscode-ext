@@ -1,11 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { decidePublish, publishedVersions } from '../scripts/publish-lib.mjs';
+import { runCheckPublish } from '../scripts/check-publish.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const workflow = readFileSync(path.join(root, '.github', 'workflows', 'publish.yml'), 'utf8');
@@ -97,7 +98,7 @@ test('the workflow publishes only from main, and never for a pull request', () =
   const publishJob = workflow.slice(workflow.indexOf('\n  publish:'));
   assert.match(publishJob, /needs: build/);
   assert.match(publishJob, /if: github\.ref == 'refs\/heads\/main' && github\.event_name != 'pull_request'/);
-  assert.match(publishJob, /environment: marketplace/);
+  assert.match(publishJob, /environment:\s*\n\s+name: marketplace/);
   assert.doesNotMatch(workflow.slice(0, workflow.indexOf('\n  publish:')), /vsce publish/, 'the build job does not publish');
 });
 
@@ -132,31 +133,35 @@ test('the README has no link to a file in the project, because vsce refuses to p
 });
 
 /**
- * Run the script with a fake `yarn` in front of the real one. The fake writes its arguments in a log and prints `answer`,
- * so the test sees how the script asks for the versions on the Marketplace, and what it does with the answer.
+ * Run the publish check with an injected `yarn` runner, so the test can inspect its arguments and return a fake answer
+ * without relying on platform-specific executable shims.
  */
 function runWithFakeYarn({ answer, exitCode = 0, manifestFirst = false }) {
   const folder = mkdtempSync(path.join(tmpdir(), 'rme-publish-'));
   try {
-    const bin = path.join(folder, 'bin');
-    mkdirSync(bin);
-    const log = path.join(folder, 'yarn-calls.txt');
-    const answerFile = path.join(folder, 'answer.txt');
-    writeFileSync(answerFile, answer);
-    writeFileSync(path.join(bin, 'yarn'), `#!/bin/sh\necho "$@" >> "${log}"\ncat "${answerFile}"\nexit ${exitCode}\n`);
-    chmodSync(path.join(bin, 'yarn'), 0o755);
     const manifestPath = path.join(folder, 'package.json');
     const outputPath = path.join(folder, 'output.txt');
     writeFileSync(manifestPath, JSON.stringify({ name: 'demo', version: '1.0.0', publisher: 'acme' }));
     writeFileSync(path.join(folder, 'demo-1.0.0.vsix'), 'x');
     writeFileSync(outputPath, '');
-    writeFileSync(log, '');
     const args = manifestFirst ? ['--manifest', manifestPath, folder] : [folder, '--manifest', manifestPath];
-    const result = spawnSync(process.execPath, [path.join(root, 'scripts', 'check-publish.mjs'), ...args], {
-      env: { ...process.env, PATH: `${bin}${path.delimiter}${process.env.PATH}`, VSCE_PAT: 'x', GITHUB_OUTPUT: outputPath, GITHUB_ACTIONS: 'true' },
-      encoding: 'utf8',
+    const calls = [];
+    let stdout = '';
+    const status = runCheckPublish({
+      args,
+      env: { ...process.env, VSCE_PAT: 'x', GITHUB_OUTPUT: outputPath, GITHUB_ACTIONS: 'true' },
+      exec(command, commandArgs) {
+        calls.push({ command, args: commandArgs });
+        if (exitCode !== 0) {
+          throw new Error('fake Marketplace failure');
+        }
+        return answer;
+      },
+      log(message) {
+        stdout += `${message}\n`;
+      },
     });
-    return { folder, status: result.status, stdout: result.stdout, output: readFileSync(outputPath, 'utf8'), calls: readFileSync(log, 'utf8').trim().split('\n').filter(Boolean) };
+    return { folder, status, stdout, output: readFileSync(outputPath, 'utf8'), calls };
   } finally {
     rmSync(folder, { recursive: true, force: true });
   }
@@ -164,7 +169,7 @@ function runWithFakeYarn({ answer, exitCode = 0, manifestFirst = false }) {
 
 test('the script asks the Marketplace through yarn, and publishes a version that is new', () => {
   const run = runWithFakeYarn({ answer: JSON.stringify({ versions: [{ version: '0.9.0' }] }) });
-  assert.deepEqual(run.calls, ['--silent vsce show acme.demo --json'], 'one call, with the ID of the extension, and no banner of yarn');
+  assert.deepEqual(run.calls, [{ command: 'yarn', args: ['--silent', 'vsce', 'show', 'acme.demo', '--json'] }], 'one call, with the extension ID and no Yarn banner');
   assert.equal(run.status, 0);
   assert.match(run.output, /publish=true/);
   assert.match(run.output, /vsix=.*demo-1\.0\.0\.vsix/);
