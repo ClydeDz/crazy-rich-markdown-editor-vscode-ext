@@ -133,7 +133,15 @@ test('resolveAssetFolder reads the setting, and the folder is relative to the do
 test('resolveAssetFolder fills in the variables', () => {
   return inTempFolder((folder, folderUri) => {
     const doc = Uri.joinPath(folderUri, 'notes', 'guide.md');
-    const rel = (setting) => path.posix.relative(folderUri.path, assets.resolveAssetFolder(setting, doc).path);
+    const normalizeDrive = (value) =>
+      process.platform === 'win32'
+        ? value.replace(/^\/([a-zA-Z]):/, (_match, drive) => `/${drive.toLowerCase()}:`)
+        : value;
+    const rel = (setting) =>
+      path.posix.relative(
+        normalizeDrive(folderUri.path),
+        normalizeDrive(assets.resolveAssetFolder(setting, doc).path),
+      );
     assert.equal(rel('${documentDirname}/pics'), 'notes/pics');
     assert.equal(rel('${documentBasenameNoExtension}.assets'), 'notes/guide.assets');
     assert.equal(rel('media/${documentBasenameNoExtension}'), 'notes/media/guide');
@@ -144,6 +152,26 @@ test('resolveAssetFolder fills in the variables', () => {
     assert.equal(rel('${unknownVariable}'), 'notes/${unknownVariable}', 'an unknown variable stays as it is');
   });
 });
+
+test(
+  'resolveAssetFolder handles different Windows drive-letter casing',
+  { skip: process.platform !== 'win32' },
+  () => {
+    const workspaceUri = Uri.file('C:\\Workspace');
+    const doc = Uri.file('c:\\Workspace\\notes\\guide.md');
+    const previous = globalThis.__rmeWorkspaceFolders;
+    globalThis.__rmeWorkspaceFolders = [{ uri: workspaceUri }];
+    try {
+      const assetsFolder = assets.resolveAssetFolder(
+        '${workspaceFolder}/docs/images',
+        doc,
+      );
+      assert.equal(assets.relativeLink(doc, assetsFolder), '../docs/images');
+    } finally {
+      globalThis.__rmeWorkspaceFolders = previous;
+    }
+  },
+);
 
 test('resolveAssetFolder uses the folder of the document when the document is outside every workspace folder', () => {
   const doc = Uri.file('/not/in/a/workspace/guide.md');

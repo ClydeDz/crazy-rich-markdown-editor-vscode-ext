@@ -54,11 +54,11 @@ function chordName(mods, base) {
  * Typing (a letter, a digit or a sign without Ctrl, Cmd or Alt) is not a shortcut, so it is left out.
  * The result is { 'Mod-b': ['win', 'mac'], ... }: the shapes in which the chord is handled.
  */
-function probeChords({ states, applyState, send, mac }) {
+function probeChords({ states, applyState, send, mac, shapes = ['win', 'mac'] }) {
   const handled = {};
   const bases = [...KEY_LETTERS, ...KEY_DIGITS, ...KEY_PUNCTUATION, ...KEY_NAMED];
   for (const state of states) {
-    for (const shape of ['win', 'mac']) {
+    for (const shape of shapes) {
       for (const mods of MODIFIER_SETS) {
         for (const base of bases) {
           const typing = !mods.includes('Mod') && !mods.includes('Alt') && (base.length === 1);

@@ -424,9 +424,10 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
     } catch {
       // Keep the raw path when it has no valid escape.
     }
-    const target = decoded.startsWith('/')
-      ? vscode.Uri.file(decoded)
-      : vscode.Uri.joinPath(documentUri, '..', decoded);
+    const target =
+      decoded.startsWith('/') || path.isAbsolute(decoded)
+        ? vscode.Uri.file(decoded)
+        : vscode.Uri.joinPath(documentUri, '..', decoded);
 
     try {
       await vscode.workspace.fs.stat(target);

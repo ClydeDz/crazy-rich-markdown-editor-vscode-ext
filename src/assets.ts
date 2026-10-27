@@ -107,6 +107,13 @@ export function resolveAssetFolder(setting: string | undefined, document: vscode
   const documentFolder = vscode.Uri.joinPath(document, '..');
   const fileName = path.posix.basename(document.path);
   const workspaceFolder = vscode.workspace.getWorkspaceFolder(document)?.uri ?? documentFolder;
+  const workspaceFolderPath =
+    process.platform === 'win32'
+      ? workspaceFolder.path.replace(
+          /^\/([a-zA-Z]):(?=\/)/,
+          (_match, drive: string) => `/${drive.toLowerCase()}:`,
+        )
+      : workspaceFolder.path;
 
   let value = (setting ?? '').trim().replace(/\\/g, '/');
   if (value === '') {
@@ -121,7 +128,7 @@ export function resolveAssetFolder(setting: string | undefined, document: vscode
       case 'documentFileName':
         return fileName;
       default:
-        return workspaceFolder.path;
+        return workspaceFolderPath;
     }
   });
 
