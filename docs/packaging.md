@@ -10,11 +10,11 @@
 
 ## Release and install (local)
 
-1. Change `version` in `package.json`. Change the `.vsix` name in the README install steps.
+1. Change `version` in `package.json`. Update the `.vsix` name in the install steps in [README.md](internal-readme.md).
 2. `yarn test`
 3. `yarn package` makes `rich-markdown-editor-<version>.vsix`. It runs `vscode:prepublish`, which builds in production mode.
 4. `code` is not on the PATH. Install with:
-   `"/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code" --install-extension <vsix> --force`
+ `"/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code" --install-extension <vsix> --force`
 5. Run **Developer: Reload Window** in VS Code. An old window can keep the older editor.
 
 ## Marketplace and GitHub release
