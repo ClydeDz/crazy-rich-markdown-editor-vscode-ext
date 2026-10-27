@@ -25,7 +25,7 @@
 
 ## MDX
 
-- A `.mdx` file opens with the view type `richMarkdown.mdxEditor` (priority `option`, so it is in "Open With" and not the default). It is the same provider. The host sends `mdx: true` in the `init` message, and `createEditor({ mdx: true })` adds `MdxBlock` and `MdxInline` (`webview/mdx.ts`). A `.md` file never gets them.
+- A `.mdx` file opens with the view type `crazyRichMarkdown.mdxEditor` (priority `option`, so it is in "Open With" and not the default). It is the same provider. The host sends `mdx: true` in the `init` message, and `createEditor({ mdx: true })` adds `MdxBlock` and `MdxInline` (`webview/mdx.ts`). A `.md` file never gets them.
 - `scanMdxBlock` finds a block at the start of the text: an `import` or `export` run, one or more JSX elements and `{expressions}` that follow each other, or an expression. A block starts at the start of a line and nothing may follow it on its last line. It never matches in the middle of a paragraph (`start: () => -1`).
 - The scanner reads over strings, templates, comments, brackets, `{ }` groups in attributes and children, HTML comments, and backticks in children. A lone apostrophe in JSX text must not start a string (a string stops at the end of its line).
 - When a block is not complete (a tag that never closes), the scanner gives up, and the Markdown parser reads the text as before.

@@ -248,8 +248,10 @@ const manifest = JSON.parse(readFileSync(fileURLToPath(new URL('../package.json'
 
 test('MDX files open in the editor only through "Open With", and Markdown files keep the default', () => {
   const editors = manifest.contributes.customEditors;
-  const markdown = editors.find((editor) => editor.viewType === 'richMarkdown.editor');
-  const mdx = editors.find((editor) => editor.viewType === 'richMarkdown.mdxEditor');
+  const markdown = editors.find((editor) => editor.viewType === 'crazyRichMarkdown.editor');
+  const mdx = editors.find((editor) => editor.viewType === 'crazyRichMarkdown.mdxEditor');
+  assert.ok(markdown, 'the Markdown editor uses the crazyRichMarkdown prefix');
+  assert.ok(mdx, 'the MDX editor uses the crazyRichMarkdown prefix');
   assert.equal(markdown.priority, 'default');
   assert.deepEqual(markdown.selector.map((entry) => entry.filenamePattern), ['*.md', '*.markdown']);
   assert.equal(mdx.priority, 'option');
@@ -260,10 +262,12 @@ test('MDX files open in the editor only through "Open With", and Markdown files 
 
 test('the title buttons work for both editors and for MDX files', () => {
   const menus = manifest.contributes.menus;
-  const source = menus['editor/title'].find((item) => item.command === 'richMarkdown.openSource');
-  const rich = menus['editor/title'].find((item) => item.command === 'richMarkdown.openRich');
-  assert.match(source.when, /richMarkdown/);
-  assert.ok(!source.when.includes('== richMarkdown.editor'), 'not only the Markdown editor');
+  const source = menus['editor/title'].find((item) => item.command === 'crazyRichMarkdown.openSource');
+  const rich = menus['editor/title'].find((item) => item.command === 'crazyRichMarkdown.openRich');
+  assert.ok(source, 'the source title button uses the crazyRichMarkdown prefix');
+  assert.ok(rich, 'the rich-editor title button uses the crazyRichMarkdown prefix');
+  assert.match(source.when, /crazyRichMarkdown/);
+  assert.ok(!source.when.includes('== crazyRichMarkdown.editor'), 'not only the Markdown editor');
   assert.match(rich.when, /resourceExtname == \.mdx/);
   assert.match(menus['explorer/context'][0].when, /\.mdx/);
 });

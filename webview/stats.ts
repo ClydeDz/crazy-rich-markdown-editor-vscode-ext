@@ -135,7 +135,7 @@ export interface StatsBar {
   updateFile(info: FileInfo): void;
   /** Show the bar. It stays hidden while the user has it turned off. */
   show(): void;
-  /** Turn the bar on or off (the setting `richMarkdown.showInfoBar`). */
+  /** Turn the bar on or off (the setting `crazyRichMarkdown.showInfoBar`). */
   setEnabled(enabled: boolean): void;
   isEnabled(): boolean;
 }

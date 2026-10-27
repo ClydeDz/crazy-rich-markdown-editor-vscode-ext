@@ -537,7 +537,7 @@ gitTest("the host sends no authors when the setting is off", async () => {
     "the author",
   );
   const settings = vscode.workspace.getConfiguration(
-    "richMarkdown",
+    "crazyRichMarkdown",
     document.uri,
   );
   const before = fake.of("fileInfo").length;
@@ -729,7 +729,7 @@ test("a file with CRLF line endings keeps them after a webview edit", async () =
 
 test("the width setting reaches the webview", async () => {
   const { fake } = await openWithProvider("width.md", "x\n");
-  const config = vscode.workspace.getConfiguration("richMarkdown");
+  const config = vscode.workspace.getConfiguration("crazyRichMarkdown");
   await config.update(
     "maxContentWidth",
     640,
@@ -751,7 +751,7 @@ test("the width setting reaches the webview", async () => {
 });
 
 test("with the bar turned off, the host tells the webview and reads no file info", async () => {
-  const config = vscode.workspace.getConfiguration("richMarkdown");
+  const config = vscode.workspace.getConfiguration("crazyRichMarkdown");
   await config.update(
     "showInfoBar",
     false,
@@ -813,7 +813,7 @@ test("after dispose the host ignores further document changes", async () => {
 
 // ---------- Assets ----------
 
-const config = () => vscode.workspace.getConfiguration("richMarkdown");
+const config = () => vscode.workspace.getConfiguration("crazyRichMarkdown");
 const setAssetFolder = (value) =>
   config().update("assetFolder", value, vscode.ConfigurationTarget.Workspace);
 const bytes = (...values) => new Uint8Array(values);
@@ -2411,7 +2411,7 @@ function canRunInWebview(when) {
     /Focus|Focused|Focussed|Visible|Shown|^editor|^textInput|^notebook|^inChat|^chatInput|^inQuickInput|^inSettings|^inSnippet|^inDebug|^inReference|^inKeybindings|^inlineChat|^inline|^inInline|^suggest|^parameterHints|^renameInput|^codeAction|^findWidget|^replace/;
   const ourEditor = {
     activeEditor: ["WebviewEditor", "workbench.editors.webviewEditor"],
-    activeCustomEditorId: ["richMarkdown.editor"],
+    activeCustomEditorId: ["crazyRichMarkdown.editor"],
   };
   return when.split("||").some((alternative) =>
     alternative.split("&&").every((atom) => {
@@ -2716,7 +2716,7 @@ test("real webview: the bar goes away when the setting is off, and comes back wh
   assert.equal(before.hidden, false);
   assert.ok(before.height > 0);
 
-  const settings = vscode.workspace.getConfiguration("richMarkdown");
+  const settings = vscode.workspace.getConfiguration("crazyRichMarkdown");
   await settings.update(
     "showInfoBar",
     false,
@@ -2971,8 +2971,8 @@ test("the extension activates and exposes its API", async () => {
   await extension.activate();
   assert.equal(typeof extension.exports.getStats, "function");
   const commands = await vscode.commands.getCommands(true);
-  assert.ok(commands.includes("richMarkdown.openRich"));
-  assert.ok(commands.includes("richMarkdown.openSource"));
+  assert.ok(commands.includes("crazyRichMarkdown.openRich"));
+  assert.ok(commands.includes("crazyRichMarkdown.openSource"));
 });
 
 test("a Markdown file opens in the rich editor by default and the webview starts", async () => {
@@ -2990,7 +2990,7 @@ test("a Markdown file opens in the rich editor by default and the webview starts
       ? active
       : undefined;
   }, "custom editor tab");
-  assert.equal(tab.input.viewType, "richMarkdown.editor");
+  assert.equal(tab.input.viewType, "crazyRichMarkdown.editor");
   assert.equal(tab.input.uri.fsPath, uri.fsPath);
 
   // The webview posts `ready` at the end of its script. This proves that the bundle ran under the CSP.
@@ -3030,13 +3030,13 @@ test("an outside change reaches the real webview without an edit coming back", a
 
 test("the source command switches to the text editor and the rich command switches back", async () => {
   const uri = vscode.Uri.file(path.join(workspace, "doc.md"));
-  await vscode.commands.executeCommand("richMarkdown.openSource");
+  await vscode.commands.executeCommand("crazyRichMarkdown.openSource");
   await waitFor(() => {
     const active = vscode.window.tabGroups.activeTabGroup.activeTab;
     return active && active.input instanceof vscode.TabInputText;
   }, "text editor tab");
 
-  await vscode.commands.executeCommand("richMarkdown.openRich", uri);
+  await vscode.commands.executeCommand("crazyRichMarkdown.openRich", uri);
   await waitFor(() => {
     const active = vscode.window.tabGroups.activeTabGroup.activeTab;
     return active && active.input instanceof vscode.TabInputCustom;
@@ -3094,7 +3094,7 @@ test("the rich command without an argument opens the file of the active text edi
       vscode.TabInputText,
     "the text editor",
   );
-  await vscode.commands.executeCommand("richMarkdown.openRich");
+  await vscode.commands.executeCommand("crazyRichMarkdown.openRich");
   await waitFor(() => {
     const input = vscode.window.tabGroups.activeTabGroup.activeTab?.input;
     return input instanceof vscode.TabInputCustom && input.uri.fsPath === file;
@@ -3106,7 +3106,7 @@ test("the rich command without a Markdown file shows a message", async () => {
   const messages = spy(vscode.window, "showInformationMessage");
   try {
     await vscode.commands.executeCommand("workbench.action.closeAllEditors");
-    await vscode.commands.executeCommand("richMarkdown.openRich");
+    await vscode.commands.executeCommand("crazyRichMarkdown.openRich");
     assert.equal(messages.calls.length, 1);
     assert.equal(messages.calls[0][0], "Open a Markdown file first.");
   } finally {

@@ -17,9 +17,9 @@ import { HostMessage, MediaItem, WebviewMessage } from './protocol';
 import { coalesceRefresh } from './refreshQueue';
 import { minimalChange } from './textDiff';
 
-export const VIEW_TYPE = 'richMarkdown.editor';
+export const VIEW_TYPE = 'crazyRichMarkdown.editor';
 /** The same editor for `.mdx` files. It has its own ID so that it is an option in "Open With", and `.md` files do not change. */
-export const MDX_VIEW_TYPE = 'richMarkdown.mdxEditor';
+export const MDX_VIEW_TYPE = 'crazyRichMarkdown.mdxEditor';
 
 export const isMdxFile = (uri: vscode.Uri): boolean => uri.path.toLowerCase().endsWith('.mdx');
 
@@ -94,7 +94,7 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
 
     const assetFolder = (): vscode.Uri =>
       resolveAssetFolder(
-        vscode.workspace.getConfiguration('richMarkdown', document.uri).get<string>('assetFolder', 'assets'),
+        vscode.workspace.getConfiguration('crazyRichMarkdown', document.uri).get<string>('assetFolder', 'assets'),
         document.uri,
       );
 
@@ -126,9 +126,10 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
     };
 
     const maxContentWidth = (): number =>
-      vscode.workspace.getConfiguration('richMarkdown').get<number>('maxContentWidth', 820);
+      vscode.workspace.getConfiguration('crazyRichMarkdown').get<number>('maxContentWidth', 820);
 
-    const showInfoBar = (): boolean => vscode.workspace.getConfiguration('richMarkdown').get<boolean>('showInfoBar', true);
+    const showInfoBar = (): boolean =>
+      vscode.workspace.getConfiguration('crazyRichMarkdown').get<boolean>('showInfoBar', true);
 
     const pushDocumentToWebview = (): void => {
       stats.updates++;
@@ -213,18 +214,21 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
       }),
 
       vscode.workspace.onDidChangeConfiguration((event) => {
-        if (event.affectsConfiguration('richMarkdown.maxContentWidth') || event.affectsConfiguration('richMarkdown.showInfoBar')) {
+        if (
+          event.affectsConfiguration('crazyRichMarkdown.maxContentWidth') ||
+          event.affectsConfiguration('crazyRichMarkdown.showInfoBar')
+        ) {
           post({ type: 'config', maxContentWidth: maxContentWidth(), showInfoBar: showInfoBar() });
         }
         // A bar that was off has no date and no authors yet.
-        if (event.affectsConfiguration('richMarkdown.showInfoBar')) {
+        if (event.affectsConfiguration('crazyRichMarkdown.showInfoBar')) {
           void refreshFileInfo(true);
         }
-        if (event.affectsConfiguration('richMarkdown.assetFolder', document.uri)) {
+        if (event.affectsConfiguration('crazyRichMarkdown.assetFolder', document.uri)) {
           webview.options = { ...webview.options, localResourceRoots: localResourceRoots() };
         }
         if (
-          event.affectsConfiguration('richMarkdown.showLastAuthors', document.uri) ||
+          event.affectsConfiguration('crazyRichMarkdown.showLastAuthors', document.uri) ||
           event.affectsConfiguration('git.enabled', document.uri)
         ) {
           void refreshFileInfo(true);
@@ -316,7 +320,9 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
     if (document.uri.scheme !== 'file') {
       return [];
     }
-    const shown = vscode.workspace.getConfiguration('richMarkdown', document.uri).get<boolean>('showLastAuthors', true);
+    const shown = vscode.workspace
+      .getConfiguration('crazyRichMarkdown', document.uri)
+      .get<boolean>('showLastAuthors', true);
     const gitOn = vscode.workspace.getConfiguration('git', document.uri).get<boolean>('enabled', true);
     return shown && gitOn ? readGitAuthors(document.uri.fsPath, await gitExecutable()) : [];
   }
