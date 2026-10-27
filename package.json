@@ -71,7 +71,7 @@
         },
         {
           "command": "richMarkdown.openRich",
-          "when": "(resourceLangId == markdown || resourceExtname == .mdx) && activeCustomEditorId !~ /^richMarkdown\\./",
+          "when": "(resourceLangId == markdown || resourceExtname == .mdx) && !(activeCustomEditorId =~ /^richMarkdown\\./)",
           "group": "navigation"
         }
       ],
