@@ -1432,12 +1432,13 @@ test("the settings button of the bar opens the settings of this extension, and o
   }
 });
 
-test("the editor and extension use the configured name", async () => {
+test("the Markdown and MDX editors use their configured names", async () => {
   const extension = vscode.extensions.getExtension(
     "clydedsouza.crazy-rich-markdown-editor",
   );
-  const editor = extension.packageJSON.contributes.customEditors[0];
-  assert.equal(editor.displayName, extension.packageJSON.displayName);
+  const editors = extension.packageJSON.contributes.customEditors;
+  assert.equal(editors[0].displayName, "Markdown Editor");
+  assert.equal(editors[1].displayName, "MDX Editor");
 });
 
 // ---------- A real webview, driven from the test ----------

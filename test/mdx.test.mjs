@@ -254,7 +254,8 @@ test('MDX files open in the editor only through "Open With", and Markdown files 
   assert.deepEqual(markdown.selector.map((entry) => entry.filenamePattern), ['*.md', '*.markdown']);
   assert.equal(mdx.priority, 'option');
   assert.deepEqual(mdx.selector.map((entry) => entry.filenamePattern), ['*.mdx']);
-  assert.equal(mdx.displayName, markdown.displayName, 'one name in the menu');
+  assert.equal(markdown.displayName, 'Markdown Editor');
+  assert.equal(mdx.displayName, 'MDX Editor');
 });
 
 test('the title buttons work for both editors and for MDX files', () => {

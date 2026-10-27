@@ -28,7 +28,7 @@
     "customEditors": [
       {
         "viewType": "richMarkdown.editor",
-        "displayName": "Crazy Rich Markdown Editor",
+        "displayName": "Markdown Editor",
         "selector": [
           {
             "filenamePattern": "*.md"
@@ -41,7 +41,7 @@
       },
       {
         "viewType": "richMarkdown.mdxEditor",
-        "displayName": "Crazy Rich Markdown Editor",
+        "displayName": "MDX Editor",
         "selector": [
           {
             "filenamePattern": "*.mdx"

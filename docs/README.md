@@ -298,7 +298,7 @@ Characters such as `_`, `<`, `&` and `~` stay as you type them. The editor adds 
 
 MDX is Markdown with `import` and `export` lines, JSX components and `{expressions}`. The editor opens `.mdx` files with the same editor, and keeps the extra parts as they are.
 
-To open an MDX file, right-click it, choose **Open With...**, and choose **Crazy Rich Markdown Editor**. Or open the file and run **Markdown: Open in Crazy Rich Markdown Editor**. A `.mdx` file does not open in the editor by default, so your setup does not change.
+To open an MDX file, right-click it, choose **Open With...**, and choose **MDX Editor**. Or open the file and run **Markdown: Open in Crazy Rich Markdown Editor**. A `.mdx` file does not open in the editor by default, so your setup does not change.
 
 What you see:
 
