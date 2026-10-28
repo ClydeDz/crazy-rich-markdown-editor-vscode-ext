@@ -26,7 +26,11 @@ test('parseGitLog returns each person once, newest first', () => {
 });
 
 test('parseGitLog treats a person without an e-mail address by the name', () => {
-  const output = [line('Carol', '', '300', 'one'), line('carol', '', '200', 'two'), line('Dan', '', '100', 'three')].join('\n');
+  const output = [
+    line('Carol', '', '300', 'one'),
+    line('carol', '', '200', 'two'),
+    line('Dan', '', '100', 'three'),
+  ].join('\n');
   assert.deepEqual(
     parseGitLog(output).map((author) => author.name),
     ['Carol', 'Dan'],
@@ -34,7 +38,13 @@ test('parseGitLog treats a person without an e-mail address by the name', () => 
 });
 
 test('parseGitLog skips a line that is not a commit', () => {
-  const output = ['', 'garbage', line('', 'x@example.org', '1', 'no name'), line('Eve', 'eve@example.org', 'soon', 'bad time'), line('Fay', 'fay@example.org', '5', 'ok')].join('\n');
+  const output = [
+    '',
+    'garbage',
+    line('', 'x@example.org', '1', 'no name'),
+    line('Eve', 'eve@example.org', 'soon', 'bad time'),
+    line('Fay', 'fay@example.org', '5', 'ok'),
+  ].join('\n');
   assert.deepEqual(parseGitLog(output), [{ name: 'Fay', date: 5000, subject: 'ok' }]);
   assert.deepEqual(parseGitLog(''), []);
 });
@@ -56,10 +66,34 @@ const at = (iso) => Date.parse(iso);
 git('readGitAuthors reads the people who changed a file, newest first, and ignores other files', () =>
   inTempFolder(async (folder) => {
     makeRepo(folder, [
-      { file: 'doc.md', content: 'one\n', author: 'Alice Smith <alice@example.org>', date: '2026-01-05T10:00:00Z', message: 'Add the first draft' },
-      { file: 'doc.md', content: 'one\ntwo\n', author: 'Bob Lee <bob@example.org>', date: '2026-02-10T11:30:00Z', message: 'Fix the second line' },
-      { file: 'other.md', content: 'x\n', author: 'Carol Diaz <carol@example.org>', date: '2026-02-20T09:00:00Z', message: 'A different file' },
-      { file: 'doc.md', content: 'one\ntwo\nthree\n', author: 'Alice Smith <alice@example.org>', date: '2026-03-01T09:15:00Z', message: 'Add the third line' },
+      {
+        file: 'doc.md',
+        content: 'one\n',
+        author: 'Alice Smith <alice@example.org>',
+        date: '2026-01-05T10:00:00Z',
+        message: 'Add the first draft',
+      },
+      {
+        file: 'doc.md',
+        content: 'one\ntwo\n',
+        author: 'Bob Lee <bob@example.org>',
+        date: '2026-02-10T11:30:00Z',
+        message: 'Fix the second line',
+      },
+      {
+        file: 'other.md',
+        content: 'x\n',
+        author: 'Carol Diaz <carol@example.org>',
+        date: '2026-02-20T09:00:00Z',
+        message: 'A different file',
+      },
+      {
+        file: 'doc.md',
+        content: 'one\ntwo\nthree\n',
+        author: 'Alice Smith <alice@example.org>',
+        date: '2026-03-01T09:15:00Z',
+        message: 'Add the third line',
+      },
     ]);
     const authors = await readGitAuthors(path.join(folder, 'doc.md'));
     assert.deepEqual(authors, [
@@ -71,26 +105,61 @@ git('readGitAuthors reads the people who changed a file, newest first, and ignor
 
 git('readGitAuthors works for a file in a folder of the repository', () =>
   inTempFolder(async (folder) => {
-    makeRepo(folder, [{ file: 'docs/guide/page.md', content: 'x\n', author: 'Ina Roy <ina@example.org>', date: '2026-04-01T08:00:00Z', message: 'Add the page' }]);
+    makeRepo(folder, [
+      {
+        file: 'docs/guide/page.md',
+        content: 'x\n',
+        author: 'Ina Roy <ina@example.org>',
+        date: '2026-04-01T08:00:00Z',
+        message: 'Add the page',
+      },
+    ]);
     const authors = await readGitAuthors(path.join(folder, 'docs', 'guide', 'page.md'));
-    assert.deepEqual(authors.map((author) => author.name), ['Ina Roy']);
+    assert.deepEqual(
+      authors.map((author) => author.name),
+      ['Ina Roy'],
+    );
   }),
 );
 
 git('readGitAuthors follows a file that was renamed', () =>
   inTempFolder(async (folder) => {
     makeRepo(folder, [
-      { file: 'old.md', content: 'A long enough text,\nso that Git sees\nthe same file after the move.\n', author: 'Erin Park <erin@example.org>', date: '2026-01-02T10:00:00Z', message: 'Add old.md' },
-      { file: 'new.md', renameFrom: 'old.md', content: 'A long enough text,\nso that Git sees\nthe same file after the move.\n', author: 'Dave Kim <dave@example.org>', date: '2026-01-03T10:00:00Z', message: 'Rename the file' },
+      {
+        file: 'old.md',
+        content: 'A long enough text,\nso that Git sees\nthe same file after the move.\n',
+        author: 'Erin Park <erin@example.org>',
+        date: '2026-01-02T10:00:00Z',
+        message: 'Add old.md',
+      },
+      {
+        file: 'new.md',
+        renameFrom: 'old.md',
+        content: 'A long enough text,\nso that Git sees\nthe same file after the move.\n',
+        author: 'Dave Kim <dave@example.org>',
+        date: '2026-01-03T10:00:00Z',
+        message: 'Rename the file',
+      },
     ]);
     const authors = await readGitAuthors(path.join(folder, 'new.md'));
-    assert.deepEqual(authors.map((author) => author.name), ['Dave Kim', 'Erin Park']);
+    assert.deepEqual(
+      authors.map((author) => author.name),
+      ['Dave Kim', 'Erin Park'],
+    );
   }),
 );
 
 git('readGitAuthors keeps names and subjects that have non-ASCII characters', () =>
   inTempFolder(async (folder) => {
-    makeRepo(folder, [{ file: 'doc.md', content: 'x\n', author: 'Zoë Müller 田中 <zoe@example.org>', date: '2026-05-01T10:00:00Z', message: 'Écrire « bonjour » 🎉' }]);
+    makeRepo(folder, [
+      {
+        file: 'doc.md',
+        content: 'x\n',
+        author: 'Zoë Müller 田中 <zoe@example.org>',
+        date: '2026-05-01T10:00:00Z',
+        message: 'Écrire « bonjour » 🎉',
+      },
+    ]);
     const [author] = await readGitAuthors(path.join(folder, 'doc.md'));
     assert.equal(author.name, 'Zoë Müller 田中');
     assert.equal(author.subject, 'Écrire « bonjour » 🎉');
@@ -118,7 +187,15 @@ git('readGitAuthors reads at most the last commits', () =>
 
 git('readGitAuthors gives an empty list for a file that no commit has', () =>
   inTempFolder(async (folder) => {
-    makeRepo(folder, [{ file: 'committed.md', content: 'x\n', author: 'Hal Wu <hal@example.org>', date: '2026-01-01T00:00:00Z', message: 'Add' }]);
+    makeRepo(folder, [
+      {
+        file: 'committed.md',
+        content: 'x\n',
+        author: 'Hal Wu <hal@example.org>',
+        date: '2026-01-01T00:00:00Z',
+        message: 'Add',
+      },
+    ]);
     writeFileSync(path.join(folder, 'untracked.md'), 'not in Git\n');
     assert.deepEqual(await readGitAuthors(path.join(folder, 'untracked.md')), []);
     assert.deepEqual(await readGitAuthors(path.join(folder, 'missing.md')), []);

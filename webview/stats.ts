@@ -123,7 +123,19 @@ type IconPart = [element: string, attributes: Record<string, string>];
 
 const GEAR: IconPart[] = [['path', { d: GEAR_PATH, 'fill-rule': 'evenodd' }]];
 const KEYBOARD: IconPart[] = [
-  ['rect', { x: '1', y: '3.5', width: '14', height: '9', rx: '1.5', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.2' }],
+  [
+    'rect',
+    {
+      x: '1',
+      y: '3.5',
+      width: '14',
+      height: '9',
+      rx: '1.5',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '1.2',
+    },
+  ],
   ['path', { d: KEYS_PATH }],
 ];
 
@@ -166,7 +178,13 @@ export function createStatsBar(element: HTMLElement, options: StatsBarOptions = 
   const characters = make('characters');
 
   // The buttons come last. The user opens the shortcuts or the settings of the extension here, without a search.
-  const makeButton = (action: string, text: string, label: string, icon: IconPart[], onClick: (() => void) | undefined): HTMLButtonElement => {
+  const makeButton = (
+    action: string,
+    text: string,
+    label: string,
+    icon: IconPart[],
+    onClick: (() => void) | undefined,
+  ): HTMLButtonElement => {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'rme-stats-button';
@@ -242,7 +260,10 @@ export function createStatsBar(element: HTMLElement, options: StatsBarOptions = 
         authors.title = [
           'The people who changed this file in the last Git commits, newest first:',
           ...list.map((author) => {
-            const subject = author.subject.length > SUBJECT_LENGTH ? `${author.subject.slice(0, SUBJECT_LENGTH - 1)}…` : author.subject;
+            const subject =
+              author.subject.length > SUBJECT_LENGTH
+                ? `${author.subject.slice(0, SUBJECT_LENGTH - 1)}…`
+                : author.subject;
             return `${author.name}, ${dayAndTime.format(author.date)}${subject ? `: ${subject}` : ''}`;
           }),
         ].join('\n');

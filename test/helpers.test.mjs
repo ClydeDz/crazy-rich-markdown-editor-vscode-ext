@@ -21,7 +21,11 @@ test('each test process writes its bundles in its own folder', () => {
   const mine = buildPath('editor');
   const child = spawnSync(
     process.execPath,
-    ['--input-type=module', '-e', "import { buildPath } from './test/helpers.mjs'; console.log('result:' + buildPath('editor'));"],
+    [
+      '--input-type=module',
+      '-e',
+      "import { buildPath } from './test/helpers.mjs'; console.log('result:' + buildPath('editor'));",
+    ],
     { cwd: root, encoding: 'utf8', env: childEnv() },
   );
   assert.equal(child.status, 0, child.stderr);
@@ -36,9 +40,12 @@ test('each test process writes its bundles in its own folder', () => {
 });
 
 test('four processes bundle and import the editor at the same time, and each one gets a working module', async () => {
-  const script = "import { loadModule } from './test/helpers.mjs'; const m = await loadModule('webview/editor.ts', 'editor'); console.log('result:' + typeof m.createEditor);";
+  const script =
+    "import { loadModule } from './test/helpers.mjs'; const m = await loadModule('webview/editor.ts', 'editor'); console.log('result:' + typeof m.createEditor);";
   const results = await Promise.all(
-    Array.from({ length: 4 }, () => run(process.execPath, ['--input-type=module', '-e', script], { cwd: root, env: childEnv() })),
+    Array.from({ length: 4 }, () =>
+      run(process.execPath, ['--input-type=module', '-e', script], { cwd: root, env: childEnv() }),
+    ),
   );
   // The runner of tests may add its own lines to the output of a child, so the test reads only the line that has the mark.
   assert.deepEqual(

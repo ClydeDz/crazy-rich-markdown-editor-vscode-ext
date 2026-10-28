@@ -32,7 +32,11 @@ const entries = [
 function renderer(options = {}) {
   const chosen = [];
   const created = createSuggestionRenderer({ describe: (item) => item, ...options })();
-  const props = (items, rect = { left: 10, right: 50, top: 100, bottom: 120 }) => ({ items, command: (item) => chosen.push(item), clientRect: () => rect });
+  const props = (items, rect = { left: 10, right: 50, top: 100, bottom: 120 }) => ({
+    items,
+    command: (item) => chosen.push(item),
+    clientRect: () => rect,
+  });
   return { created, chosen, props };
 }
 
@@ -42,7 +46,10 @@ test('the renderer shows a list box with one row for each item, and the first ro
   assert.equal(menu().getAttribute('role'), 'listbox');
   assert.equal(menu().className, 'rme-slash');
   assert.deepEqual(titles(), ['One', 'Two', 'Three']);
-  assert.deepEqual(rows().map((row) => row.getAttribute('aria-selected')), ['true', 'false', 'false']);
+  assert.deepEqual(
+    rows().map((row) => row.getAttribute('aria-selected')),
+    ['true', 'false', 'false'],
+  );
   assert.equal(document.querySelectorAll('.is-selected').length, 1);
   for (const row of rows()) assert.equal(row.getAttribute('role'), 'option');
   created.onExit();
@@ -202,12 +209,36 @@ test('the list shows below the cursor when it fits, above when it does not, and 
     return result;
   };
   try {
-    assert.deepEqual(place({ left: 100, right: 110, top: 100, bottom: 120 }), { top: '126px', left: '100px' }, 'below the cursor');
-    assert.deepEqual(place({ left: 100, right: 110, top: 700, bottom: 720 }), { top: '394px', left: '100px' }, 'above the cursor');
-    assert.deepEqual(place({ left: -50, right: 0, top: 100, bottom: 120 }), { top: '126px', left: '8px' }, 'not past the left edge');
-    assert.deepEqual(place({ left: 2000, right: 2010, top: 100, bottom: 120 }), { top: '126px', left: '766px' }, 'not past the right edge');
-    assert.deepEqual(place({ left: 100, right: 110, top: 100, bottom: 462 }), { top: '468px', left: '100px' }, 'the list fits exactly');
-    assert.deepEqual(place({ left: 100, right: 110, top: 100, bottom: 463 }), { top: '8px', left: '100px' }, 'above, but not above the screen');
+    assert.deepEqual(
+      place({ left: 100, right: 110, top: 100, bottom: 120 }),
+      { top: '126px', left: '100px' },
+      'below the cursor',
+    );
+    assert.deepEqual(
+      place({ left: 100, right: 110, top: 700, bottom: 720 }),
+      { top: '394px', left: '100px' },
+      'above the cursor',
+    );
+    assert.deepEqual(
+      place({ left: -50, right: 0, top: 100, bottom: 120 }),
+      { top: '126px', left: '8px' },
+      'not past the left edge',
+    );
+    assert.deepEqual(
+      place({ left: 2000, right: 2010, top: 100, bottom: 120 }),
+      { top: '126px', left: '766px' },
+      'not past the right edge',
+    );
+    assert.deepEqual(
+      place({ left: 100, right: 110, top: 100, bottom: 462 }),
+      { top: '468px', left: '100px' },
+      'the list fits exactly',
+    );
+    assert.deepEqual(
+      place({ left: 100, right: 110, top: 100, bottom: 463 }),
+      { top: '8px', left: '100px' },
+      'above, but not above the screen',
+    );
     const { created, props } = renderer();
     created.onStart({ ...props(entries), clientRect: null });
     assert.equal(menu().style.top, '', 'no position without a cursor rectangle');
@@ -222,7 +253,12 @@ test('the list shows below the cursor when it fits, above when it does not, and 
 
 // ---------- The slash menu in an editor ----------
 
-const press = (editor, name) => Boolean(editor.view.someProp('handleKeyDown', (handler) => handler(editor.view, new window.KeyboardEvent('keydown', { key: name, cancelable: true }))));
+const press = (editor, name) =>
+  Boolean(
+    editor.view.someProp('handleKeyDown', (handler) =>
+      handler(editor.view, new window.KeyboardEvent('keydown', { key: name, cancelable: true })),
+    ),
+  );
 
 /** An empty editor with the slash menu. The test types text, and waits for the menu. */
 async function slashEditor(markdown = '', onPickMedia = () => {}) {
@@ -240,9 +276,21 @@ test('typing a slash at the start of a line opens the menu with every item', asy
   await type(editor, '/');
   assert.ok(menu());
   assert.deepEqual(titles(), [
-    'Heading 1', 'Heading 2', 'Heading 3', 'Bulleted list', 'Numbered list', 'Task list', 'Quote',
+    'Heading 1',
+    'Heading 2',
+    'Heading 3',
+    'Bulleted list',
+    'Numbered list',
+    'Task list',
+    'Quote',
     ...ALERT_TYPES.map((type) => `${ALERT_TITLES[type]} alert`),
-    'Code block', 'Table', 'Math block', 'Diagram', 'Footnote', 'Divider', 'Image or video',
+    'Code block',
+    'Table',
+    'Math block',
+    'Diagram',
+    'Footnote',
+    'Divider',
+    'Image or video',
   ]);
   assert.equal(selectedTitle(), 'Heading 1');
   editor.destroy();
@@ -314,7 +362,11 @@ const CASES = [
   ['Numbered list', (doc) => doc[0].type, 'orderedList'],
   ['Task list', (doc) => doc[0].type, 'taskList'],
   ['Quote', (doc) => doc[0].type, 'blockquote'],
-  ...ALERT_TYPES.map((type) => [`${ALERT_TITLES[type]} alert`, (doc) => [doc[0].type, doc[0].attrs.alertType ?? doc[0].attrs.type], ['alert', type]]),
+  ...ALERT_TYPES.map((type) => [
+    `${ALERT_TITLES[type]} alert`,
+    (doc) => [doc[0].type, doc[0].attrs.alertType ?? doc[0].attrs.type],
+    ['alert', type],
+  ]),
   ['Code block', (doc) => doc[0].type, 'codeBlock'],
   ['Table', (doc) => doc[0].type, 'table'],
   ['Math block', (doc) => doc[0].type, 'mathBlock'],
@@ -346,9 +398,19 @@ test('the slash menu item "Table" makes a table of three rows and three columns,
   await tick();
   const table = editor.getJSON().content.find((node) => node.type === 'table');
   assert.equal(table.content.length, 3, 'rows');
-  assert.deepEqual(table.content.map((row) => row.content.length), [3, 3, 3], 'columns');
-  assert.deepEqual(table.content[0].content.map((cell) => cell.type), ['tableHeader', 'tableHeader', 'tableHeader']);
-  assert.deepEqual(table.content[1].content.map((cell) => cell.type), ['tableCell', 'tableCell', 'tableCell']);
+  assert.deepEqual(
+    table.content.map((row) => row.content.length),
+    [3, 3, 3],
+    'columns',
+  );
+  assert.deepEqual(
+    table.content[0].content.map((cell) => cell.type),
+    ['tableHeader', 'tableHeader', 'tableHeader'],
+  );
+  assert.deepEqual(
+    table.content[1].content.map((cell) => cell.type),
+    ['tableCell', 'tableCell', 'tableCell'],
+  );
   editor.destroy();
 });
 
@@ -408,7 +470,10 @@ test('typing a colon and two letters opens the emoji menu, and Enter makes the e
   assert.equal(menu(), null, 'one letter is too few');
   await type(editor, 'mi');
   assert.ok(menu().classList.contains('rme-emoji-menu') || menu(), 'the menu is open');
-  assert.ok(titles().some((title) => title.includes('smile')), titles().join());
+  assert.ok(
+    titles().some((title) => title.includes('smile')),
+    titles().join(),
+  );
   assert.equal(press(editor, 'Enter'), true);
   await tick();
   assert.equal(menu(), null);

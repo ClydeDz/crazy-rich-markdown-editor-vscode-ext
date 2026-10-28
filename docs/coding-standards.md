@@ -1,6 +1,6 @@
 # Coding standards
 
-These rules come from the code that is already here. There is no ESLint or Prettier config, so the rules live in this file. When the code and a rule disagree, follow the surrounding code and tell the user.
+Prettier enforces the formatting rules in this file. Run `yarn lint` to check formatting. When the code and a rule disagree, follow the surrounding code and tell the user.
 
 ## TypeScript
 

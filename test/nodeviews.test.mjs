@@ -40,9 +40,16 @@ function nodeViews() {
     video: find('.rme-video'),
     image: find('img:not(.ProseMirror-separator)'),
   };
-  const definition = [...editor.view.dom.querySelectorAll('.rme-raw')].find((element) => editor.view.docView.nearestDesc(element).node.type.name === 'linkDefinition');
+  const definition = [...editor.view.dom.querySelectorAll('.rme-raw')].find(
+    (element) => editor.view.docView.nearestDesc(element).node.type.name === 'linkDefinition',
+  );
   assert.ok(definition, 'a link definition is on the page');
-  views.linkDefinition = { dom: definition, desc: editor.view.docView.nearestDesc(definition), spec: editor.view.docView.nearestDesc(definition).spec, type: 'linkDefinition' };
+  views.linkDefinition = {
+    dom: definition,
+    desc: editor.view.docView.nearestDesc(definition),
+    spec: editor.view.docView.nearestDesc(definition).spec,
+    type: 'linkDefinition',
+  };
   return { editor, views };
 }
 
@@ -62,7 +69,8 @@ test('every node view refuses a node of another type, and accepts a node of its 
 
 test('a node view shows the new attributes of a node that it accepts', () => {
   const { editor, views } = nodeViews();
-  const copy = (view, attrs) => view.desc.node.type.create({ ...view.desc.node.attrs, ...attrs }, view.desc.node.content);
+  const copy = (view, attrs) =>
+    view.desc.node.type.create({ ...view.desc.node.attrs, ...attrs }, view.desc.node.content);
 
   assert.equal(views.image.spec.update(copy(views.image, { src: 'b.png', alt: 'new alt', title: 'new title' })), true);
   assert.equal(views.image.dom.alt, 'new alt');
@@ -88,12 +96,28 @@ test('the fields inside a node view get their own events, and the rest of the no
   const { views, editor } = nodeViews();
   const inside = (view, selector) => view.dom.querySelector(selector);
 
-  assert.equal(views.alert.spec.stopEvent(event(inside(views.alert, '.rme-alert-select'))), true, 'the select in the header of an alert');
+  assert.equal(
+    views.alert.spec.stopEvent(event(inside(views.alert, '.rme-alert-select'))),
+    true,
+    'the select in the header of an alert',
+  );
   assert.equal(views.alert.spec.stopEvent(event(inside(views.alert, '.rme-alert-header'))), true);
-  assert.equal(views.alert.spec.stopEvent(event(inside(views.alert, '.rme-alert-body p'))), false, 'the text of the alert is the editor\'s');
+  assert.equal(
+    views.alert.spec.stopEvent(event(inside(views.alert, '.rme-alert-body p'))),
+    false,
+    "the text of the alert is the editor's",
+  );
 
-  assert.equal(views.codeBlock.spec.stopEvent(event(inside(views.codeBlock, '.rme-code-lang'))), true, 'the language button');
-  assert.equal(views.codeBlock.spec.stopEvent(event(inside(views.codeBlock, 'code'))), false, 'the code is the editor\'s');
+  assert.equal(
+    views.codeBlock.spec.stopEvent(event(inside(views.codeBlock, '.rme-code-lang'))),
+    true,
+    'the language button',
+  );
+  assert.equal(
+    views.codeBlock.spec.stopEvent(event(inside(views.codeBlock, 'code'))),
+    false,
+    "the code is the editor's",
+  );
 
   assert.equal(views.mathInline.spec.stopEvent(event(inside(views.mathInline, 'input'))), true);
   assert.equal(views.mathInline.spec.stopEvent(event(inside(views.mathInline, '.rme-math-view'))), false);
@@ -105,7 +129,11 @@ test('the fields inside a node view get their own events, and the rest of the no
     assert.equal(views[name].spec.stopEvent(event(inside(views[name], '.rme-raw-label'))), false, `${name}: the label`);
   }
 
-  assert.equal(views.video.spec.stopEvent(event(inside(views.video, 'video'))), true, 'the player needs its own events');
+  assert.equal(
+    views.video.spec.stopEvent(event(inside(views.video, 'video'))),
+    true,
+    'the player needs its own events',
+  );
   assert.equal(views.video.spec.stopEvent(event(inside(views.video, '.rme-video-caption'))), false);
   editor.destroy();
 });
@@ -115,7 +143,11 @@ test('a node view that fills its own page tells the editor to ignore the changes
   for (const name of ['mathInline', 'mathBlock', 'htmlBlock', 'linkDefinition', 'video']) {
     const view = views[name];
     assert.equal(view.spec.ignoreMutation(mutation('childList', view.dom)), true, `${name}: a change of the page`);
-    assert.equal(view.spec.ignoreMutation(mutation('attributes', view.dom.firstElementChild)), true, `${name}: a change of an attribute`);
+    assert.equal(
+      view.spec.ignoreMutation(mutation('attributes', view.dom.firstElementChild)),
+      true,
+      `${name}: a change of an attribute`,
+    );
   }
   editor.destroy();
 });
@@ -124,15 +156,31 @@ test('an alert and a code block ignore changes outside their text, and read chan
   const { views, editor } = nodeViews();
   const alert = views.alert;
   const body = alert.dom.querySelector('.rme-alert-body');
-  assert.equal(alert.spec.ignoreMutation(mutation('childList', alert.dom.querySelector('.rme-alert-header'))), true, 'the header is not text');
-  assert.equal(alert.spec.ignoreMutation(mutation('characterData', body.querySelector('p'))), false, 'the text is read');
+  assert.equal(
+    alert.spec.ignoreMutation(mutation('childList', alert.dom.querySelector('.rme-alert-header'))),
+    true,
+    'the header is not text',
+  );
+  assert.equal(
+    alert.spec.ignoreMutation(mutation('characterData', body.querySelector('p'))),
+    false,
+    'the text is read',
+  );
   assert.equal(alert.spec.ignoreMutation(mutation('childList', body)), false);
-  assert.equal(alert.spec.ignoreMutation(mutation('selection', alert.dom.querySelector('.rme-alert-header'))), false, 'a selection is never ignored');
+  assert.equal(
+    alert.spec.ignoreMutation(mutation('selection', alert.dom.querySelector('.rme-alert-header'))),
+    false,
+    'a selection is never ignored',
+  );
 
   const code = views.codeBlock;
   const codeElement = code.dom.querySelector('code');
   assert.equal(code.spec.ignoreMutation(mutation('childList', code.dom.querySelector('.rme-code-header'))), true);
-  assert.equal(code.spec.ignoreMutation(mutation('childList', code.dom.querySelector('.rme-code-preview'))), true, 'the picture is not text');
+  assert.equal(
+    code.spec.ignoreMutation(mutation('childList', code.dom.querySelector('.rme-code-preview'))),
+    true,
+    'the picture is not text',
+  );
   assert.equal(code.spec.ignoreMutation(mutation('characterData', codeElement)), false);
   assert.equal(code.spec.ignoreMutation(mutation('selection', code.dom.querySelector('.rme-code-header'))), false);
   editor.destroy();

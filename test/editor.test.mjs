@@ -36,7 +36,8 @@ const canonical = {
   nestedInsideTag: '<ins>underlined **bold** text</ins> and *<sup>x</sup>*',
   alertNote: '> [!NOTE]\n> Useful information.',
   alertAll: '> [!TIP]\n> Tip.\n\n> [!IMPORTANT]\n> Important.\n\n> [!WARNING]\n> Warning.\n\n> [!CAUTION]\n> Caution.',
-  alertBlocks: '> [!TIP]\n> First paragraph\n>\n> - a list in the alert\n> - second item\n>\n> ```js\n> const x = 1;\n> ```',
+  alertBlocks:
+    '> [!TIP]\n> First paragraph\n>\n> - a list in the alert\n> - second item\n>\n> ```js\n> const x = 1;\n> ```',
   plainQuote: '> plain quote\n>\n> > nested quote',
   unknownMarker: '> [!UNKNOWN]\n> stays a quote',
   video: 'before\n\n<video src="assets/demo.mp4" controls></video>\n\nafter',
@@ -58,7 +59,8 @@ const canonical = {
   escapedDollars: 'Literal \\$x\\$ stays text.',
   mathFence: '```math\nx^2\n```',
   mermaidFence: '```mermaid\ngraph TD\n  A --> B\n```',
-  footnoteMultiBlock: 'Text[^a].\n\n[^a]: First paragraph.\n    continued line\n\n    Second paragraph.\n\n    - list in note\n\nAfter the notes.',
+  footnoteMultiBlock:
+    'Text[^a].\n\n[^a]: First paragraph.\n    continued line\n\n    Second paragraph.\n\n    - list in note\n\nAfter the notes.',
   footnoteUrl: 'See[^1].\n\n[^1]: https://example.com',
   emojiCodes: 'Great :+1: and :tada: and :smile:. Not an emoji :nosuchcode: or 10:30:45.',
   emojiInCode: 'Code `:smile:` stays.',
@@ -94,13 +96,36 @@ test('extra blank lines between blocks go away, blank lines in code stay', () =>
 
 test('typed text that looks like syntax is escaped and reads back as text', () => {
   const editor = makeEditor(createEditor, '');
-  const samples = ['# not heading', '- not list', '1. not ordered', '> not quote', '+ plus', '---', 'a*b*c', '_x_', '`tick`', '<div>x</div>', '&amp;', '[a](b)', 'C:\\Users\\me\\', '~~x~~'];
+  const samples = [
+    '# not heading',
+    '- not list',
+    '1. not ordered',
+    '> not quote',
+    '+ plus',
+    '---',
+    'a*b*c',
+    '_x_',
+    '`tick`',
+    '<div>x</div>',
+    '&amp;',
+    '[a](b)',
+    'C:\\Users\\me\\',
+    '~~x~~',
+  ];
   for (const text of samples) {
     editor.commands.setContent({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text }] }] });
     const markdown = getMarkdown(editor);
     setMarkdown(editor, markdown);
-    assert.equal(editor.state.doc.childCount, 1, `one block for ${JSON.stringify(text)} via ${JSON.stringify(markdown)}`);
-    assert.equal(editor.state.doc.firstChild.type.name, 'paragraph', `paragraph for ${JSON.stringify(text)} via ${JSON.stringify(markdown)}`);
+    assert.equal(
+      editor.state.doc.childCount,
+      1,
+      `one block for ${JSON.stringify(text)} via ${JSON.stringify(markdown)}`,
+    );
+    assert.equal(
+      editor.state.doc.firstChild.type.name,
+      'paragraph',
+      `paragraph for ${JSON.stringify(text)} via ${JSON.stringify(markdown)}`,
+    );
     assert.equal(editor.state.doc.textContent, text, `text for ${JSON.stringify(markdown)}`);
   }
   editor.destroy();
@@ -110,10 +135,12 @@ test('text after a hard break is escaped like the start of a line', () => {
   const editor = makeEditor(createEditor, '');
   editor.commands.setContent({
     type: 'doc',
-    content: [{
-      type: 'paragraph',
-      content: [{ type: 'text', text: 'first' }, { type: 'hardBreak' }, { type: 'text', text: '# second' }],
-    }],
+    content: [
+      {
+        type: 'paragraph',
+        content: [{ type: 'text', text: 'first' }, { type: 'hardBreak' }, { type: 'text', text: '# second' }],
+      },
+    ],
   });
   const markdown = getMarkdown(editor);
   assert.ok(markdown.includes('\\# second'), markdown);
@@ -124,19 +151,27 @@ test('table cells that hold a pipe survive', () => {
   const editor = makeEditor(createEditor, '');
   editor.commands.setContent({
     type: 'doc',
-    content: [{
-      type: 'table',
-      content: [
-        { type: 'tableRow', content: [
-          { type: 'tableHeader', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'a|b' }] }] },
-          { type: 'tableHeader', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'c' }] }] },
-        ] },
-        { type: 'tableRow', content: [
-          { type: 'tableCell', content: [{ type: 'paragraph', content: [{ type: 'text', text: '1' }] }] },
-          { type: 'tableCell', content: [{ type: 'paragraph', content: [{ type: 'text', text: '2' }] }] },
-        ] },
-      ],
-    }],
+    content: [
+      {
+        type: 'table',
+        content: [
+          {
+            type: 'tableRow',
+            content: [
+              { type: 'tableHeader', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'a|b' }] }] },
+              { type: 'tableHeader', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'c' }] }] },
+            ],
+          },
+          {
+            type: 'tableRow',
+            content: [
+              { type: 'tableCell', content: [{ type: 'paragraph', content: [{ type: 'text', text: '1' }] }] },
+              { type: 'tableCell', content: [{ type: 'paragraph', content: [{ type: 'text', text: '2' }] }] },
+            ],
+          },
+        ],
+      },
+    ],
   });
   const markdown = getMarkdown(editor);
   setMarkdown(editor, markdown);
@@ -285,12 +320,17 @@ test('toolbar link form cancel leaves the text alone', () => {
   editor.destroy();
 });
 
-
 // ---------- GitHub Flavored Markdown ----------
 
 test('a link whose text is its address is written as a bare address', () => {
-  const editor = makeEditor(createEditor, '<https://example.com/path> and [https://example.com/a](https://example.com/a) and [other text](https://example.com)');
-  assert.equal(getMarkdown(editor), 'https://example.com/path and https://example.com/a and [other text](https://example.com)');
+  const editor = makeEditor(
+    createEditor,
+    '<https://example.com/path> and [https://example.com/a](https://example.com/a) and [other text](https://example.com)',
+  );
+  assert.equal(
+    getMarkdown(editor),
+    'https://example.com/path and https://example.com/a and [other text](https://example.com)',
+  );
   editor.destroy();
 });
 
@@ -352,13 +392,19 @@ test('the alert select in the editor changes the type', () => {
 });
 
 test('code blocks keep the language, and only a named language gets colors', () => {
-  const editor = makeEditor(createEditor, '```ts\nconst a = 1;\n```\n\n```\nconst b = 2;\n```\n\n```mermaid\nconst c = 3;\n```');
+  const editor = makeEditor(
+    createEditor,
+    '```ts\nconst a = 1;\n```\n\n```\nconst b = 2;\n```\n\n```mermaid\nconst c = 3;\n```',
+  );
   const blocks = [...editor.view.dom.querySelectorAll('.rme-code')];
   assert.equal(blocks.length, 3);
   assert.ok(blocks[0].querySelector('.hljs-keyword'), 'ts block has colors');
   assert.equal(blocks[1].querySelector('[class^="hljs"]'), null, 'a block without a language stays plain');
   assert.equal(blocks[2].querySelector('[class^="hljs"]'), null, 'an unknown language stays plain');
-  assert.deepEqual(blocks.map((b) => b.querySelector('.rme-code-lang').textContent), ['TypeScript', 'Plain text', 'Mermaid']);
+  assert.deepEqual(
+    blocks.map((b) => b.querySelector('.rme-code-lang').textContent),
+    ['TypeScript', 'Plain text', 'Mermaid'],
+  );
   editor.destroy();
 });
 
@@ -431,14 +477,22 @@ test('a code block with extra words after the language still gets colors', () =>
 
 test('typing a fence with a language makes a code block with that language', () => {
   const editor = makeEditor(createEditor, '');
-  editor.commands.insertContent({ type: 'codeBlock', attrs: { language: 'bash' }, content: [{ type: 'text', text: 'echo hi' }] });
+  editor.commands.insertContent({
+    type: 'codeBlock',
+    attrs: { language: 'bash' },
+    content: [{ type: 'text', text: 'echo hi' }],
+  });
   assert.equal(getMarkdown(editor), '```bash\necho hi\n```');
   editor.destroy();
 });
 
 test('a fence is longer than any run of backticks in the code', () => {
   const editor = makeEditor(createEditor, '');
-  editor.commands.insertContent({ type: 'codeBlock', attrs: { language: 'md' }, content: [{ type: 'text', text: '```js\nx\n```' }] });
+  editor.commands.insertContent({
+    type: 'codeBlock',
+    attrs: { language: 'md' },
+    content: [{ type: 'text', text: '```js\nx\n```' }],
+  });
   assert.equal(getMarkdown(editor), '````md\n```js\nx\n```\n````');
   const again = makeEditor(createEditor, getMarkdown(editor));
   assert.equal(again.state.doc.firstChild.textContent, '```js\nx\n```');
@@ -455,7 +509,10 @@ test('HTML in a line is kept as a chip that holds the HTML', () => {
 });
 
 test('named entities are read as characters, and the file gets the character', () => {
-  const editor = makeEditor(createEditor, 'Copyright &copy; 2026 &mdash; a&nbsp;b &amp; c &lt;tag&gt; &#169; AT&T; R&D');
+  const editor = makeEditor(
+    createEditor,
+    'Copyright &copy; 2026 &mdash; a&nbsp;b &amp; c &lt;tag&gt; &#169; AT&T; R&D',
+  );
   assert.equal(editor.state.doc.textContent, 'Copyright © 2026 — a\u00a0b & c <tag> © AT&T; R&D');
   assert.equal(getMarkdown(editor), 'Copyright © 2026 — a&nbsp;b & c \\<tag> © AT&T; R&D');
   editor.destroy();
@@ -513,10 +570,7 @@ test('inserting media adds an image and a video', () => {
     { type: 'image', attrs: { src: 'assets/a%20b.png', alt: 'a b' } },
     { type: 'video', attrs: { raw: videoHtml('assets/demo.mp4') } },
   ]);
-  assert.equal(
-    getMarkdown(editor),
-    'text![a b](assets/a%20b.png)\n\n<video src="assets/demo.mp4" controls></video>',
-  );
+  assert.equal(getMarkdown(editor), 'text![a b](assets/a%20b.png)\n\n<video src="assets/demo.mp4" controls></video>');
   editor.destroy();
 });
 
@@ -624,7 +678,6 @@ test('undo does not remove the loaded document', () => {
   editor.destroy();
 });
 
-
 // ---------- Footnotes, emoji and colors ----------
 
 /** Type text the way a user does, so the input rules run. */
@@ -639,11 +692,22 @@ function type(editor, text) {
 }
 
 test('footnote marks are numbered in the order they appear', () => {
-  const editor = makeEditor(createEditor, 'Second[^b] then first[^a] then second again[^b].\n\n[^a]: Text A.\n\n[^b]: Text B.\n\n[^c]: Unused.');
+  const editor = makeEditor(
+    createEditor,
+    'Second[^b] then first[^a] then second again[^b].\n\n[^a]: Text A.\n\n[^b]: Text B.\n\n[^c]: Unused.',
+  );
   const refs = [...editor.view.dom.querySelectorAll('.rme-fn-ref')].map((el) => el.getAttribute('data-n'));
   assert.deepEqual(refs, ['1', '2', '1']);
-  const defs = [...editor.view.dom.querySelectorAll('.rme-fn-def')].map((el) => [el.getAttribute('data-footnote-definition'), el.getAttribute('data-n'), el.classList.contains('is-unused')]);
-  assert.deepEqual(defs, [['a', '2', false], ['b', '1', false], ['c', '', true]]);
+  const defs = [...editor.view.dom.querySelectorAll('.rme-fn-def')].map((el) => [
+    el.getAttribute('data-footnote-definition'),
+    el.getAttribute('data-n'),
+    el.classList.contains('is-unused'),
+  ]);
+  assert.deepEqual(defs, [
+    ['a', '2', false],
+    ['b', '1', false],
+    ['c', '', true],
+  ]);
   editor.destroy();
 });
 
@@ -651,15 +715,24 @@ test('footnote numbers update when the document changes', () => {
   const editor = makeEditor(createEditor, 'One[^a].\n\n[^a]: A.');
   editor.commands.focus('start');
   editor.commands.insertContentAt(1, { type: 'footnoteRef', attrs: { id: 'z' } });
-  const refs = [...editor.view.dom.querySelectorAll('.rme-fn-ref')].map((el) => [el.getAttribute('data-footnote-ref'), el.getAttribute('data-n')]);
-  assert.deepEqual(refs, [['z', '1'], ['a', '2']]);
+  const refs = [...editor.view.dom.querySelectorAll('.rme-fn-ref')].map((el) => [
+    el.getAttribute('data-footnote-ref'),
+    el.getAttribute('data-n'),
+  ]);
+  assert.deepEqual(refs, [
+    ['z', '1'],
+    ['a', '2'],
+  ]);
   editor.destroy();
 });
 
 test('a footnote definition holds several blocks', () => {
   const editor = makeEditor(createEditor, 'Text[^a].\n\n[^a]: First.\n\n    - item');
   const definition = editor.state.doc.content.content.find((node) => node.type.name === 'footnoteDefinition');
-  assert.deepEqual(definition.content.content.map((node) => node.type.name), ['paragraph', 'bulletList']);
+  assert.deepEqual(
+    definition.content.content.map((node) => node.type.name),
+    ['paragraph', 'bulletList'],
+  );
   editor.destroy();
 });
 
@@ -679,7 +752,9 @@ test('insert footnote adds a mark and a definition, with the cursor in the defin
 test('a footnote mark is a node, not text', () => {
   const editor = makeEditor(createEditor, 'A note[^1].');
   let refs = 0;
-  editor.state.doc.descendants((node) => { if (node.type.name === 'footnoteRef') refs++; });
+  editor.state.doc.descendants((node) => {
+    if (node.type.name === 'footnoteRef') refs++;
+  });
   assert.equal(refs, 1);
   assert.equal(editor.state.doc.textContent, 'A note.');
   editor.destroy();
@@ -688,7 +763,9 @@ test('a footnote mark is a node, not text', () => {
 test('emoji codes become emoji nodes and are written as codes', () => {
   const editor = makeEditor(createEditor, 'a :tada: b');
   const emoji = [];
-  editor.state.doc.descendants((node) => { if (node.type.name === 'emoji') emoji.push(node.attrs.name); });
+  editor.state.doc.descendants((node) => {
+    if (node.type.name === 'emoji') emoji.push(node.attrs.name);
+  });
   assert.deepEqual(emoji, ['tada']);
   assert.equal(editor.view.dom.querySelector('.rme-emoji').textContent, '🎉');
   assert.equal(getMarkdown(editor), 'a :tada: b');
@@ -726,7 +803,10 @@ test('emoji data and search work', () => {
 });
 
 test('inline code that holds a color shows a swatch', () => {
-  const editor = makeEditor(createEditor, 'Use `#0969DA`, `rgb(9,105,218)`, `hsl(212,92%,43%)` and `notacolor` and #ff0000 plain.');
+  const editor = makeEditor(
+    createEditor,
+    'Use `#0969DA`, `rgb(9,105,218)`, `hsl(212,92%,43%)` and `notacolor` and #ff0000 plain.',
+  );
   const swatches = [...editor.view.dom.querySelectorAll('.rme-swatch')];
   assert.equal(swatches.length, 3);
   assert.equal(swatches[0].style.backgroundColor !== '', true);
@@ -742,7 +822,6 @@ test('color detection follows the GitHub forms', () => {
   }
 });
 
-
 // ---------- Math and diagrams ----------
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -750,8 +829,13 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 test('math in a line becomes a math node with the TeX, and the file keeps the dollars', () => {
   const editor = makeEditor(createEditor, 'Inline $E = mc^2$ and $`a_b`$ here.');
   const nodes = [];
-  editor.state.doc.descendants((node) => { if (node.type.name === 'mathInline') nodes.push([node.attrs.tex, node.attrs.backtick]); });
-  assert.deepEqual(nodes, [['E = mc^2', false], ['a_b', true]]);
+  editor.state.doc.descendants((node) => {
+    if (node.type.name === 'mathInline') nodes.push([node.attrs.tex, node.attrs.backtick]);
+  });
+  assert.deepEqual(nodes, [
+    ['E = mc^2', false],
+    ['a_b', true],
+  ]);
   assert.equal(editor.view.dom.querySelectorAll('.rme-math .katex').length, 2);
   assert.equal(getMarkdown(editor), 'Inline $E = mc^2$ and $`a_b`$ here.');
   editor.destroy();
@@ -760,7 +844,9 @@ test('math in a line becomes a math node with the TeX, and the file keeps the do
 test('dollar signs that are not math stay text', () => {
   const editor = makeEditor(createEditor, 'It costs $5 and $6, or $10-$20, or $ x $ here.');
   let math = 0;
-  editor.state.doc.descendants((node) => { if (node.type.name.startsWith('math')) math++; });
+  editor.state.doc.descendants((node) => {
+    if (node.type.name.startsWith('math')) math++;
+  });
   assert.equal(math, 0);
   assert.equal(getMarkdown(editor), 'It costs $5 and $6, or $10-$20, or $ x $ here.');
   editor.destroy();
@@ -768,7 +854,10 @@ test('dollar signs that are not math stay text', () => {
 
 test('typed text that looks like math is escaped, so it reads back as text', () => {
   const editor = makeEditor(createEditor, '');
-  editor.commands.setContent({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Write $x$ and $y$ as text' }] }] });
+  editor.commands.setContent({
+    type: 'doc',
+    content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Write $x$ and $y$ as text' }] }],
+  });
   assert.equal(getMarkdown(editor), 'Write \\$x\\$ and \\$y\\$ as text');
   setMarkdown(editor, getMarkdown(editor));
   assert.equal(editor.state.doc.textContent, 'Write $x$ and $y$ as text');
@@ -780,8 +869,13 @@ test('typed text that looks like math is escaped, so it reads back as text', () 
 test('a $$ block is a math block, in one line or in lines', () => {
   const editor = makeEditor(createEditor, '$$\n\\int_0^1 x\\,dx\n$$\n\ntext\n\n$$a^2$$');
   const blocks = [];
-  editor.state.doc.descendants((node) => { if (node.type.name === 'mathBlock') blocks.push([node.attrs.tex, node.attrs.oneLine]); });
-  assert.deepEqual(blocks, [['\\int_0^1 x\\,dx', false], ['a^2', true]]);
+  editor.state.doc.descendants((node) => {
+    if (node.type.name === 'mathBlock') blocks.push([node.attrs.tex, node.attrs.oneLine]);
+  });
+  assert.deepEqual(blocks, [
+    ['\\int_0^1 x\\,dx', false],
+    ['a^2', true],
+  ]);
   assert.equal(editor.view.dom.querySelectorAll('.rme-math-block .katex-display').length, 2);
   assert.equal(getMarkdown(editor), '$$\n\\int_0^1 x\\,dx\n$$\n\ntext\n\n$$a^2$$');
   editor.destroy();
@@ -803,7 +897,9 @@ test('TeX with an error shows the TeX and the message, and the file keeps it', (
 test('clicking inline math opens its TeX for editing, and leaving it saves the change', () => {
   const editor = makeEditor(createEditor, 'a $x^2$ b');
   let pos;
-  editor.state.doc.descendants((node, at) => { if (node.type.name === 'mathInline') pos = at; });
+  editor.state.doc.descendants((node, at) => {
+    if (node.type.name === 'mathInline') pos = at;
+  });
   editor.commands.setNodeSelection(pos);
   const input = editor.view.dom.querySelector('.rme-math-input');
   assert.equal(input.hidden, false);
@@ -817,7 +913,9 @@ test('clicking inline math opens its TeX for editing, and leaving it saves the c
 test('an empty TeX field removes the inline math', () => {
   const editor = makeEditor(createEditor, 'a $x$ b');
   let pos;
-  editor.state.doc.descendants((node, at) => { if (node.type.name === 'mathInline') pos = at; });
+  editor.state.doc.descendants((node, at) => {
+    if (node.type.name === 'mathInline') pos = at;
+  });
   editor.commands.setNodeSelection(pos);
   const input = editor.view.dom.querySelector('.rme-math-input');
   input.value = '   ';
@@ -898,7 +996,9 @@ test('a mermaid code block shows the picture that the library draws', async () =
 
     // A change of the text draws the diagram again.
     let end;
-    editor.state.doc.descendants((node, pos) => { if (node.type.name === 'codeBlock') end = pos + node.nodeSize - 1; });
+    editor.state.doc.descendants((node, pos) => {
+      if (node.type.name === 'codeBlock') end = pos + node.nodeSize - 1;
+    });
     editor.commands.insertContentAt(end, '\n  B --> C');
     await wait(500);
     assert.ok(calls.some((call) => call[0] === 'render' && call[1].includes('B --> C')));
@@ -939,13 +1039,14 @@ test('without the diagram library a mermaid block still shows its text and a mes
   editor.destroy();
 });
 
-
 // ---------- Problems that the examples of the GitHub page found ----------
 
 test('a line break tag at the end of a line makes one break, not two', () => {
   const editor = makeEditor(createEditor, 'This example<br/>\nWill span two lines');
   let breaks = 0;
-  editor.state.doc.descendants((node) => { if (node.type.name === 'hardBreak') breaks++; });
+  editor.state.doc.descendants((node) => {
+    if (node.type.name === 'hardBreak') breaks++;
+  });
   assert.equal(breaks, 1);
   assert.equal(editor.state.doc.textContent, 'This exampleWill span two lines', 'no new line character in the text');
   assert.equal(getMarkdown(editor), 'This example  \nWill span two lines');
@@ -955,7 +1056,9 @@ test('a line break tag at the end of a line makes one break, not two', () => {
 test('a tag pair with only a space stays HTML', () => {
   const editor = makeEditor(createEditor, 'Use <sub> </sub> and <sup> </sup> and <ins> </ins> here.');
   let marks = 0;
-  editor.state.doc.descendants((node) => { marks += node.marks.length; });
+  editor.state.doc.descendants((node) => {
+    marks += node.marks.length;
+  });
   assert.equal(marks, 0);
   assert.equal(getMarkdown(editor), 'Use <sub> </sub> and <sup> </sup> and <ins> </ins> here.');
   const again = makeEditor(createEditor, getMarkdown(editor));
@@ -966,7 +1069,13 @@ test('a tag pair with only a space stays HTML', () => {
 
 test('bullet lists that follow each other stay separate lists', () => {
   const editor = makeEditor(createEditor, '- George\n* John\n+ Thomas');
-  const count = (e) => { let n = 0; e.state.doc.descendants((node) => { if (node.type.name === 'bulletList') n++; }); return n; };
+  const count = (e) => {
+    let n = 0;
+    e.state.doc.descendants((node) => {
+      if (node.type.name === 'bulletList') n++;
+    });
+    return n;
+  };
   assert.equal(count(editor), 3);
   const written = getMarkdown(editor);
   assert.equal(written, '- George\n\n* John\n\n+ Thomas');
@@ -984,7 +1093,13 @@ test('one list, and lists with other text between them, keep the usual marker', 
 });
 
 test('numbered lists that follow each other stay separate lists', () => {
-  const count = (e) => { let n = 0; e.state.doc.descendants((node) => { if (node.type.name === 'orderedList') n++; }); return n; };
+  const count = (e) => {
+    let n = 0;
+    e.state.doc.descendants((node) => {
+      if (node.type.name === 'orderedList') n++;
+    });
+    return n;
+  };
   const editor = makeEditor(createEditor, '1. a\n\n1) b');
   assert.equal(count(editor), 2);
   const written = getMarkdown(editor);

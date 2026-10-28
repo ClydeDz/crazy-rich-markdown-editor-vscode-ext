@@ -82,7 +82,10 @@ test('proseText holds the text that a reader sees, and nothing else', () => {
 });
 
 test('proseText leaves out the Markdown marks and the blocks that are not text', () => {
-  const editor = makeEditor(createEditor, '**bold** and `code`\n\n$$\nx^2\n$$\n\n<div>raw</div>\n\n![alt text](a.png)\n');
+  const editor = makeEditor(
+    createEditor,
+    '**bold** and `code`\n\n$$\nx^2\n$$\n\n<div>raw</div>\n\n![alt text](a.png)\n',
+  );
   const text = proseText(editor);
   assert.ok(text.includes('bold and code'), JSON.stringify(text));
   for (const hidden of ['**', '`', 'x^2', '<div>', 'raw', 'alt text', 'a.png']) {
@@ -94,7 +97,12 @@ test('proseText leaves out the Markdown marks and the blocks that are not text',
 test('proseText of an empty document is empty', () => {
   const editor = makeEditor(createEditor, '');
   assert.equal(proseText(editor), '');
-  assert.deepEqual(documentStats('', proseText(editor)), { lines: 0, words: 0, characters: 0, charactersWithoutSpaces: 0 });
+  assert.deepEqual(documentStats('', proseText(editor)), {
+    lines: 0,
+    words: 0,
+    characters: 0,
+    charactersWithoutSpaces: 0,
+  });
   editor.destroy();
 });
 
@@ -153,7 +161,10 @@ test('the stats bar puts the facts about the file before the counts, and hides t
     [...element.querySelectorAll('[data-stat]')].map((item) => item.dataset.stat),
     ['authors', 'modified', 'lines', 'words', 'characters'],
   );
-  assert.ok(element.lastElementChild === element.querySelector('[data-action="settings"]'), 'the settings button is the last item');
+  assert.ok(
+    element.lastElementChild === element.querySelector('[data-action="settings"]'),
+    'the settings button is the last item',
+  );
   assert.equal(read('authors').hidden, true);
   assert.equal(read('modified').hidden, true);
   assert.equal(read('lines').hidden, false);
@@ -301,7 +312,10 @@ test('the stats bar ends with a settings button that has an icon and the text "S
   assert.equal(icon.getAttribute('viewBox'), '0 0 16 16');
   assert.match(icon.querySelector('path').getAttribute('d'), /^M[\d. ]+L.*Z/s, 'the gear has a path');
   assert.equal(icon.querySelector('path').getAttribute('fill-rule'), 'evenodd', 'the hole in the gear needs this rule');
-  assert.ok(button.querySelector('.rme-stats-button-label'), 'the text has its own element, so a narrow editor can hide it');
+  assert.ok(
+    button.querySelector('.rme-stats-button-label'),
+    'the text has its own element, so a narrow editor can hide it',
+  );
   element.remove();
 });
 
@@ -429,7 +443,11 @@ test('the stats bar does not touch the page when the numbers or the facts have n
   observer.observe(element, { subtree: true, childList: true, characterData: true, attributes: true });
   bar.update({ ...numbers });
   bar.updateFile({ modified: Date.UTC(2026, 9, 25), authors: [alice, bob] });
-  assert.equal(observer.takeRecords().length, 0, 'the same numbers and the same facts change nothing on the page (a tooltip would flicker)');
+  assert.equal(
+    observer.takeRecords().length,
+    0,
+    'the same numbers and the same facts change nothing on the page (a tooltip would flicker)',
+  );
 
   bar.update({ ...numbers, words: 5 });
   assert.ok(observer.takeRecords().length > 0, 'a new number changes the page');
@@ -440,12 +458,27 @@ test('the stats bar does not touch the page when the numbers or the facts have n
 });
 
 test('the bar uses every class that styles.css has for its items and buttons', () => {
-  const css = readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'webview', 'styles.css'), 'utf8');
+  const css = readFileSync(
+    path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'webview', 'styles.css'),
+    'utf8',
+  );
   // `rme-stats` is the class of the bar itself. The page has it, and the code does not make it.
-  const wanted = new Set([...css.matchAll(/\.(rme-stat(?:s-button)?[\w-]*)/g)].map((match) => match[1]).filter((name) => name !== 'rme-stats'));
+  const wanted = new Set(
+    [...css.matchAll(/\.(rme-stat(?:s-button)?[\w-]*)/g)]
+      .map((match) => match[1])
+      .filter((name) => name !== 'rme-stats'),
+  );
   const { element } = barWithFile({ modified: Date.UTC(2026, 9, 25), authors: [alice] });
   const used = new Set([...element.querySelectorAll('*')].flatMap((item) => [...item.classList]));
-  assert.deepEqual([...wanted].filter((name) => !used.has(name)), [], 'a class of styles.css that the bar does not use');
-  assert.deepEqual([...used].filter((name) => !wanted.has(name)), [], 'a class of the bar that styles.css does not know');
+  assert.deepEqual(
+    [...wanted].filter((name) => !used.has(name)),
+    [],
+    'a class of styles.css that the bar does not use',
+  );
+  assert.deepEqual(
+    [...used].filter((name) => !wanted.has(name)),
+    [],
+    'a class of the bar that styles.css does not know',
+  );
   element.remove();
 });

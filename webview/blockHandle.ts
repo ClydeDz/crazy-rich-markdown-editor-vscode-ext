@@ -55,7 +55,10 @@ export function dropPosition(view: EditorView, clientY: number): { pos: number; 
       return { pos: 0, top: first.getBoundingClientRect().top - hostTop };
     }
     const last = doc.lastChild ? view.nodeDOM(doc.content.size - doc.lastChild.nodeSize) : null;
-    return { pos: doc.content.size, top: last instanceof HTMLElement ? last.getBoundingClientRect().bottom - hostTop : 0 };
+    return {
+      pos: doc.content.size,
+      top: last instanceof HTMLElement ? last.getBoundingClientRect().bottom - hostTop : 0,
+    };
   }
   const rect = block.dom.getBoundingClientRect();
   if (clientY < rect.top + rect.height / 2) {

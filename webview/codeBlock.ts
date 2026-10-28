@@ -113,31 +113,27 @@ export const RichCodeBlock = CodeBlockLowlight.extend({
       ...parentCommands,
 
       // All selected lines go in one code block. The default command makes one code block for each line.
-      toggleCodeBlock:
-        (attributes) =>
-        (props) => {
-          if (!isNodeActive(props.state, this.name)) {
-            const replaced = replaceSelectedLines(props, 'source', (group) => makeBlock(props.state, attributes, group));
-            if (replaced) {
-              selectInside(props.tr, replaced.place, replaced.groups === 1 ? replaced.cursorOffset : undefined);
-              return true;
-            }
+      toggleCodeBlock: (attributes) => (props) => {
+        if (!isNodeActive(props.state, this.name)) {
+          const replaced = replaceSelectedLines(props, 'source', (group) => makeBlock(props.state, attributes, group));
+          if (replaced) {
+            selectInside(props.tr, replaced.place, replaced.groups === 1 ? replaced.cursorOffset : undefined);
+            return true;
           }
-          return parentCommands!.toggleCodeBlock!(attributes)(props);
-        },
+        }
+        return parentCommands!.toggleCodeBlock!(attributes)(props);
+      },
 
-      setDiagram:
-        () =>
-        (props) => {
-          const replaced = replaceSelectedLines(props, 'source', (group) =>
-            makeBlock(props.state, { language: 'mermaid' }, group),
-          );
-          if (!replaced) {
-            return false;
-          }
-          selectInside(props.tr, replaced.place);
-          return true;
-        },
+      setDiagram: () => (props) => {
+        const replaced = replaceSelectedLines(props, 'source', (group) =>
+          makeBlock(props.state, { language: 'mermaid' }, group),
+        );
+        if (!replaced) {
+          return false;
+        }
+        selectInside(props.tr, replaced.place);
+        return true;
+      },
     };
   },
 

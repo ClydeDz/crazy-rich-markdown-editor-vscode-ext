@@ -8,7 +8,17 @@
   const pm = () => document.querySelector('.ProseMirror');
   const editor = () => pm() && pm().editor;
   const bytes = (base64) => Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
-  const box = (rect) => (rect ? { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right, width: rect.width, height: rect.height } : null);
+  const box = (rect) =>
+    rect
+      ? {
+          top: rect.top,
+          bottom: rect.bottom,
+          left: rect.left,
+          right: rect.right,
+          width: rect.width,
+          height: rect.height,
+        }
+      : null;
   const toolbar = () => document.querySelector('.rme-toolbar:not(.rme-table-toolbar)');
 
   function positionOf(text) {
@@ -41,10 +51,16 @@
     const backdrop = document.querySelector('.rme-modal-backdrop');
     const dialog = backdrop && backdrop.querySelector('.rme-modal');
     const rect = dialog && dialog.getBoundingClientRect();
-    const boldRow = dialog && [...dialog.querySelectorAll('.rme-shortcut')].find((row) => row.querySelector('.rme-shortcut-label').firstChild.textContent === 'Bold');
+    const boldRow =
+      dialog &&
+      [...dialog.querySelectorAll('.rme-shortcut')].find(
+        (row) => row.querySelector('.rme-shortcut-label').firstChild.textContent === 'Bold',
+      );
     const button = document.querySelector('.rme-stats [data-action="shortcuts"]');
     const buttonRect = button && button.getBoundingClientRect();
-    const atButton = buttonRect && document.elementFromPoint(buttonRect.left + buttonRect.width / 2, buttonRect.top + buttonRect.height / 2);
+    const atButton =
+      buttonRect &&
+      document.elementFromPoint(buttonRect.left + buttonRect.width / 2, buttonRect.top + buttonRect.height / 2);
     return {
       found: Boolean(backdrop),
       open: Boolean(backdrop) && !backdrop.hidden,
@@ -53,13 +69,20 @@
       groups: dialog ? [...dialog.querySelectorAll('h3')].map((heading) => heading.textContent) : [],
       rows: dialog ? dialog.querySelectorAll('.rme-shortcut').length : 0,
       bold: boldRow ? [...boldRow.querySelectorAll('kbd')].map((cap) => cap.textContent) : [],
-      links: dialog ? [...dialog.querySelectorAll('footer a')].map((anchor) => ({ text: anchor.textContent, href: anchor.getAttribute('href') })) : [],
+      links: dialog
+        ? [...dialog.querySelectorAll('footer a')].map((anchor) => ({
+            text: anchor.textContent,
+            href: anchor.getAttribute('href'),
+          }))
+        : [],
       credit: dialog ? dialog.querySelector('.rme-modal-credit').textContent : '',
       activeClass: document.activeElement ? document.activeElement.className : '',
       activeAction: document.activeElement ? document.activeElement.dataset.action : undefined,
       // The window must cover the sticky bar: the point of the button then belongs to the dark layer.
       coversBar: Boolean(atButton) && Boolean(backdrop) && backdrop.contains(atButton),
-      dialogInside: rect ? rect.left >= 0 && rect.right <= innerWidth && rect.top >= 0 && rect.bottom <= innerHeight : false,
+      dialogInside: rect
+        ? rect.left >= 0 && rect.right <= innerWidth && rect.top >= 0 && rect.bottom <= innerHeight
+        : false,
     };
   };
 
@@ -106,7 +129,8 @@
       const bar = toolbar();
       const selection = getSelection().rangeCount ? getSelection().getRangeAt(0).getBoundingClientRect() : null;
       return {
-        visible: Boolean(bar) && getComputedStyle(bar).visibility === 'visible' && getComputedStyle(bar).opacity === '1',
+        visible:
+          Boolean(bar) && getComputedStyle(bar).visibility === 'visible' && getComputedStyle(bar).opacity === '1',
         bar: box(bar && bar.getBoundingClientRect()),
         selection: box(selection),
         buttons: bar ? [...bar.querySelectorAll('[data-action]')].map((el) => el.getAttribute('data-action')) : [],
@@ -122,7 +146,10 @@
       editor().commands.setTextSelection({ from, to: positionOf(last) + last.length });
       await sleep(600);
       const bar = toolbar();
-      return { visible: Boolean(bar) && getComputedStyle(bar).visibility === 'visible' && getComputedStyle(bar).opacity === '1' };
+      return {
+        visible:
+          Boolean(bar) && getComputedStyle(bar).visibility === 'visible' && getComputedStyle(bar).opacity === '1',
+      };
     },
 
     // What the blocks of the page are: the code blocks with their language, and the drawn math blocks.
@@ -174,7 +201,13 @@
       target.dispatchEvent(over);
       const drop = new DragEvent('drop', { dataTransfer: transfer, bubbles: true, cancelable: true });
       target.dispatchEvent(drop);
-      return { enterPrevented: enter.defaultPrevented, overPrevented: over.defaultPrevented, dropEffect: transfer.dropEffect, dropPrevented: drop.defaultPrevented, insideText: pm().contains(target) };
+      return {
+        enterPrevented: enter.defaultPrevented,
+        overPrevented: over.defaultPrevented,
+        dropEffect: transfer.dropEffect,
+        dropPrevented: drop.defaultPrevented,
+        insideText: pm().contains(target),
+      };
     },
 
     async pickLanguage({ index, language }) {
@@ -187,7 +220,11 @@
       input.dispatchEvent(new Event('input', { bubbles: true }));
       input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
       await sleep(150);
-      return { opened, closed: !document.querySelector('.rme-picker'), label: document.querySelectorAll('.rme-code-lang')[index].textContent };
+      return {
+        opened,
+        closed: !document.querySelector('.rme-picker'),
+        label: document.querySelectorAll('.rme-code-lang')[index].textContent,
+      };
     },
 
     async moreMenu({ action }) {
@@ -212,8 +249,13 @@
     // Wait until the mermaid library has drawn the diagram, then report what the page holds.
     // Elements that have the hidden attribute must not take up space, whatever the styles say.
     async hiddenElements() {
-      const visible = [...pm().querySelectorAll('[hidden]')].filter((el) => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().height > 0);
-      return { count: pm().querySelectorAll('[hidden]').length, visible: visible.map((el) => el.className || el.tagName) };
+      const visible = [...pm().querySelectorAll('[hidden]')].filter(
+        (el) => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().height > 0,
+      );
+      return {
+        count: pm().querySelectorAll('[hidden]').length,
+        visible: visible.map((el) => el.className || el.tagName),
+      };
     },
 
     async diagram() {
@@ -273,7 +315,11 @@
         const item = bar.querySelector(`[data-stat="${name}"]`);
         return { hidden: item.hidden, text: item.textContent, title: item.title, value: item.dataset.value };
       };
-      return { authors: read('authors'), modified: read('modified'), order: [...bar.querySelectorAll('[data-stat]')].map((item) => item.dataset.stat) };
+      return {
+        authors: read('authors'),
+        modified: read('modified'),
+        order: [...bar.querySelectorAll('[data-stat]')].map((item) => item.dataset.stat),
+      };
     },
 
     // The settings button at the end of the bar.
@@ -315,13 +361,17 @@
     },
 
     async pressEscape() {
-      document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      document.activeElement.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+      );
       await sleep(50);
       return shortcutsState();
     },
 
     async clickBackdrop() {
-      document.querySelector('.rme-modal-backdrop').dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+      document
+        .querySelector('.rme-modal-backdrop')
+        .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
       await sleep(50);
       return shortcutsState();
     },
@@ -340,9 +390,24 @@
       const mac = /Mac/.test(navigator.platform);
       const { mods, base } = parseChord(chord);
       const formats = () =>
-        ['bold', 'italic', 'underline', 'strike', 'code', 'superscript', 'subscript', 'bulletList', 'orderedList', 'taskList', 'blockquote', 'codeBlock']
+        [
+          'bold',
+          'italic',
+          'underline',
+          'strike',
+          'code',
+          'superscript',
+          'subscript',
+          'bulletList',
+          'orderedList',
+          'taskList',
+          'blockquote',
+          'codeBlock',
+        ]
           .filter((name) => editor().isActive(name))
-          .concat([1, 2, 3, 4, 5, 6].filter((level) => editor().isActive('heading', { level })).map((level) => `h${level}`));
+          .concat(
+            [1, 2, 3, 4, 5, 6].filter((level) => editor().isActive('heading', { level })).map((level) => `h${level}`),
+          );
       let reachedWindow = 0;
       const spy = () => reachedWindow++;
       window.addEventListener('keydown', spy);
@@ -382,7 +447,12 @@
         const event = new KeyboardEvent('keydown', keyEventInit(mods, base, shape, mac));
         pm().dispatchEvent(event);
         // VS Code prevents the default of some keys itself (Save, Find, Print, Copy), so a prevented key is not always handled by the editor.
-        return { handled: event.defaultPrevented && reachedWindow === 0, preventedByVsCode: event.defaultPrevented && reachedWindow > 0, reachedWindow, text: editor().getText() };
+        return {
+          handled: event.defaultPrevented && reachedWindow === 0,
+          preventedByVsCode: event.defaultPrevented && reachedWindow > 0,
+          reachedWindow,
+          text: editor().getText(),
+        };
       } finally {
         window.removeEventListener('keydown', spy);
       }
@@ -433,10 +503,15 @@
       await sleep(400);
       pm().focus();
       const base = edits();
-      editor().commands.insertContentAt(editor().state.doc.content.size, { type: 'paragraph', content: [{ type: 'text', text }] });
+      editor().commands.insertContentAt(editor().state.doc.content.size, {
+        type: 'paragraph',
+        content: [{ type: 'text', text }],
+      });
       const before = edits() - base;
       if (how === 'save') {
-        window.dispatchEvent(new KeyboardEvent('keydown', { key: 's', metaKey: true, bubbles: true, cancelable: true }));
+        window.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 's', metaKey: true, bubbles: true, cancelable: true }),
+        );
       } else {
         pm().dispatchEvent(new FocusEvent('blur'));
       }
@@ -453,7 +528,12 @@
     // Click a link in the text, with or without Ctrl or Cmd. The page may start a scroll.
     async clickLink({ href, meta, ctrl }) {
       const link = pm().querySelector(`a[href="${href}"]`);
-      const event = new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: Boolean(meta), ctrlKey: Boolean(ctrl) });
+      const event = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        metaKey: Boolean(meta),
+        ctrlKey: Boolean(ctrl),
+      });
       link.dispatchEvent(event);
       // A scroll to a heading is smooth. Wait until the page stops.
       let last = -1;
@@ -464,7 +544,11 @@
         last = window.scrollY;
       }
       const heading = [...pm().querySelectorAll('h2')].find((h) => h.textContent === 'The target');
-      return { prevented: event.defaultPrevented, scrollY: window.scrollY, headingTop: heading ? heading.getBoundingClientRect().top : null };
+      return {
+        prevented: event.defaultPrevented,
+        scrollY: window.scrollY,
+        headingTop: heading ? heading.getBoundingClientRect().top : null,
+      };
     },
 
     // A key press. VS Code reads every key in the webview, so the page must stop a key that the editor has handled.
@@ -475,7 +559,13 @@
       window.addEventListener('keydown', spy);
       try {
         pm().focus();
-        const event = new KeyboardEvent('keydown', { key, metaKey: shortcut && mac, ctrlKey: shortcut && !mac, bubbles: true, cancelable: true });
+        const event = new KeyboardEvent('keydown', {
+          key,
+          metaKey: shortcut && mac,
+          ctrlKey: shortcut && !mac,
+          bubbles: true,
+          cancelable: true,
+        });
         pm().dispatchEvent(event);
         return { handled: event.defaultPrevented, reachedWindow };
       } finally {
@@ -494,7 +584,9 @@
       const from = positionOf(text);
       editor().commands.setTextSelection({ from, to: from + text.length });
       await sleep(600);
-      pm().dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: mac, ctrlKey: !mac, bubbles: true, cancelable: true }));
+      pm().dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'k', metaKey: mac, ctrlKey: !mac, bubbles: true, cancelable: true }),
+      );
       await sleep(500);
       const field = document.activeElement;
       return {
@@ -505,7 +597,9 @@
     },
 
     async leaveLinkField() {
-      document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      document.activeElement.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+      );
       await sleep(500);
       return { linkMode: toolbar().classList.contains('is-link-mode'), focusInText: document.activeElement === pm() };
     },
@@ -526,7 +620,11 @@
           // The colored copy is not cut off and does not sit lower than the text box (a padding of the page once did that).
           boxHeightOk: (() => {
             const colors = box.querySelector('.rme-raw-colors');
-            return Boolean(area && colors) && colors.scrollHeight <= colors.clientHeight + 1 && area.offsetHeight >= area.scrollHeight - 1;
+            return (
+              Boolean(area && colors) &&
+              colors.scrollHeight <= colors.clientHeight + 1 &&
+              area.offsetHeight >= area.scrollHeight - 1
+            );
           })(),
         };
       });

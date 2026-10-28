@@ -127,7 +127,9 @@ function patchMarkdownEscaping(editor: Editor): void {
   manager.encodeTextForMarkdown = (text: string, node: any, parentNode: any): string => {
     const codeTypes: Set<string> | undefined = manager.codeTypes;
     const inCodeBlock = parentNode?.type != null && codeTypes?.has(parentNode.type);
-    const hasCodeMark = (node.marks ?? []).some((mark: any) => codeTypes?.has(typeof mark === 'string' ? mark : mark.type));
+    const hasCodeMark = (node.marks ?? []).some((mark: any) =>
+      codeTypes?.has(typeof mark === 'string' ? mark : mark.type),
+    );
     if (inCodeBlock || hasCodeMark) {
       return text;
     }

@@ -2,8 +2,43 @@
 // scripts/mutation-check.mjs applies one mutant at a time, runs the tests, and reports the mutants that no test noticed.
 import { transformSync } from 'esbuild';
 
-const KEYWORDS_BEFORE_REGEX = new Set(['return', 'typeof', 'case', 'in', 'of', 'delete', 'void', 'throw', 'new', 'else', 'yield', 'await']);
-const SYMBOLS_BEFORE_REGEX = new Set(['', '(', ',', '=', ':', '[', '!', '&', '|', '?', '{', '}', ';', '+', '-', '*', '%', '<', '>', '~', '^']);
+const KEYWORDS_BEFORE_REGEX = new Set([
+  'return',
+  'typeof',
+  'case',
+  'in',
+  'of',
+  'delete',
+  'void',
+  'throw',
+  'new',
+  'else',
+  'yield',
+  'await',
+]);
+const SYMBOLS_BEFORE_REGEX = new Set([
+  '',
+  '(',
+  ',',
+  '=',
+  ':',
+  '[',
+  '!',
+  '&',
+  '|',
+  '?',
+  '{',
+  '}',
+  ';',
+  '+',
+  '-',
+  '*',
+  '%',
+  '<',
+  '>',
+  '~',
+  '^',
+]);
 
 function skipString(source, start) {
   const quote = source[start];
@@ -131,7 +166,8 @@ function closingParen(source, mask, open) {
   return -1;
 }
 
-const balanced = (text) => ['()', '[]', '{}'].every(([open, close]) => text.split(open).length === text.split(close).length);
+const balanced = (text) =>
+  ['()', '[]', '{}'].every(([open, close]) => text.split(open).length === text.split(close).length);
 
 /**
  * Every mutant of a source text: { start, end, replacement, operator, line }.
@@ -142,7 +178,8 @@ export function findMutants(source) {
   const mask = codeMask(source);
   const lineAt = (index) => source.slice(0, index).split('\n').length;
   const mutants = [];
-  const add = (start, end, replacement, operator) => mutants.push({ start, end, replacement, operator, line: lineAt(start) });
+  const add = (start, end, replacement, operator) =>
+    mutants.push({ start, end, replacement, operator, line: lineAt(start) });
   const allCode = (start, end) => {
     for (let i = start; i < end; i++) if (!mask[i]) return false;
     return true;

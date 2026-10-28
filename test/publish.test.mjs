@@ -12,7 +12,10 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const workflow = readFileSync(path.join(root, '.github', 'workflows', 'publish.yml'), 'utf8');
 
 test('publishedVersions reads the versions from the output of vsce show', () => {
-  const output = JSON.stringify({ publisher: { publisherName: 'acme' }, versions: [{ version: '1.2.0' }, { version: '1.1.0' }, { version: '1.1.0' }] });
+  const output = JSON.stringify({
+    publisher: { publisherName: 'acme' },
+    versions: [{ version: '1.2.0' }, { version: '1.1.0' }, { version: '1.1.0' }],
+  });
   assert.deepEqual(publishedVersions(output), ['1.2.0', '1.1.0']);
 });
 
@@ -33,7 +36,12 @@ test('decidePublish publishes a version that the Marketplace does not hold', () 
 });
 
 test('decidePublish skips a version that is already published, and does not fail', () => {
-  const decision = decidePublish({ publisher: 'acme', version: '1.2.0', published: ['1.2.0', '1.1.0'], hasToken: true });
+  const decision = decidePublish({
+    publisher: 'acme',
+    version: '1.2.0',
+    published: ['1.2.0', '1.1.0'],
+    hasToken: true,
+  });
   assert.deepEqual({ publish: decision.publish, ok: decision.ok }, { publish: false, ok: true });
   assert.match(decision.message, /already on the Marketplace/);
 });
@@ -67,10 +75,14 @@ function runScript(manifest, env = {}) {
     writeFileSync(outputPath, '');
     const base = { ...process.env, GITHUB_OUTPUT: outputPath, GITHUB_ACTIONS: 'true' };
     delete base.VSCE_PAT;
-    const result = spawnSync(process.execPath, [path.join(root, 'scripts', 'check-publish.mjs'), folder, '--manifest', manifestPath], {
-      env: { ...base, ...env },
-      encoding: 'utf8',
-    });
+    const result = spawnSync(
+      process.execPath,
+      [path.join(root, 'scripts', 'check-publish.mjs'), folder, '--manifest', manifestPath],
+      {
+        env: { ...base, ...env },
+        encoding: 'utf8',
+      },
+    );
     return { status: result.status, stdout: result.stdout, output: readFileSync(outputPath, 'utf8') };
   } finally {
     rmSync(folder, { recursive: true, force: true });
@@ -99,7 +111,11 @@ test('the workflow publishes only from main, and never for a pull request', () =
   assert.match(publishJob, /needs: build/);
   assert.match(publishJob, /if: github\.ref == 'refs\/heads\/main' && github\.event_name != 'pull_request'/);
   assert.match(publishJob, /environment:\s*\n\s+name: marketplace/);
-  assert.doesNotMatch(workflow.slice(0, workflow.indexOf('\n  publish:')), /vsce publish/, 'the build job does not publish');
+  assert.doesNotMatch(
+    workflow.slice(0, workflow.indexOf('\n  publish:')),
+    /vsce publish/,
+    'the build job does not publish',
+  );
 });
 
 test('the workflow publishes the file that the build job made, and reads the token from a secret', () => {
@@ -140,11 +156,8 @@ test('the package leaves out the workflow files', () => {
 });
 
 // TODO: Check validity of test after publishing
-test.skip("the README has no link to a file in the project, because vsce refuses to package it without a repository address", () => {
-  const readme = readFileSync(path.join(root, "README.md"), "utf8").replace(
-    /```[\s\S]*?```/g,
-    "",
-  );
+test.skip('the README has no link to a file in the project, because vsce refuses to package it without a repository address', () => {
+  const readme = readFileSync(path.join(root, 'README.md'), 'utf8').replace(/```[\s\S]*?```/g, '');
   const links = [...readme.matchAll(/\]\(([^)\s]+)/g)].map((match) => match[1]);
   assert.ok(links.length > 0, 'the README has links to check');
   const relative = links.filter((href) => !/^(https?:|mailto:|#)/i.test(href));
@@ -188,7 +201,11 @@ function runWithFakeYarn({ answer, exitCode = 0, manifestFirst = false }) {
 
 test('the script asks the Marketplace through yarn, and publishes a version that is new', () => {
   const run = runWithFakeYarn({ answer: JSON.stringify({ versions: [{ version: '0.9.0' }] }) });
-  assert.deepEqual(run.calls, [{ command: 'yarn', args: ['--silent', 'vsce', 'show', 'acme.demo', '--json'] }], 'one call, with the extension ID and no Yarn banner');
+  assert.deepEqual(
+    run.calls,
+    [{ command: 'yarn', args: ['--silent', 'vsce', 'show', 'acme.demo', '--json'] }],
+    'one call, with the extension ID and no Yarn banner',
+  );
   assert.equal(run.status, 0);
   assert.match(run.output, /publish=true/);
   assert.match(run.output, /vsix=.*demo-1\.0\.0\.vsix/);
@@ -218,5 +235,9 @@ test('the script finds the folder of the package when the manifest option comes 
   const run = runWithFakeYarn({ answer: 'undefined', manifestFirst: true });
   assert.equal(run.status, 0, run.stdout);
   const vsix = /^vsix=(.*)$/m.exec(run.output)?.[1];
-  assert.equal(vsix, path.join(run.folder, 'demo-1.0.0.vsix'), 'the package is in the folder, and the manifest is not taken for the folder');
+  assert.equal(
+    vsix,
+    path.join(run.folder, 'demo-1.0.0.vsix'),
+    'the package is in the folder, and the manifest is not taken for the folder',
+  );
 });

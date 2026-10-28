@@ -6,7 +6,14 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const port = Number(process.env.PORT ?? 5199);
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.map': 'application/json' };
+const types = {
+  '.html': 'text/html',
+  '.js': 'text/javascript',
+  '.css': 'text/css',
+  '.png': 'image/png',
+  '.svg': 'image/svg+xml',
+  '.map': 'application/json',
+};
 
 http
   .createServer(async (req, res) => {
@@ -18,7 +25,10 @@ http
     }
     try {
       const body = await readFile(file);
-      res.writeHead(200, { 'content-type': types[path.extname(file)] ?? 'application/octet-stream', 'cache-control': 'no-store' });
+      res.writeHead(200, {
+        'content-type': types[path.extname(file)] ?? 'application/octet-stream',
+        'cache-control': 'no-store',
+      });
       res.end(body);
     } catch {
       res.writeHead(404).end('not found');

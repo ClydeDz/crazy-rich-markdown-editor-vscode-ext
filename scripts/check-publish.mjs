@@ -10,7 +10,12 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { decidePublish, publishedVersions } from './publish-lib.mjs';
 
-export function runCheckPublish({ args = process.argv.slice(2), env = process.env, exec = execFileSync, log = console.log } = {}) {
+export function runCheckPublish({
+  args = process.argv.slice(2),
+  env = process.env,
+  exec = execFileSync,
+  log = console.log,
+} = {}) {
   const manifestIndex = args.indexOf('--manifest');
   const manifestPath = manifestIndex >= 0 ? args[manifestIndex + 1] : 'package.json';
   const manifestValueIndex = manifestIndex >= 0 ? manifestIndex + 1 : -1;
@@ -52,7 +57,9 @@ export function runCheckPublish({ args = process.argv.slice(2), env = process.en
       maxBuffer: 64 * 1024 * 1024,
     });
   } catch (error) {
-    return fail(`The Marketplace did not answer for ${publisher}.${name}: ${error instanceof Error ? error.message : error}`);
+    return fail(
+      `The Marketplace did not answer for ${publisher}.${name}: ${error instanceof Error ? error.message : error}`,
+    );
   }
 
   const decision = decidePublish({ publisher, version, published: publishedVersions(output), hasToken });

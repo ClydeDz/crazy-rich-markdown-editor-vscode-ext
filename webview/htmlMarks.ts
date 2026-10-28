@@ -49,13 +49,27 @@ function markdownFor(name: string, tag: string): any {
 /** Underline. It is written as `<ins>text</ins>`, the form that GitHub shows as underlined text. */
 export const UnderlineMark = withoutKeys(Underline).extend({
   parseHTML() {
-    return [{ tag: 'u' }, { tag: 'ins' }, { style: 'text-decoration', consuming: false, getAttrs: (style) => ((style as string).includes('underline') ? {} : false) }];
+    return [
+      { tag: 'u' },
+      { tag: 'ins' },
+      {
+        style: 'text-decoration',
+        consuming: false,
+        getAttrs: (style) => ((style as string).includes('underline') ? {} : false),
+      },
+    ];
   },
   ...markdownFor('underline', 'ins'),
 });
 
 /** Subscript. It is written as `<sub>text</sub>`. Text cannot have both subscript and superscript. */
-export const SubscriptMark = withoutKeys(Subscript).extend({ excludes: 'superscript', ...markdownFor('subscript', 'sub') });
+export const SubscriptMark = withoutKeys(Subscript).extend({
+  excludes: 'superscript',
+  ...markdownFor('subscript', 'sub'),
+});
 
 /** Superscript. It is written as `<sup>text</sup>`. */
-export const SuperscriptMark = withoutKeys(Superscript).extend({ excludes: 'subscript', ...markdownFor('superscript', 'sup') });
+export const SuperscriptMark = withoutKeys(Superscript).extend({
+  excludes: 'subscript',
+  ...markdownFor('superscript', 'sup'),
+});

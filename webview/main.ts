@@ -100,7 +100,10 @@ function autosizeFrontMatter(): void {
 
 function serialize(): string {
   const body = editor ? getMarkdown(editor).replace(/\s+$/, '') : '';
-  const full = joinFrontMatter(frontMatter, frontMatter !== undefined && body.length > 0 ? frontMatterGap + body : body);
+  const full = joinFrontMatter(
+    frontMatter,
+    frontMatter !== undefined && body.length > 0 ? frontMatterGap + body : body,
+  );
   if (full.length === 0) {
     return '';
   }

@@ -33,5 +33,8 @@ export function highlightInto(target: HTMLElement, language: string, text: strin
     children = [{ type: 'text', value: text }];
   }
   // A last empty line needs a character, or the colored copy is one line shorter than the field.
-  target.replaceChildren(...children.map(toDom), document.createTextNode(text.endsWith('\n') || text === '' ? '\n' : ''));
+  target.replaceChildren(
+    ...children.map(toDom),
+    document.createTextNode(text.endsWith('\n') || text === '' ? '\n' : ''),
+  );
 }

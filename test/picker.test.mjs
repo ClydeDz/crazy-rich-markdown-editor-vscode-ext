@@ -20,7 +20,8 @@ function open(current) {
     root: () => document.querySelector('.rme-picker'),
     input: () => document.querySelector('.rme-picker-input'),
     rows: () => [...document.querySelectorAll('.rme-picker-item')],
-    labels: () => [...document.querySelectorAll('.rme-picker-item .rme-picker-label')].map((label) => label.textContent),
+    labels: () =>
+      [...document.querySelectorAll('.rme-picker-item .rme-picker-label')].map((label) => label.textContent),
     selectedLabel: () => document.querySelector('.rme-picker-item.is-selected .rme-picker-label')?.textContent,
     type(text) {
       const input = document.querySelector('.rme-picker-input');
@@ -62,7 +63,11 @@ test('the list starts on the current language, which has a check mark and is the
   assert.equal(checked[0].querySelector('.rme-picker-label').textContent, 'TypeScript');
   const selected = picker.rows().filter((row) => row.getAttribute('aria-selected') === 'true');
   assert.deepEqual(selected, checked, 'only the current language is selected');
-  assert.equal(selected[0].querySelector('.rme-picker-hint').textContent, 'typescript', 'the hint is the id of the language');
+  assert.equal(
+    selected[0].querySelector('.rme-picker-hint').textContent,
+    'typescript',
+    'the hint is the id of the language',
+  );
   picker.clean();
 
   const plain = open(null);
@@ -82,9 +87,17 @@ test('the arrow keys move the selection, and go round at both ends', () => {
   picker.key('ArrowUp');
   assert.equal(picker.rows().indexOf(document.querySelector('.is-selected')), 0);
   assert.equal(picker.key('ArrowUp').defaultPrevented, true);
-  assert.equal(picker.rows().indexOf(document.querySelector('.is-selected')), last, 'up from the first goes to the last');
+  assert.equal(
+    picker.rows().indexOf(document.querySelector('.is-selected')),
+    last,
+    'up from the first goes to the last',
+  );
   picker.key('ArrowDown');
-  assert.equal(picker.rows().indexOf(document.querySelector('.is-selected')), 0, 'down from the last goes to the first');
+  assert.equal(
+    picker.rows().indexOf(document.querySelector('.is-selected')),
+    0,
+    'down from the last goes to the first',
+  );
   assert.equal(document.querySelectorAll('.is-selected').length, 1);
   picker.clean();
 });
@@ -188,7 +201,8 @@ test('other keys do nothing to the list', () => {
 
 test('a click outside closes the list, and a click inside it or on the button does not', () => {
   const picker = open('');
-  const mousedown = (target) => target.dispatchEvent(new window.MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+  const mousedown = (target) =>
+    target.dispatchEvent(new window.MouseEvent('mousedown', { bubbles: true, cancelable: true }));
   mousedown(picker.input());
   mousedown(picker.root());
   mousedown(picker.anchor);
@@ -254,12 +268,36 @@ test('the list shows below the button when it fits, above when it does not, and 
   try {
     assert.equal(window.innerHeight, 768);
     assert.equal(window.innerWidth, 1024);
-    assert.deepEqual(place({ top: 100, bottom: 120, right: 600 }), { top: '124px', left: '350px' }, 'below, and the right edge of the list is the right edge of the button');
-    assert.deepEqual(place({ top: 700, bottom: 720, right: 600 }), { top: '396px', left: '350px' }, 'above the button when there is no room below');
-    assert.deepEqual(place({ top: 100, bottom: 120, right: 100 }), { top: '124px', left: '8px' }, 'not past the left edge');
-    assert.deepEqual(place({ top: 100, bottom: 120, right: 1200 }), { top: '124px', left: '766px' }, 'not past the right edge');
-    assert.deepEqual(place({ top: 100, bottom: 460, right: 600 }), { top: '464px', left: '350px' }, 'the list fits exactly');
-    assert.deepEqual(place({ top: 100, bottom: 465, right: 600 }), { top: '8px', left: '350px' }, 'one pixel too low: above, but not above the screen');
+    assert.deepEqual(
+      place({ top: 100, bottom: 120, right: 600 }),
+      { top: '124px', left: '350px' },
+      'below, and the right edge of the list is the right edge of the button',
+    );
+    assert.deepEqual(
+      place({ top: 700, bottom: 720, right: 600 }),
+      { top: '396px', left: '350px' },
+      'above the button when there is no room below',
+    );
+    assert.deepEqual(
+      place({ top: 100, bottom: 120, right: 100 }),
+      { top: '124px', left: '8px' },
+      'not past the left edge',
+    );
+    assert.deepEqual(
+      place({ top: 100, bottom: 120, right: 1200 }),
+      { top: '124px', left: '766px' },
+      'not past the right edge',
+    );
+    assert.deepEqual(
+      place({ top: 100, bottom: 460, right: 600 }),
+      { top: '464px', left: '350px' },
+      'the list fits exactly',
+    );
+    assert.deepEqual(
+      place({ top: 100, bottom: 465, right: 600 }),
+      { top: '8px', left: '350px' },
+      'one pixel too low: above, but not above the screen',
+    );
   } finally {
     for (const name of ['offsetHeight', 'offsetWidth']) {
       if (sizes[name]) Object.defineProperty(window.HTMLElement.prototype, name, sizes[name]);
@@ -275,8 +313,9 @@ test('the picker leaves no listener on the page behind when it closes, however i
     'a click outside': () => document.body.dispatchEvent(new window.MouseEvent('mousedown', { bubbles: true })),
     'a resize': () => window.dispatchEvent(new window.Event('resize')),
     'a lost window focus': () => window.dispatchEvent(new window.Event('blur')),
-    'a click on a row': (picker) => picker.rows()[0].dispatchEvent(new window.MouseEvent('mousedown', { bubbles: true, cancelable: true })),
-    'closeLanguagePicker': () => closeLanguagePicker(),
+    'a click on a row': (picker) =>
+      picker.rows()[0].dispatchEvent(new window.MouseEvent('mousedown', { bubbles: true, cancelable: true })),
+    closeLanguagePicker: () => closeLanguagePicker(),
   };
   for (const [name, close] of Object.entries(ways)) {
     for (const target of [document, window]) {

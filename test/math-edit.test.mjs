@@ -22,7 +22,13 @@ function openInline(markdown = 'a $x^2$ b') {
   const pos = positionOfNode(editor, 'mathInline');
   editor.commands.setNodeSelection(pos);
   const input = editor.view.dom.querySelector('.rme-math-input');
-  return { editor, pos, input, view: editor.view.dom.querySelector('.rme-math-view'), box: editor.view.dom.querySelector('.rme-math') };
+  return {
+    editor,
+    pos,
+    input,
+    view: editor.view.dom.querySelector('.rme-math-view'),
+    box: editor.view.dom.querySelector('.rme-math'),
+  };
 }
 
 function openBlock(markdown = '$$\nx\n$$') {
@@ -30,7 +36,13 @@ function openBlock(markdown = '$$\nx\n$$') {
   const pos = positionOfNode(editor, 'mathBlock');
   editor.commands.setNodeSelection(pos);
   const area = editor.view.dom.querySelector('textarea.rme-math-input');
-  return { editor, pos, area, view: editor.view.dom.querySelector('.rme-math-block .rme-math-view'), box: editor.view.dom.querySelector('.rme-math-block') };
+  return {
+    editor,
+    pos,
+    area,
+    view: editor.view.dom.querySelector('.rme-math-block .rme-math-view'),
+    box: editor.view.dom.querySelector('.rme-math-block'),
+  };
 }
 
 // ---------- Inline math ----------
@@ -168,7 +180,10 @@ test('a change of an inline formula that is not open shows at once', () => {
   editor.view.dispatch(editor.state.tr.setNodeMarkup(pos, undefined, { tex: '\\frac{1}{2}', backtick: false }));
   assert.ok(editor.view.dom.querySelector('.rme-math') === box, 'the element is not made again');
   assert.ok(box.querySelector('.rme-math-view .katex'), 'drawn again');
-  assert.ok(box.querySelector('.rme-math-view').innerHTML.includes('mfrac') || box.querySelector('.rme-math-view').innerHTML.includes('frac'));
+  assert.ok(
+    box.querySelector('.rme-math-view').innerHTML.includes('mfrac') ||
+      box.querySelector('.rme-math-view').innerHTML.includes('frac'),
+  );
   editor.destroy();
 });
 

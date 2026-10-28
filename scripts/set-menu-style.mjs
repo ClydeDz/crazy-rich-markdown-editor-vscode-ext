@@ -65,6 +65,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   } else {
     const next = applyMenuStyle(manifest, style);
     writeFileSync(file, `${JSON.stringify(next, null, 2)}\n`);
-    console.log(`Style "${style}": the menu item is "${menuItemText(next)}". Run "yarn package" and install the new file.`);
+    console.log(
+      `Style "${style}": the menu item is "${menuItemText(next)}". Run "yarn package" and install the new file.`,
+    );
   }
 }

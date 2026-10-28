@@ -4,7 +4,7 @@
  * An empty address hides the link: the creator stays as plain text, and the coffee link goes away.
  */
 export const ABOUT = {
-  creator: "Clyde",
-  creatorUrl: "https://clydedsouza.net",
-  coffeeUrl: "https://sponsor.clydedsouza.net",
+  creator: 'Clyde',
+  creatorUrl: 'https://clydedsouza.net',
+  coffeeUrl: 'https://sponsor.clydedsouza.net',
 };

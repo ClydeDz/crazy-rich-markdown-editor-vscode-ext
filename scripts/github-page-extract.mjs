@@ -10,7 +10,13 @@ import { fileURLToPath } from 'node:url';
  * `yarn check:github-page --out test/fixtures/github-page-examples.json`.
  * The text of the GitHub docs is licensed under CC BY 4.0, so keep the attribution if you keep the file.
  */
-export const LOCAL_COPY = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'test', 'fixtures', 'github-page-examples.json');
+export const LOCAL_COPY = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+  'test',
+  'fixtures',
+  'github-page-examples.json',
+);
 
 export const SOURCE =
   'https://raw.githubusercontent.com/github/docs/main/content/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax.md';
@@ -34,7 +40,10 @@ export function extractExamples(source) {
 
   for (const line of lines) {
     if (!fence && /^## /.test(line)) {
-      section = line.replace(/^## /, '').replace(/\s*\{.*$/, '').trim();
+      section = line
+        .replace(/^## /, '')
+        .replace(/\s*\{.*$/, '')
+        .trim();
     }
     const open = /^(\s*)(`{3,}|~{3,})(.*)$/.exec(line);
     if (open && !fence) {

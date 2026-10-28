@@ -45,7 +45,10 @@ test('an import with a bracket that never closes is not a block', () => {
 });
 
 test('a self-closing component is a block', () => {
-  assert.deepEqual(scan('<Chart data={[1, 2, 3]} color="red" />\n\nText'), { kind: 'jsx', raw: '<Chart data={[1, 2, 3]} color="red" />\n' });
+  assert.deepEqual(scan('<Chart data={[1, 2, 3]} color="red" />\n\nText'), {
+    kind: 'jsx',
+    raw: '<Chart data={[1, 2, 3]} color="red" />\n',
+  });
 });
 
 test('a component with children is one block, also with empty lines and markdown inside', () => {
@@ -129,7 +132,8 @@ test('an inline expression is found only when it is complete', () => {
 
 const blockTypes = (editor) => editor.getJSON().content.map((node) => node.type);
 const SAMPLES = {
-  imports: "import { Chart } from '../components/Chart'\nimport Foo from './foo.js'\nexport const meta = { title: 'Hi', tags: ['a_b', '*x*'] }\n\n# Title\n",
+  imports:
+    "import { Chart } from '../components/Chart'\nimport Foo from './foo.js'\nexport const meta = { title: 'Hi', tags: ['a_b', '*x*'] }\n\n# Title\n",
   callout: '# Title\n\n<Callout type="warning">\n  Be *careful* here.\n</Callout>\n\nAfter.\n',
   nested: '<Tabs>\n\n<Tab label="One">\n\nSome **markdown** inside.\n\n</Tab>\n\n</Tabs>\n',
   selfClosing: '<Chart data={[1, 2, 3]} color="red" />\n\nText.\n',
@@ -181,7 +185,8 @@ test('an expression in a line of text is a small piece that the editor keeps, an
 });
 
 test('front matter and the MDX under it both come back as they were written', () => {
-  const file = "---\ntitle: Doc\ntags: [a, b]\n---\n\nimport Foo from './foo'\n\n# Title\n\n<Foo bar={1} />\n\nText with {props.x}.\n";
+  const file =
+    "---\ntitle: Doc\ntags: [a, b]\n---\n\nimport Foo from './foo'\n\n# Title\n\n<Foo bar={1} />\n\nText with {props.x}.\n";
   const { yaml, body } = splitFrontMatter(file);
   assert.equal(yaml, 'title: Doc\ntags: [a, b]');
   const editor = makeEditor(createEditor, body, { mdx: true });
@@ -204,7 +209,9 @@ test('editing an MDX block changes the text of the file in that place only', () 
   editor.state.doc.descendants((node, pos) => {
     if (node.type.name === 'mdxBlock') place = pos;
   });
-  editor.view.dispatch(editor.state.tr.setNodeMarkup(place, undefined, { raw: '<Callout type="info">\n  New.\n</Callout>' }));
+  editor.view.dispatch(
+    editor.state.tr.setNodeMarkup(place, undefined, { raw: '<Callout type="info">\n  New.\n</Callout>' }),
+  );
   assert.equal(getMarkdown(editor).trim(), '# Title\n\n<Callout type="info">\n  New.\n</Callout>\n\nAfter.');
   editor.destroy();
 });
@@ -253,9 +260,15 @@ test('MDX files open in the editor only through "Open With", and Markdown files 
   assert.ok(markdown, 'the Markdown editor uses the crazyRichMarkdown prefix');
   assert.ok(mdx, 'the MDX editor uses the crazyRichMarkdown prefix');
   assert.equal(markdown.priority, 'default');
-  assert.deepEqual(markdown.selector.map((entry) => entry.filenamePattern), ['*.md', '*.markdown']);
+  assert.deepEqual(
+    markdown.selector.map((entry) => entry.filenamePattern),
+    ['*.md', '*.markdown'],
+  );
   assert.equal(mdx.priority, 'option');
-  assert.deepEqual(mdx.selector.map((entry) => entry.filenamePattern), ['*.mdx']);
+  assert.deepEqual(
+    mdx.selector.map((entry) => entry.filenamePattern),
+    ['*.mdx'],
+  );
   assert.equal(markdown.displayName, 'Markdown Editor');
   assert.equal(mdx.displayName, 'MDX Editor');
 });

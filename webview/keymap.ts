@@ -53,5 +53,6 @@ export const KeymapStarterKit = StarterKit.extend({
 });
 
 /** Give an extension no keys of its own. */
-export const withoutKeys = <T extends { extend: (config: { addKeyboardShortcuts: () => Record<string, never> }) => T }>(extension: T): T =>
-  extension.extend({ addKeyboardShortcuts: () => ({}) });
+export const withoutKeys = <T extends { extend: (config: { addKeyboardShortcuts: () => Record<string, never> }) => T }>(
+  extension: T,
+): T => extension.extend({ addKeyboardShortcuts: () => ({}) });

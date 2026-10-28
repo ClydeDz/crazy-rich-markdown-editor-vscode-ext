@@ -117,7 +117,8 @@ const FORMAT_OF = {
  * select all, and Alt+D (delete the word ahead, only on a Mac). ProseMirror handles them itself. For example it always takes Enter and Escape, to stop the browser default.
  * The list does not need them. VS Code binds them only to commands of a text editor, which are not active in a webview.
  */
-const ORDINARY = /^(?:(?:Mod|Shift|Alt)-)*(?:Enter|Escape|Backspace|Delete|ArrowUp|ArrowDown|ArrowLeft|ArrowRight)$|^Mod-a$|^Alt-d$/;
+const ORDINARY =
+  /^(?:(?:Mod|Shift|Alt)-)*(?:Enter|Escape|Backspace|Delete|ArrowUp|ArrowDown|ArrowLeft|ArrowRight)$|^Mod-a$|^Alt-d$/;
 
 /** Listed keys that a probe of the bare editor cannot press: a menu or the toolbar handles them, or VS Code does. */
 const NOT_IN_THE_EDITOR = ['/', ':', 'Mod-Click', 'Mod-s', 'Escape', 'ArrowUp', 'ArrowDown', 'Mod-k'];

@@ -124,7 +124,14 @@ test('a raw block that changes keeps its element, and the text area gets the new
   // The user types. The node follows, and the text area must not be set again (that would move the cursor).
   let assigned = 0;
   let value = area.value;
-  Object.defineProperty(area, 'value', { configurable: true, get: () => value, set: (next) => { assigned++; value = next; } });
+  Object.defineProperty(area, 'value', {
+    configurable: true,
+    get: () => value,
+    set: (next) => {
+      assigned++;
+      value = next;
+    },
+  });
   editor.view.dispatch(editor.state.tr.setNodeMarkup(pos, undefined, { raw: '<div>two</div>' }));
   assert.equal(assigned, 0, 'same text: the text area is left alone');
   editor.view.dispatch(editor.state.tr.setNodeMarkup(pos, undefined, { raw: '<div>three</div>' }));
@@ -264,7 +271,9 @@ test('an image shows its title, and loses it when the title goes', () => {
   const [{ pos, node }] = nodesNamed(editor, 'image');
   editor.view.dispatch(editor.state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, title: null }));
   assert.equal(image().hasAttribute('title'), false, 'no empty title is left');
-  editor.view.dispatch(editor.state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, title: 'Again', alt: 'New alt' }));
+  editor.view.dispatch(
+    editor.state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, title: 'Again', alt: 'New alt' }),
+  );
   assert.equal(image().title, 'Again');
   assert.equal(image().alt, 'New alt');
   editor.destroy();
@@ -283,10 +292,19 @@ test('the table is not resizable, and pasting an address over selected text make
   assert.equal(option('taskItem').nested, true);
 
   editor.commands.setTextSelection({ from: 3, to: 7 });
-  const clipboard = { getData: (type) => (type === 'text/plain' ? 'https://example.com/page' : ''), types: ['text/plain'], files: [] };
+  const clipboard = {
+    getData: (type) => (type === 'text/plain' ? 'https://example.com/page' : ''),
+    types: ['text/plain'],
+    files: [],
+  };
   const event = { clipboardData: clipboard, preventDefault() {}, stopPropagation() {} };
-  const pasted = editor.schema.nodeFromJSON({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'https://example.com/page' }] }] });
-  const handled = editor.view.someProp('handlePaste', (handler) => handler(editor.view, event, pasted.slice(1, pasted.content.size - 1)));
+  const pasted = editor.schema.nodeFromJSON({
+    type: 'doc',
+    content: [{ type: 'paragraph', content: [{ type: 'text', text: 'https://example.com/page' }] }],
+  });
+  const handled = editor.view.someProp('handlePaste', (handler) =>
+    handler(editor.view, event, pasted.slice(1, pasted.content.size - 1)),
+  );
   assert.equal(Boolean(handled), true, 'the paste is handled');
   assert.equal(getMarkdown(editor), 'a [word](https://example.com/page) here');
   editor.destroy();

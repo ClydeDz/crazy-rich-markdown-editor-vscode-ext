@@ -12,6 +12,7 @@
 
 Tick a box only when you ran the check and it passed. Leave a box open and say why when you did not run it.
 
+- [ ] `yarn lint` passes
 - [ ] `yarn typecheck` passes
 - [ ] `yarn test` passes (number of tests: )
 - [ ] `yarn test:vscode` passes, or the change does not touch the host, the real webview or keys (CI runs these tests only on `main`, not on this pull request)

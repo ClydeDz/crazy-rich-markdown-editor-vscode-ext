@@ -1,0 +1,16 @@
+{
+  "arrowParens": "always",
+  "endOfLine": "auto",
+  "printWidth": 120,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "all",
+  "overrides": [
+    {
+      "files": ["scripts/mutations.mjs", "test/vscode/suite.cjs"],
+      "options": {
+        "singleQuote": false
+      }
+    }
+  ]
+}

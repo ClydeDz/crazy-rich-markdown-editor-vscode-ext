@@ -162,18 +162,14 @@ const moreItems: (ToolbarAction | null)[] = [
     run: (e) => e.chain().focus().toggleSubscript().run(),
   },
   null,
-  ...ALERT_TYPES.map(
-    (type): ToolbarAction => ({
-      id: `alert-${type}`,
-      title: `${ALERT_TITLES[type]} alert`,
-      icon: alertIcons[type],
-      isActive: (e) => e.isActive('alert', { type }),
-      run: (e) =>
-        e.isActive('alert', { type })
-          ? e.chain().focus().unsetAlert().run()
-          : e.chain().focus().setAlert(type).run(),
-    }),
-  ),
+  ...ALERT_TYPES.map((type): ToolbarAction => ({
+    id: `alert-${type}`,
+    title: `${ALERT_TITLES[type]} alert`,
+    icon: alertIcons[type],
+    isActive: (e) => e.isActive('alert', { type }),
+    run: (e) =>
+      e.isActive('alert', { type }) ? e.chain().focus().unsetAlert().run() : e.chain().focus().setAlert(type).run(),
+  })),
   null,
   {
     id: 'mathBlock',
@@ -525,7 +521,10 @@ export function createFloatingToolbars(): FloatingToolbars {
       }
       const active = action.isActive(boundEditor);
       button.classList.toggle('is-active', active);
-      button.setAttribute(button.getAttribute('role') === 'menuitemcheckbox' ? 'aria-checked' : 'aria-pressed', String(active));
+      button.setAttribute(
+        button.getAttribute('role') === 'menuitemcheckbox' ? 'aria-checked' : 'aria-pressed',
+        String(active),
+      );
     }
   };
 
@@ -578,12 +577,7 @@ export function createFloatingToolbars(): FloatingToolbars {
       return table ? { getBoundingClientRect: () => table.getBoundingClientRect(), contextElement: table } : null;
     },
     shouldShow: ({ editor, state, element }) => {
-      return (
-        editor.isEditable &&
-        state.selection.empty &&
-        editor.isActive('table') &&
-        isFocusInside(editor, element)
-      );
+      return editor.isEditable && state.selection.empty && editor.isActive('table') && isFocusInside(editor, element);
     },
   });
 

@@ -82,21 +82,19 @@ function createItems(options: SlashMenuOptions): SlashItem[] {
       icon: icons.quote,
       run: (e, r) => chain(e, r).toggleBlockquote().run(),
     },
-    ...ALERT_TYPES.map(
-      (type): SlashItem => ({
-        title: `${ALERT_TITLES[type]} alert`,
-        description: 'Colored box that stands out from the text',
-        keywords: `callout admonition ${type}`,
-        icon: {
-          note: icons.alertNote,
-          tip: icons.alertTip,
-          important: icons.alertImportant,
-          warning: icons.alertWarning,
-          caution: icons.alertCaution,
-        }[type],
-        run: (e, r) => chain(e, r).setAlert(type).run(),
-      }),
-    ),
+    ...ALERT_TYPES.map((type): SlashItem => ({
+      title: `${ALERT_TITLES[type]} alert`,
+      description: 'Colored box that stands out from the text',
+      keywords: `callout admonition ${type}`,
+      icon: {
+        note: icons.alertNote,
+        tip: icons.alertTip,
+        important: icons.alertImportant,
+        warning: icons.alertWarning,
+        caution: icons.alertCaution,
+      }[type],
+      run: (e, r) => chain(e, r).setAlert(type).run(),
+    })),
     {
       title: 'Code block',
       description: 'Block of code',
@@ -164,7 +162,9 @@ function createItems(options: SlashMenuOptions): SlashItem[] {
             keywords: 'mdx jsx component react import export expression',
             icon: icons.codeBlock,
             run: (e: Editor, r: Range) => {
-              chain(e, r).insertContent({ type: 'mdxBlock', attrs: { raw: '' } }).run();
+              chain(e, r)
+                .insertContent({ type: 'mdxBlock', attrs: { raw: '' } })
+                .run();
               focusEmptyMdxBlock(e);
             },
           },

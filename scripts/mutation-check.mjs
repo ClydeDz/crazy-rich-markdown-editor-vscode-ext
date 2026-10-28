@@ -51,13 +51,29 @@ function handMutants() {
     const source = read(hand.file);
     const first = source.indexOf(hand.find);
     if (first < 0 || source.indexOf(hand.find, first + 1) >= 0) {
-      throw new Error(`The mutant "${hand.id}" must match exactly once in ${hand.file}: ${JSON.stringify(hand.find.slice(0, 60))}`);
+      throw new Error(
+        `The mutant "${hand.id}" must match exactly once in ${hand.file}: ${JSON.stringify(hand.find.slice(0, 60))}`,
+      );
     }
-    const mutant = { start: first, end: first + hand.find.length, replacement: hand.replace, operator: hand.why, line: source.slice(0, first).split('\n').length };
+    const mutant = {
+      start: first,
+      end: first + hand.find.length,
+      replacement: hand.replace,
+      operator: hand.why,
+      line: source.slice(0, first).split('\n').length,
+    };
     if (!isValidSyntax(applyMutant(source, mutant), hand.file)) {
       throw new Error(`The mutant "${hand.id}" breaks the syntax of ${hand.file}.`);
     }
-    return { id: hand.id, kind: 'hand', suite: hand.suite ?? 'unit', file: hand.file, accepted: hand.accepted, mutant, description: `${hand.why}   | ${describeMutant(source, mutant).split('|').pop().trim()}` };
+    return {
+      id: hand.id,
+      kind: 'hand',
+      suite: hand.suite ?? 'unit',
+      file: hand.file,
+      accepted: hand.accepted,
+      mutant,
+      description: `${hand.why}   | ${describeMutant(source, mutant).split('|').pop().trim()}`,
+    };
   });
 }
 
@@ -73,7 +89,14 @@ function autoMutants() {
       if (taken >= wanted) break;
       if (!isValidSyntax(applyMutant(source, mutant), file)) continue;
       taken++;
-      result.push({ id: `${file}:${mutant.line}:${mutant.operator}`, kind: 'auto', suite: 'unit', file, mutant, description: describeMutant(source, mutant) });
+      result.push({
+        id: `${file}:${mutant.line}:${mutant.operator}`,
+        kind: 'auto',
+        suite: 'unit',
+        file,
+        mutant,
+        description: describeMutant(source, mutant),
+      });
     }
   }
   return result;
@@ -84,7 +107,8 @@ const mutants = [...(useHand ? handMutants() : []), ...(useAuto ? autoMutants() 
   .filter((item) => !only || only.split(',').some((part) => item.id.includes(part) || item.file.includes(part)));
 
 if (args.includes('--list')) {
-  for (const item of mutants) console.log(`${item.kind.padEnd(5)} ${item.suite.padEnd(6)} ${item.id}\n        ${item.description}`);
+  for (const item of mutants)
+    console.log(`${item.kind.padEnd(5)} ${item.suite.padEnd(6)} ${item.id}\n        ${item.description}`);
   console.log(`\n${mutants.length} mutants.`);
   process.exit(0);
 }
@@ -109,7 +133,10 @@ for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => process.exi
 const SKIP = new Set(['node_modules', 'dist', '.git', '.claude', '.build']);
 function makeJob(name) {
   const directory = path.join(scratch, name);
-  cpSync(root, directory, { recursive: true, filter: (source) => !SKIP.has(path.basename(source)) && !source.endsWith('.vsix') });
+  cpSync(root, directory, {
+    recursive: true,
+    filter: (source) => !SKIP.has(path.basename(source)) && !source.endsWith('.vsix'),
+  });
   symlinkSync(path.join(root, 'node_modules'), path.join(directory, 'node_modules'));
   return directory;
 }
@@ -121,7 +148,9 @@ async function prepareExamples() {
   try {
     return JSON.stringify(await fetchExamples());
   } catch (error) {
-    console.log(`The GitHub page cannot be fetched (${error instanceof Error ? error.message : error}). Its test is skipped in every run.`);
+    console.log(
+      `The GitHub page cannot be fetched (${error instanceof Error ? error.message : error}). Its test is skipped in every run.`,
+    );
     return undefined;
   }
 }
@@ -130,7 +159,12 @@ async function prepareExamples() {
 
 function run(command, commandArgs, cwd, timeoutMs) {
   return new Promise((resolve) => {
-    const child = spawn(command, commandArgs, { cwd, detached: true, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, CI: 'true' } });
+    const child = spawn(command, commandArgs, {
+      cwd,
+      detached: true,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: { ...process.env, CI: 'true' },
+    });
     let output = '';
     child.stdout.on('data', (chunk) => (output += chunk));
     child.stderr.on('data', (chunk) => (output += chunk));
@@ -152,7 +186,12 @@ function run(command, commandArgs, cwd, timeoutMs) {
 
 async function runSuite(suite, directory) {
   if (suite === 'unit') {
-    const result = await run(process.execPath, ['--test', '--test-reporter=tap', '--test-concurrency=3', 'test/*.test.mjs'], directory, TIMEOUT_MS.unit);
+    const result = await run(
+      process.execPath,
+      ['--test', '--test-reporter=tap', '--test-concurrency=3', 'test/*.test.mjs'],
+      directory,
+      TIMEOUT_MS.unit,
+    );
     const failed = [...result.output.matchAll(/^not ok \d+ - (.+)$/gm)].map((match) => match[1]);
     return { ...result, failed };
   }
@@ -185,7 +224,9 @@ async function worker(suite, directory, queue) {
     finished++;
     results.push({ ...item, mutant: undefined, status, failedTests: outcome.failed.slice(0, 5) });
     const by = outcome.failed[0] ? `  <- ${outcome.failed[0].slice(0, 90)}` : '';
-    console.log(`[${finished}/${mutants.length}] ${status.toUpperCase().padEnd(17)} ${item.id}${status === 'survived' ? `\n      ${item.description}` : by}`);
+    console.log(
+      `[${finished}/${mutants.length}] ${status.toUpperCase().padEnd(17)} ${item.id}${status === 'survived' ? `\n      ${item.description}` : by}`,
+    );
   }
 }
 
@@ -208,7 +249,9 @@ try {
     const baseline = await Promise.all(directories.map((directory) => runSuite(suite, directory)));
     const broken = baseline.find((outcome) => outcome.code !== 0);
     if (broken) {
-      console.error(`The ${suite} tests fail without any change. Fix them first.\n${broken.failed.join('\n') || broken.output.slice(-1500)}`);
+      console.error(
+        `The ${suite} tests fail without any change. Fix them first.\n${broken.failed.join('\n') || broken.output.slice(-1500)}`,
+      );
       process.exit(2);
     }
     console.log(`The ${suite} tests pass without a change. ${queue.length} mutants, ${jobs} at a time.\n`);
@@ -222,7 +265,9 @@ const allSurvivors = results.filter((item) => item.status === 'survived');
 const accepted = allSurvivors.filter((item) => item.accepted);
 const survivors = allSurvivors.filter((item) => !item.accepted);
 const count = (status) => results.filter((item) => item.status === status).length;
-console.log(`\n${results.length} mutants: ${count('killed')} killed by a failing test, ${count('killed-by-crash')} by a crash, ${count('killed-by-timeout')} by a timeout, ${survivors.length} survived${accepted.length ? `, ${accepted.length} more survived and are accepted` : ''}.`);
+console.log(
+  `\n${results.length} mutants: ${count('killed')} killed by a failing test, ${count('killed-by-crash')} by a crash, ${count('killed-by-timeout')} by a timeout, ${survivors.length} survived${accepted.length ? `, ${accepted.length} more survived and are accepted` : ''}.`,
+);
 for (const item of survivors) console.log(`SURVIVED ${item.id}\n    ${item.description}`);
 for (const item of accepted) console.log(`ACCEPTED ${item.id}\n    ${item.accepted}`);
 writeFileSync(reportPath, JSON.stringify(results, null, 1));

@@ -9,7 +9,11 @@ const { escapeMarkdownText } = await loadModule('webview/markdownText.ts', 'mark
 const { searchEmoji, EMOJI } = await loadModule('webview/emoji.ts', 'emoji');
 
 const press = (editor, key) =>
-  Boolean(editor.view.someProp('handleKeyDown', (handler) => handler(editor.view, new window.KeyboardEvent('keydown', { key, cancelable: true }))));
+  Boolean(
+    editor.view.someProp('handleKeyDown', (handler) =>
+      handler(editor.view, new window.KeyboardEvent('keydown', { key, cancelable: true })),
+    ),
+  );
 
 function positionOf(editor, text) {
   let found;
@@ -35,21 +39,43 @@ test('isMediaFile looks at the file type, and at the extension when the type is 
   assert.equal(isMediaFile({ name: 'a', type: 'image/png' }), true);
   assert.equal(isMediaFile({ name: 'a', type: 'IMAGE/JPEG' }), true);
   assert.equal(isMediaFile({ name: 'a', type: 'video/quicktime' }), true);
-  for (const name of ['a.png', 'a.JPG', 'a.jpeg', 'a.gif', 'a.svg', 'a.webp', 'a.avif', 'a.bmp', 'a.mp4', 'a.MOV', 'a.webm', 'a.m4v', 'a.ogv']) {
+  for (const name of [
+    'a.png',
+    'a.JPG',
+    'a.jpeg',
+    'a.gif',
+    'a.svg',
+    'a.webp',
+    'a.avif',
+    'a.bmp',
+    'a.mp4',
+    'a.MOV',
+    'a.webm',
+    'a.m4v',
+    'a.ogv',
+  ]) {
     assert.equal(isMediaFile({ name, type: '' }), true, name);
   }
   assert.equal(isMediaFile({ name: 'notes.txt', type: 'text/plain' }), false);
   assert.equal(isMediaFile({ name: 'a.png.txt', type: '' }), false);
   assert.equal(isMediaFile({ name: 'png', type: '' }), false);
   assert.equal(isMediaFile({ name: 'a.pdf', type: 'application/pdf' }), false);
-  assert.equal(isMediaFile({ name: 'a', type: 'application/image' }), false, 'the type must start with image/ or video/');
+  assert.equal(
+    isMediaFile({ name: 'a', type: 'application/image' }),
+    false,
+    'the type must start with image/ or video/',
+  );
 });
 
 function mediaEditor() {
   const received = [];
-  const editor = makeEditor(createEditor, 'Some text here.', { extensions: [createMediaInput({ onFiles: (files) => received.push(files.map((item) => item.name)) })] });
+  const editor = makeEditor(createEditor, 'Some text here.', {
+    extensions: [createMediaInput({ onFiles: (files) => received.push(files.map((item) => item.name)) })],
+  });
   // The plugin of this feature on its own. The other plugins of the editor also read a paste and a drop.
-  const plugin = editor.state.plugins.find((candidate) => candidate.props.handlePaste && String(candidate.key).startsWith('rmeMediaInput'));
+  const plugin = editor.state.plugins.find(
+    (candidate) => candidate.props.handlePaste && String(candidate.key).startsWith('rmeMediaInput'),
+  );
   assert.ok(plugin, 'the editor has the plugin for media');
   return {
     editor,
@@ -60,7 +86,13 @@ function mediaEditor() {
 }
 
 function pasteEvent(files) {
-  return { clipboardData: { files }, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; } };
+  return {
+    clipboardData: { files },
+    defaultPrevented: false,
+    preventDefault() {
+      this.defaultPrevented = true;
+    },
+  };
 }
 
 test('a paste of images and videos goes to the host, and the editor does not paste it', () => {
@@ -82,7 +114,15 @@ test('a paste with other files too sends only the images and videos', () => {
 test('a paste without a media file is left to the editor', () => {
   const { editor, received, paste } = mediaEditor();
   for (const files of [[], [file('notes.txt', 'text/plain')], undefined]) {
-    const event = files === undefined ? { clipboardData: null, preventDefault() { throw new Error('must not prevent'); } } : pasteEvent(files);
+    const event =
+      files === undefined
+        ? {
+            clipboardData: null,
+            preventDefault() {
+              throw new Error('must not prevent');
+            },
+          }
+        : pasteEvent(files);
     assert.equal(paste(event), false);
     assert.equal(event.defaultPrevented ?? false, false);
   }
@@ -94,7 +134,15 @@ test('a drop of media goes to the host, and the cursor moves to the place of the
   const { editor, received, drop } = mediaEditor();
   editor.view.posAtCoords = () => ({ pos: 6, inside: -1 });
   editor.commands.setTextSelection(1);
-  const event = { dataTransfer: { files: [file('a.png', 'image/png'), file('x.txt', 'text/plain')] }, clientX: 5, clientY: 5, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; } };
+  const event = {
+    dataTransfer: { files: [file('a.png', 'image/png'), file('x.txt', 'text/plain')] },
+    clientX: 5,
+    clientY: 5,
+    defaultPrevented: false,
+    preventDefault() {
+      this.defaultPrevented = true;
+    },
+  };
   assert.equal(drop(event), true);
   assert.equal(event.defaultPrevented, true);
   assert.deepEqual(received, [['a.png']]);
@@ -107,7 +155,15 @@ test('a drop outside the text still goes to the host, and a drop without media i
   editor.view.posAtCoords = () => null;
   editor.commands.setTextSelection(3);
   const drop = (files) => {
-    const event = { dataTransfer: { files }, clientX: 0, clientY: 0, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; } };
+    const event = {
+      dataTransfer: { files },
+      clientX: 0,
+      clientY: 0,
+      defaultPrevented: false,
+      preventDefault() {
+        this.defaultPrevented = true;
+      },
+    };
     return { handled: handleDrop(event), event };
   };
   const media = drop([file('b.webm', 'video/webm')]);
@@ -143,7 +199,10 @@ test('escapeMarkdownText keeps the brackets of a footnote label and escapes othe
 test('a footnote definition with no text gets an empty paragraph', () => {
   const editor = makeEditor(createEditor, 'Text[^1]\n\n[^1]:');
   const definition = editor.getJSON().content.find((node) => node.type === 'footnoteDefinition');
-  assert.deepEqual(definition.content.map((node) => node.type), ['paragraph']);
+  assert.deepEqual(
+    definition.content.map((node) => node.type),
+    ['paragraph'],
+  );
   editor.destroy();
 });
 
@@ -153,9 +212,21 @@ test('insertFootnote takes the first free number, and puts the cursor in the new
   editor.commands.insertFootnote();
   const ids = [];
   editor.state.doc.descendants((node) => {
-    if (node.type.name === 'footnoteRef' || node.type.name === 'footnoteDefinition') ids.push(`${node.type.name}:${node.attrs.id}`);
+    if (node.type.name === 'footnoteRef' || node.type.name === 'footnoteDefinition')
+      ids.push(`${node.type.name}:${node.attrs.id}`);
   });
-  assert.deepEqual(ids, ['footnoteRef:1', 'footnoteRef:3', 'footnoteDefinition:1', 'footnoteDefinition:3', 'footnoteRef:2', 'footnoteDefinition:2'], 'the number 2 is free');
+  assert.deepEqual(
+    ids,
+    [
+      'footnoteRef:1',
+      'footnoteRef:3',
+      'footnoteDefinition:1',
+      'footnoteDefinition:3',
+      'footnoteRef:2',
+      'footnoteDefinition:2',
+    ],
+    'the number 2 is free',
+  );
   const { $from } = editor.state.selection;
   assert.equal($from.node(1).type.name, 'footnoteDefinition');
   assert.equal($from.node(1).attrs.id, '2', 'the cursor is in the new note');
@@ -208,7 +279,12 @@ test('Ctrl or Cmd plus a click on a footnote mark scrolls to its note, and a pla
       at = pos;
     }
   });
-  const click = (node, pos, init) => Boolean(editor.view.someProp('handleClickOn', (handler) => handler(editor.view, pos, node, pos, new window.MouseEvent('click', init), true)));
+  const click = (node, pos, init) =>
+    Boolean(
+      editor.view.someProp('handleClickOn', (handler) =>
+        handler(editor.view, pos, node, pos, new window.MouseEvent('click', init), true),
+      ),
+    );
   globalThis.__scrolledIntoView.length = 0;
 
   assert.equal(click(ref, at, {}), false, 'a plain click');
@@ -218,7 +294,12 @@ test('Ctrl or Cmd plus a click on a footnote mark scrolls to its note, and a pla
   assert.equal(globalThis.__scrolledIntoView.length, 1);
   const scrolled = globalThis.__scrolledIntoView[0];
   assert.equal(scrolled.element.getAttribute('data-n'), '1');
-  assert.ok(scrolled.element.classList.contains('rme-fn-def') || scrolled.element.dataset.footnoteDefinition !== undefined || scrolled.element.textContent.includes('Note A.'), 'it scrolls to the note');
+  assert.ok(
+    scrolled.element.classList.contains('rme-fn-def') ||
+      scrolled.element.dataset.footnoteDefinition !== undefined ||
+      scrolled.element.textContent.includes('Note A.'),
+    'it scrolls to the note',
+  );
   assert.deepEqual(scrolled.options, { block: 'center', behavior: 'smooth' });
 
   assert.equal(click(ref, at, { ctrlKey: true }), true, 'Ctrl+click');
@@ -251,7 +332,8 @@ test('Backspace does not take anything out of an alert in the other cases', () =
   const cases = {
     'in the middle of a word': (editor) => editor.commands.setTextSelection(positionOf(editor, 'First') + 2),
     'at the start of the second block': (editor) => editor.commands.setTextSelection(positionOf(editor, 'Second')),
-    'with a selection': (editor) => editor.commands.setTextSelection({ from: positionOf(editor, 'First'), to: positionOf(editor, 'First') + 3 }),
+    'with a selection': (editor) =>
+      editor.commands.setTextSelection({ from: positionOf(editor, 'First'), to: positionOf(editor, 'First') + 3 }),
   };
   for (const [name, place] of Object.entries(cases)) {
     const editor = makeEditor(createEditor, source);
@@ -275,7 +357,16 @@ test('the alert has a header with an icon and a select of the five types, and a 
   const select = header.querySelector('select');
   assert.equal(select.getAttribute('aria-label'), 'Alert type');
   assert.equal(select.value, 'tip');
-  assert.deepEqual([...select.options].map((option) => [option.value, option.textContent]), [['note', 'Note'], ['tip', 'Tip'], ['important', 'Important'], ['warning', 'Warning'], ['caution', 'Caution']]);
+  assert.deepEqual(
+    [...select.options].map((option) => [option.value, option.textContent]),
+    [
+      ['note', 'Note'],
+      ['tip', 'Tip'],
+      ['important', 'Important'],
+      ['warning', 'Warning'],
+      ['caution', 'Caution'],
+    ],
+  );
   const body = alert.querySelector('.rme-alert-body');
   assert.equal(body.querySelector('p').textContent, 'Text', 'the blocks are in the body');
   editor.destroy();
@@ -314,8 +405,14 @@ test('searchEmoji needs two letters, ignores capitals, and puts the codes that s
   const startsWith = found.map((match) => match.name.startsWith('smi'));
   const firstOther = startsWith.indexOf(false);
   assert.ok(firstOther > 0, 'some codes start with the text, and some only contain it');
-  assert.ok(startsWith.slice(0, firstOther).every(Boolean) && startsWith.slice(firstOther).every((value) => !value), 'all that start with it come first');
-  assert.ok(found.slice(firstOther).every((match) => match.name.includes('smi')), 'the others contain the text');
+  assert.ok(
+    startsWith.slice(0, firstOther).every(Boolean) && startsWith.slice(firstOther).every((value) => !value),
+    'all that start with it come first',
+  );
+  assert.ok(
+    found.slice(firstOther).every((match) => match.name.includes('smi')),
+    'the others contain the text',
+  );
   assert.ok(found.some((match) => match.name === 'smile'));
   assert.equal(new Set(found.map((match) => match.name)).size, found.length, 'no code twice');
 });

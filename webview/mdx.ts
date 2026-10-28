@@ -23,7 +23,21 @@ export interface MdxMatch {
 const CLOSER: Record<string, string> = { '(': ')', '[': ']', '{': '}' };
 
 /** Tags that have no closing tag in HTML. In JSX they are written `<br />`, but the editor also accepts `<br>`. */
-const VOID_TAGS = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
+const VOID_TAGS = new Set([
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'source',
+  'track',
+  'wbr',
+]);
 
 /** The end of a string that starts at `start` with a quote. A string stops at the end of its line, so an apostrophe in text is not a string. */
 function skipString(src: string, start: number): number {

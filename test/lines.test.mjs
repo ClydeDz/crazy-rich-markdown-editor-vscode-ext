@@ -45,7 +45,11 @@ test('three paragraphs that the selection touches are one group, from the start 
   assert.equal(groups[0].text, 'one\ntwo\nthree');
   assert.equal(groups[0].from, 0);
   const fourth = editor.state.doc.child(3);
-  assert.equal(groups[0].to, editor.state.doc.content.size - fourth.nodeSize, 'the group ends where the fourth paragraph starts');
+  assert.equal(
+    groups[0].to,
+    editor.state.doc.content.size - fourth.nodeSize,
+    'the group ends where the fourth paragraph starts',
+  );
   editor.destroy();
 });
 
@@ -59,9 +63,15 @@ test('a selection that starts and ends inside a line takes the whole line', () =
 test('a cursor gives the line that holds it, and a heading is a line', () => {
   const editor = makeEditor(createEditor, '# Title\n\nbody');
   editor.commands.setTextSelection(positionOf(editor, 'body') + 1);
-  assert.deepEqual(selectedLineGroups(editor.state, 'source').map((g) => g.lines), [['body']]);
+  assert.deepEqual(
+    selectedLineGroups(editor.state, 'source').map((g) => g.lines),
+    [['body']],
+  );
   selectBetween(editor, 'Title', 'body');
-  assert.deepEqual(selectedLineGroups(editor.state, 'source').map((g) => g.lines), [['Title', 'body']]);
+  assert.deepEqual(
+    selectedLineGroups(editor.state, 'source').map((g) => g.lines),
+    [['Title', 'body']],
+  );
   editor.destroy();
 });
 
@@ -87,7 +97,10 @@ test('the lines of a table are not lines: a cursor in a cell gives no group, and
   editor.commands.setTextSelection(positionOf(editor, '1') + 1);
   assert.deepEqual(selectedLineGroups(editor.state, 'source'), []);
   editor.commands.selectAll();
-  assert.deepEqual(selectedLineGroups(editor.state, 'source').map((group) => group.lines), [['x'], ['y']]);
+  assert.deepEqual(
+    selectedLineGroups(editor.state, 'source').map((group) => group.lines),
+    [['x'], ['y']],
+  );
   editor.destroy();
 });
 
@@ -102,21 +115,30 @@ test('a selection of a block that holds no line gives no group', () => {
 test('paragraphs of one list item are one group, and the paragraphs of two list items are two groups', () => {
   const editor = makeEditor(createEditor, '- first\n\n  second\n- third');
   selectBetween(editor, 'first', 'third');
-  assert.deepEqual(selectedLineGroups(editor.state, 'source').map((g) => g.lines), [['first', 'second'], ['third']]);
+  assert.deepEqual(
+    selectedLineGroups(editor.state, 'source').map((g) => g.lines),
+    [['first', 'second'], ['third']],
+  );
   editor.destroy();
 });
 
 test('a paragraph in a quote and a paragraph after the quote are two groups, though no block lies between them', () => {
   const editor = makeEditor(createEditor, '> inside\n\noutside');
   selectBetween(editor, 'inside', 'outside');
-  assert.deepEqual(selectedLineGroups(editor.state, 'source').map((g) => g.lines), [['inside'], ['outside']]);
+  assert.deepEqual(
+    selectedLineGroups(editor.state, 'source').map((g) => g.lines),
+    [['inside'], ['outside']],
+  );
   editor.destroy();
 });
 
 test('the text of a line is what the user sees: a line break is a new line, marks are gone, and the text is not escaped', () => {
   const editor = makeEditor(createEditor, 'a  \nb **bold** `code`\n\ndef f(*args, **kwargs) x_1 \\frac{a}{b}');
   selectBetween(editor, 'a', 'frac');
-  assert.deepEqual(selectedLineGroups(editor.state, 'source')[0].lines, ['a\nb bold code', 'def f(*args, **kwargs) x_1 \\frac{a}{b}']);
+  assert.deepEqual(selectedLineGroups(editor.state, 'source')[0].lines, [
+    'a\nb bold code',
+    'def f(*args, **kwargs) x_1 \\frac{a}{b}',
+  ]);
   editor.destroy();
 });
 
@@ -132,7 +154,10 @@ test('the parts of a line that are not text give the Markdown that made them, an
 test('a blank line at the start or at the end of a group is cut off, and a blank line in the middle stays', () => {
   const editor = makeEditor(createEditor, 'x');
   const paragraph = (text) => (text ? { type: 'paragraph', content: [{ type: 'text', text }] } : { type: 'paragraph' });
-  editor.commands.setContent({ type: 'doc', content: [paragraph(''), paragraph('  indented'), paragraph(''), paragraph('last'), paragraph('')] });
+  editor.commands.setContent({
+    type: 'doc',
+    content: [paragraph(''), paragraph('  indented'), paragraph(''), paragraph('last'), paragraph('')],
+  });
   editor.commands.selectAll();
   const [group] = selectedLineGroups(editor.state, 'source');
   assert.equal(group.lines.length, 5);
@@ -263,7 +288,10 @@ test('a block that holds no line stops the group: the code blocks are two, and t
   const editor = makeEditor(createEditor, 'one\n\n---\n\ntwo\n\n| a | b |\n| - | - |\n| 1 | 2 |\n\nthree');
   selectBetween(editor, 'one', 'three');
   editor.commands.toggleCodeBlock();
-  assert.equal(getMarkdown(editor), '```\none\n```\n\n---\n\n```\ntwo\n```\n\n| a   | b   |\n| --- | --- |\n| 1   | 2   |\n\n```\nthree\n```');
+  assert.equal(
+    getMarkdown(editor),
+    '```\none\n```\n\n---\n\n```\ntwo\n```\n\n| a   | b   |\n| --- | --- |\n| 1   | 2   |\n\n```\nthree\n```',
+  );
   editor.destroy();
 });
 
@@ -320,7 +348,12 @@ test('an empty line becomes an empty code block, with the cursor inside it', () 
 test('the command works in a chain, after another command, as the slash menu runs it', () => {
   const editor = makeEditor(createEditor, 'keep\n\n/code');
   const from = positionOf(editor, '/code');
-  editor.chain().focus().deleteRange({ from, to: from + 5 }).toggleCodeBlock().run();
+  editor
+    .chain()
+    .focus()
+    .deleteRange({ from, to: from + 5 })
+    .toggleCodeBlock()
+    .run();
   assert.deepEqual(topTypes(editor).slice(0, 2), ['paragraph', 'codeBlock']);
   assert.equal(getMarkdown(editor).startsWith('keep\n\n```'), true);
   editor.destroy();
@@ -431,7 +464,10 @@ test('the Diagram item puts all selected lines in one mermaid block', () => {
   const editor = makeEditor(createEditor, 'before\n\ngraph TD\n\nA[Start] --> B{Done}\n\nB -.-> C((End))\n\nafter');
   selectBetween(editor, 'graph', 'End');
   assert.equal(editor.commands.setDiagram(), true);
-  assert.equal(getMarkdown(editor), 'before\n\n```mermaid\ngraph TD\nA[Start] --> B{Done}\nB -.-> C((End))\n```\n\nafter');
+  assert.equal(
+    getMarkdown(editor),
+    'before\n\n```mermaid\ngraph TD\nA[Start] --> B{Done}\nB -.-> C((End))\n```\n\nafter',
+  );
   assert.equal(nodesOf(editor, 'codeBlock').length, 1);
   assert.equal(nodesOf(editor, 'codeBlock')[0].attrs.language, 'mermaid');
   editor.destroy();

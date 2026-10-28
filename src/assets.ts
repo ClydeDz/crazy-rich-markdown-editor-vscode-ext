@@ -92,7 +92,8 @@ export function altText(fileName: string): string {
     .trim();
 }
 
-const VARIABLES = /\$\{(documentDirname|documentBasenameNoExtension|documentFileName|workspaceFolder|documentWorkspaceFolder)\}/g;
+const VARIABLES =
+  /\$\{(documentDirname|documentBasenameNoExtension|documentFileName|workspaceFolder|documentWorkspaceFolder)\}/g;
 
 /**
  * Find the folder for new assets. The setting is a path that is relative to the folder of the document.
@@ -109,10 +110,7 @@ export function resolveAssetFolder(setting: string | undefined, document: vscode
   const workspaceFolder = vscode.workspace.getWorkspaceFolder(document)?.uri ?? documentFolder;
   const workspaceFolderPath =
     process.platform === 'win32'
-      ? workspaceFolder.path.replace(
-          /^\/([a-zA-Z]):(?=\/)/,
-          (_match, drive: string) => `/${drive.toLowerCase()}:`,
-        )
+      ? workspaceFolder.path.replace(/^\/([a-zA-Z]):(?=\/)/, (_match, drive: string) => `/${drive.toLowerCase()}:`)
       : workspaceFolder.path;
 
   let value = (setting ?? '').trim().replace(/\\/g, '/');

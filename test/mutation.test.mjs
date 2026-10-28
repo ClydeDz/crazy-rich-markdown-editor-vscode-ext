@@ -2,7 +2,14 @@
 // If the tool changed text in a string or a comment, its report about the tests would be wrong.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { applyMutant, codeMask, describeMutant, findMutants, isValidSyntax, seededShuffle } from '../scripts/mutation-lib.mjs';
+import {
+  applyMutant,
+  codeMask,
+  describeMutant,
+  findMutants,
+  isValidSyntax,
+  seededShuffle,
+} from '../scripts/mutation-lib.mjs';
 
 const mutate = (source, operator) =>
   findMutants(source)
@@ -50,21 +57,51 @@ test('each operator makes the change that its name says', () => {
 });
 
 test('the operators leave alone what is not a comparison, a name or a number', () => {
-  assert.deepEqual(mutate('x = a && b; y = a != b; z = (a) => b;', 'and to or'), ['x = a || b; y = a != b; z = (a) => b;']);
-  assert.equal(findMutants('x = a.b3; y = $1;').filter((mutant) => mutant.operator === 'number plus one').length, 0, 'a digit inside a name');
-  assert.equal(findMutants('x = a !== b;').filter((mutant) => mutant.operator === 'remove not').length, 0, 'the ! of !==');
-  assert.equal(findMutants('x = 1.5;').filter((mutant) => mutant.operator === 'number plus one').length, 0, 'a decimal number');
-  assert.equal(findMutants('f(a => b);').filter((mutant) => mutant.operator === 'greater than to greater or equal').length, 0, 'an arrow');
+  assert.deepEqual(mutate('x = a && b; y = a != b; z = (a) => b;', 'and to or'), [
+    'x = a || b; y = a != b; z = (a) => b;',
+  ]);
+  assert.equal(
+    findMutants('x = a.b3; y = $1;').filter((mutant) => mutant.operator === 'number plus one').length,
+    0,
+    'a digit inside a name',
+  );
+  assert.equal(
+    findMutants('x = a !== b;').filter((mutant) => mutant.operator === 'remove not').length,
+    0,
+    'the ! of !==',
+  );
+  assert.equal(
+    findMutants('x = 1.5;').filter((mutant) => mutant.operator === 'number plus one').length,
+    0,
+    'a decimal number',
+  );
+  assert.equal(
+    findMutants('f(a => b);').filter((mutant) => mutant.operator === 'greater than to greater or equal').length,
+    0,
+    'an arrow',
+  );
 });
 
 test('an if condition is negated as a whole', () => {
   assert.deepEqual(mutate('if (a && (b || c)) { x(); }', 'negate if'), ['if (!(a && (b || c))) { x(); }']);
-  assert.deepEqual(mutate("if (s.includes(')')) { x(); }", 'negate if'), ["if (!(s.includes(')'))) { x(); }"], 'a ) in a string does not end the condition');
+  assert.deepEqual(
+    mutate("if (s.includes(')')) { x(); }", 'negate if'),
+    ["if (!(s.includes(')'))) { x(); }"],
+    'a ) in a string does not end the condition',
+  );
   assert.deepEqual(mutate("// if (a) {}\nconst s = 'if (b) {}';", 'negate if'), [], 'not in a comment or a string');
 });
 
 test('a statement on one line can be deleted, a declaration or a return cannot', () => {
-  const source = ['  foo(1, 2);', '  obj.x = 5;', '  const y = bar();', '  return baz();', '  total += 2;', '  call(', '    a);'].join('\n');
+  const source = [
+    '  foo(1, 2);',
+    '  obj.x = 5;',
+    '  const y = bar();',
+    '  return baz();',
+    '  total += 2;',
+    '  call(',
+    '    a);',
+  ].join('\n');
   const deleted = findMutants(source)
     .filter((mutant) => mutant.operator === 'delete statement')
     .map((mutant) => source.slice(mutant.start, mutant.end));
@@ -95,8 +132,15 @@ test('seededShuffle gives the same order for the same seed, and every item once'
   assert.deepEqual(seededShuffle(items, 7), one);
   assert.notDeepEqual(seededShuffle(items, 8), one);
   assert.notDeepEqual(one, items);
-  assert.deepEqual([...one].sort((a, b) => a - b), items);
-  assert.deepEqual(items, Array.from({ length: 20 }, (_, index) => index), 'the input does not change');
+  assert.deepEqual(
+    [...one].sort((a, b) => a - b),
+    items,
+  );
+  assert.deepEqual(
+    items,
+    Array.from({ length: 20 }, (_, index) => index),
+    'the input does not change',
+  );
 });
 
 test('a backslash in a string hides one character, so a string can end with an escaped backslash', () => {

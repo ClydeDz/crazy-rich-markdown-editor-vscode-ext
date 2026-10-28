@@ -10,14 +10,22 @@ const { createShortcutsModal } = await loadModule('webview/shortcutsModal.ts', '
 const { ABOUT } = await loadModule('webview/about.ts', 'about');
 
 const GROUPS = [
-  { title: 'Text', items: [{ label: 'Bold', keys: ['Mod-b'] }, { label: 'Link', keys: ['Mod-k'], note: 'Select text first' }] },
+  {
+    title: 'Text',
+    items: [
+      { label: 'Bold', keys: ['Mod-b'] },
+      { label: 'Link', keys: ['Mod-k'], note: 'Select text first' },
+    ],
+  },
   { title: 'Editing', items: [{ label: 'Redo', keys: ['Mod-Shift-z', 'Mod-y'] }] },
 ];
 
 const created = [];
 const openedLinks = [];
 
-function makeModal(about = { creator: 'Ada', creatorUrl: 'https://example.com/ada', coffeeUrl: 'https://example.com/coffee' }) {
+function makeModal(
+  about = { creator: 'Ada', creatorUrl: 'https://example.com/ada', coffeeUrl: 'https://example.com/coffee' },
+) {
   const modal = createShortcutsModal({ groups: GROUPS, about, openLink: (href) => openedLinks.push(href) });
   created.push(modal);
   return modal;
@@ -81,7 +89,11 @@ test('the window lists each group and each line, with the key caps and the notes
 
   assert.deepEqual(caps(rows[2]), ['Ctrl', 'Shift', 'Z', 'Ctrl', 'Y']);
   assert.equal(rows[2].querySelectorAll('.rme-shortcut-way').length, 2);
-  assert.deepEqual([...rows[2].querySelectorAll('.rme-shortcut-or')].map((or) => or.textContent), ['or'], 'the word "or" is between two ways, and only there');
+  assert.deepEqual(
+    [...rows[2].querySelectorAll('.rme-shortcut-or')].map((or) => or.textContent),
+    ['or'],
+    'the word "or" is between two ways, and only there',
+  );
   assert.equal(rows[0].querySelector('.rme-shortcut-or'), null, 'one way has no "or"');
 });
 
@@ -276,7 +288,10 @@ test('opening the window again starts at the top of the list', () => {
 test('the names and links in ABOUT are empty or a full https address, so a typo does not ship', () => {
   assert.equal(typeof ABOUT.creator, 'string');
   assert.ok(ABOUT.creator.length > 0, 'the creator has a name');
-  for (const [name, value] of [['creatorUrl', ABOUT.creatorUrl], ['coffeeUrl', ABOUT.coffeeUrl]]) {
+  for (const [name, value] of [
+    ['creatorUrl', ABOUT.creatorUrl],
+    ['coffeeUrl', ABOUT.coffeeUrl],
+  ]) {
     if (value === '' || value === undefined) continue;
     const url = new URL(value);
     assert.equal(url.protocol, 'https:', `${name} uses https`);
@@ -285,14 +300,25 @@ test('the names and links in ABOUT are empty or a full https address, so a typo 
 });
 
 test('the window uses every class that styles.css has for it, so no part of the window is left without its style', () => {
-  const css = readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'webview', 'styles.css'), 'utf8');
+  const css = readFileSync(
+    path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'webview', 'styles.css'),
+    'utf8',
+  );
   const wanted = new Set([...css.matchAll(/\.(rme-(?:modal|shortcut)[\w-]*)/g)].map((match) => match[1]));
   const modal = makeModal();
   const used = new Set([modal.element, ...modal.element.querySelectorAll('*')].flatMap((item) => [...item.classList]));
-  assert.deepEqual([...wanted].filter((name) => !used.has(name)), [], 'a class of styles.css that the window does not use');
+  assert.deepEqual(
+    [...wanted].filter((name) => !used.has(name)),
+    [],
+    'a class of styles.css that the window does not use',
+  );
   // These classes are only marks for the tests and for a theme. They have no style.
   const marks = new Set(['rme-modal-credit', 'rme-modal-coffee', 'rme-shortcut-group']);
-  assert.deepEqual([...used].filter((name) => !wanted.has(name) && !marks.has(name)), [], 'a class of the window that styles.css does not know');
+  assert.deepEqual(
+    [...used].filter((name) => !wanted.has(name) && !marks.has(name)),
+    [],
+    'a class of the window that styles.css does not know',
+  );
 });
 
 test('the close button has an icon', () => {

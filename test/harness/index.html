@@ -1,121 +1,140 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crazy Rich Markdown Editor harness</title>
-  <style>
-    /* A few of the VS Code theme variables, so the page looks like a webview. */
-    :root {
-      --vscode-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      --vscode-editor-font-family: Menlo, Monaco, "Courier New", monospace;
-      --vscode-editor-font-size: 13px;
-      --vscode-editor-background: #1e1e1e;
-      --vscode-editor-foreground: #d4d4d4;
-      --vscode-foreground: #cccccc;
-      --vscode-descriptionForeground: #9d9d9d;
-      --vscode-textLink-foreground: #3794ff;
-      --vscode-textLink-activeForeground: #3794ff;
-      --vscode-textCodeBlock-background: #2b2b2b;
-      --vscode-textPreformat-foreground: #d7ba7d;
-      --vscode-textBlockQuote-background: #2b2b2b;
-      --vscode-textBlockQuote-border: #616161;
-      --vscode-textSeparator-foreground: #494949;
-      --vscode-editorWidget-background: #252526;
-      --vscode-editorWidget-border: #454545;
-      --vscode-editorWidget-foreground: #cccccc;
-      --vscode-widget-shadow: rgba(0, 0, 0, 0.36);
-      --vscode-toolbar-hoverBackground: rgba(90, 93, 94, 0.31);
-      --vscode-toolbar-activeBackground: rgba(99, 102, 103, 0.31);
-      --vscode-inputOption-activeBackground: rgba(0, 127, 212, 0.4);
-      --vscode-inputOption-activeBorder: #007acc;
-      --vscode-inputOption-activeForeground: #ffffff;
-      --vscode-input-background: #3c3c3c;
-      --vscode-input-foreground: #cccccc;
-      --vscode-input-border: transparent;
-      --vscode-input-placeholderForeground: #a6a6a6;
-      --vscode-focusBorder: #007fd4;
-      --vscode-editor-selectionBackground: #264f78;
-      --vscode-editorSuggestWidget-background: #252526;
-      --vscode-editorSuggestWidget-border: #454545;
-      --vscode-editorSuggestWidget-foreground: #d4d4d4;
-      --vscode-editorSuggestWidget-selectedBackground: #04395e;
-      --vscode-list-activeSelectionBackground: #04395e;
-      --vscode-list-activeSelectionForeground: #ffffff;
-      --vscode-button-background: #0e639c;
-    }
-    :root[data-theme='light'] {
-      --vscode-editor-background: #ffffff;
-      --vscode-editor-foreground: #3b3b3b;
-      --vscode-foreground: #3b3b3b;
-      --vscode-descriptionForeground: #717171;
-      --vscode-textLink-foreground: #006ab1;
-      --vscode-textCodeBlock-background: #f0f0f0;
-      --vscode-textPreformat-foreground: #a31515;
-      --vscode-textBlockQuote-background: #f2f2f2;
-      --vscode-textBlockQuote-border: #bdbdbd;
-      --vscode-textSeparator-foreground: #d4d4d4;
-      --vscode-editorWidget-background: #f8f8f8;
-      --vscode-editorWidget-border: #c8c8c8;
-      --vscode-editorWidget-foreground: #3b3b3b;
-      --vscode-widget-shadow: rgba(0, 0, 0, 0.16);
-      --vscode-toolbar-hoverBackground: rgba(184, 184, 184, 0.31);
-      --vscode-inputOption-activeBackground: rgba(0, 102, 191, 0.2);
-      --vscode-inputOption-activeBorder: rgba(0, 102, 191, 0.4);
-      --vscode-inputOption-activeForeground: #000000;
-      --vscode-input-background: #ffffff;
-      --vscode-input-foreground: #3b3b3b;
-      --vscode-input-border: #cecece;
-      --vscode-editor-selectionBackground: #add6ff;
-      --vscode-editorSuggestWidget-background: #f8f8f8;
-      --vscode-editorSuggestWidget-border: #c8c8c8;
-      --vscode-editorSuggestWidget-foreground: #3b3b3b;
-      --vscode-editorSuggestWidget-selectedBackground: #e8e8e8;
-      --vscode-list-activeSelectionBackground: #0060c0;
-    }
-  </style>
-  <link rel="stylesheet" href="/dist/webview.css" />
-</head>
-<body>
-  <div id="stats" class="rme-stats" hidden></div>
-  <div id="app">
-    <details id="frontmatter" class="rme-frontmatter" hidden>
-      <summary>Front matter</summary>
-      <textarea id="frontmatter-input" spellcheck="false" rows="4"></textarea>
-    </details>
-    <div id="editor"></div>
-  </div>
-  <script>
-    // A stand-in for the VS Code webview API. It records every message that the editor sends.
-    const params = new URLSearchParams(location.search);
-    if (params.get('theme') === 'light') document.documentElement.dataset.theme = 'light';
-    // VS Code puts one of these classes on the body of every webview.
-    document.body.classList.add(params.get('theme') === 'light' ? 'vscode-light' : 'vscode-dark');
-    window.__sent = [];
-    window.acquireVsCodeApi = () => ({
-      postMessage(message) {
-        window.__sent.push(message);
-        if (message.type === 'ready') {
-          // ?file=sample.mdx opens the MDX sample.
-          const file = params.get('file') || 'sample.md';
-          fetch('/test/harness/' + file).then((r) => r.text()).then((text) => {
-            window.postMessage({ type: 'init', text, baseUri: location.origin + '/test/harness', maxContentWidth: 820, showInfoBar: params.get('bar') !== 'off', mdx: /\.mdx$/i.test(file) }, '*');
-            // What the extension host sends about the file. The real host reads it from the disk and from Git.
-            window.postMessage({
-              type: 'fileInfo',
-              modified: Date.now() - 3 * 3600 * 1000,
-              authors: [
-                { name: 'Priya Raman', date: Date.now() - 2 * 86400000, subject: 'Explain the asset folder setting' },
-                { name: 'Tom Becker', date: Date.now() - 9 * 86400000, subject: 'Fix the table toolbar' },
-                { name: 'Ana Souza', date: Date.now() - 30 * 86400000, subject: 'First draft' },
-                { name: 'Lee Chen', date: Date.now() - 60 * 86400000, subject: 'Typo' },
-              ],
-            }, '*');
-          });
-        }
-      },
-    });
-  </script>
-  <script src="/dist/webview.js" data-mermaid="/dist/mermaid.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crazy Rich Markdown Editor harness</title>
+    <style>
+      /* A few of the VS Code theme variables, so the page looks like a webview. */
+      :root {
+        --vscode-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        --vscode-editor-font-family: Menlo, Monaco, 'Courier New', monospace;
+        --vscode-editor-font-size: 13px;
+        --vscode-editor-background: #1e1e1e;
+        --vscode-editor-foreground: #d4d4d4;
+        --vscode-foreground: #cccccc;
+        --vscode-descriptionForeground: #9d9d9d;
+        --vscode-textLink-foreground: #3794ff;
+        --vscode-textLink-activeForeground: #3794ff;
+        --vscode-textCodeBlock-background: #2b2b2b;
+        --vscode-textPreformat-foreground: #d7ba7d;
+        --vscode-textBlockQuote-background: #2b2b2b;
+        --vscode-textBlockQuote-border: #616161;
+        --vscode-textSeparator-foreground: #494949;
+        --vscode-editorWidget-background: #252526;
+        --vscode-editorWidget-border: #454545;
+        --vscode-editorWidget-foreground: #cccccc;
+        --vscode-widget-shadow: rgba(0, 0, 0, 0.36);
+        --vscode-toolbar-hoverBackground: rgba(90, 93, 94, 0.31);
+        --vscode-toolbar-activeBackground: rgba(99, 102, 103, 0.31);
+        --vscode-inputOption-activeBackground: rgba(0, 127, 212, 0.4);
+        --vscode-inputOption-activeBorder: #007acc;
+        --vscode-inputOption-activeForeground: #ffffff;
+        --vscode-input-background: #3c3c3c;
+        --vscode-input-foreground: #cccccc;
+        --vscode-input-border: transparent;
+        --vscode-input-placeholderForeground: #a6a6a6;
+        --vscode-focusBorder: #007fd4;
+        --vscode-editor-selectionBackground: #264f78;
+        --vscode-editorSuggestWidget-background: #252526;
+        --vscode-editorSuggestWidget-border: #454545;
+        --vscode-editorSuggestWidget-foreground: #d4d4d4;
+        --vscode-editorSuggestWidget-selectedBackground: #04395e;
+        --vscode-list-activeSelectionBackground: #04395e;
+        --vscode-list-activeSelectionForeground: #ffffff;
+        --vscode-button-background: #0e639c;
+      }
+      :root[data-theme='light'] {
+        --vscode-editor-background: #ffffff;
+        --vscode-editor-foreground: #3b3b3b;
+        --vscode-foreground: #3b3b3b;
+        --vscode-descriptionForeground: #717171;
+        --vscode-textLink-foreground: #006ab1;
+        --vscode-textCodeBlock-background: #f0f0f0;
+        --vscode-textPreformat-foreground: #a31515;
+        --vscode-textBlockQuote-background: #f2f2f2;
+        --vscode-textBlockQuote-border: #bdbdbd;
+        --vscode-textSeparator-foreground: #d4d4d4;
+        --vscode-editorWidget-background: #f8f8f8;
+        --vscode-editorWidget-border: #c8c8c8;
+        --vscode-editorWidget-foreground: #3b3b3b;
+        --vscode-widget-shadow: rgba(0, 0, 0, 0.16);
+        --vscode-toolbar-hoverBackground: rgba(184, 184, 184, 0.31);
+        --vscode-inputOption-activeBackground: rgba(0, 102, 191, 0.2);
+        --vscode-inputOption-activeBorder: rgba(0, 102, 191, 0.4);
+        --vscode-inputOption-activeForeground: #000000;
+        --vscode-input-background: #ffffff;
+        --vscode-input-foreground: #3b3b3b;
+        --vscode-input-border: #cecece;
+        --vscode-editor-selectionBackground: #add6ff;
+        --vscode-editorSuggestWidget-background: #f8f8f8;
+        --vscode-editorSuggestWidget-border: #c8c8c8;
+        --vscode-editorSuggestWidget-foreground: #3b3b3b;
+        --vscode-editorSuggestWidget-selectedBackground: #e8e8e8;
+        --vscode-list-activeSelectionBackground: #0060c0;
+      }
+    </style>
+    <link rel="stylesheet" href="/dist/webview.css" />
+  </head>
+  <body>
+    <div id="stats" class="rme-stats" hidden></div>
+    <div id="app">
+      <details id="frontmatter" class="rme-frontmatter" hidden>
+        <summary>Front matter</summary>
+        <textarea id="frontmatter-input" spellcheck="false" rows="4"></textarea>
+      </details>
+      <div id="editor"></div>
+    </div>
+    <script>
+      // A stand-in for the VS Code webview API. It records every message that the editor sends.
+      const params = new URLSearchParams(location.search);
+      if (params.get('theme') === 'light') document.documentElement.dataset.theme = 'light';
+      // VS Code puts one of these classes on the body of every webview.
+      document.body.classList.add(params.get('theme') === 'light' ? 'vscode-light' : 'vscode-dark');
+      window.__sent = [];
+      window.acquireVsCodeApi = () => ({
+        postMessage(message) {
+          window.__sent.push(message);
+          if (message.type === 'ready') {
+            // ?file=sample.mdx opens the MDX sample.
+            const file = params.get('file') || 'sample.md';
+            fetch('/test/harness/' + file)
+              .then((r) => r.text())
+              .then((text) => {
+                window.postMessage(
+                  {
+                    type: 'init',
+                    text,
+                    baseUri: location.origin + '/test/harness',
+                    maxContentWidth: 820,
+                    showInfoBar: params.get('bar') !== 'off',
+                    mdx: /\.mdx$/i.test(file),
+                  },
+                  '*',
+                );
+                // What the extension host sends about the file. The real host reads it from the disk and from Git.
+                window.postMessage(
+                  {
+                    type: 'fileInfo',
+                    modified: Date.now() - 3 * 3600 * 1000,
+                    authors: [
+                      {
+                        name: 'Priya Raman',
+                        date: Date.now() - 2 * 86400000,
+                        subject: 'Explain the asset folder setting',
+                      },
+                      { name: 'Tom Becker', date: Date.now() - 9 * 86400000, subject: 'Fix the table toolbar' },
+                      { name: 'Ana Souza', date: Date.now() - 30 * 86400000, subject: 'First draft' },
+                      { name: 'Lee Chen', date: Date.now() - 60 * 86400000, subject: 'Typo' },
+                    ],
+                  },
+                  '*',
+                );
+              });
+          }
+        },
+      });
+    </script>
+    <script src="/dist/webview.js" data-mermaid="/dist/mermaid.js"></script>
+  </body>
 </html>

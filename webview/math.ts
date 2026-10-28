@@ -170,7 +170,11 @@ export const MathInline = Node.create({
       const leave = (): void => {
         const pos = getPos();
         if (pos !== undefined) {
-          editor.chain().focus().setTextSelection(pos + current.nodeSize).run();
+          editor
+            .chain()
+            .focus()
+            .setTextSelection(pos + current.nodeSize)
+            .run();
         }
       };
 
@@ -257,7 +261,11 @@ export const MathBlock = Node.create({
   },
 
   renderHTML({ node }) {
-    return ['div', { class: 'rme-math-block', 'data-math-block': '', 'data-tex': node.attrs.tex }, `$$${node.attrs.tex}$$`];
+    return [
+      'div',
+      { class: 'rme-math-block', 'data-math-block': '', 'data-tex': node.attrs.tex },
+      `$$${node.attrs.tex}$$`,
+    ];
   },
 
   markdownTokenName: 'mathBlock',
@@ -310,19 +318,17 @@ export const MathBlock = Node.create({
           return true;
         },
 
-      setMathBlock:
-        () =>
-        (props) => {
-          const { state, tr } = props;
-          const replaced = replaceSelectedLines(props, 'tex', (group) =>
-            state.schema.nodes.mathBlock.create({ tex: group.text, oneLine: false }),
-          );
-          if (!replaced) {
-            return false;
-          }
-          tr.setSelection(NodeSelection.create(tr.doc, replaced.place)).scrollIntoView();
-          return true;
-        },
+      setMathBlock: () => (props) => {
+        const { state, tr } = props;
+        const replaced = replaceSelectedLines(props, 'tex', (group) =>
+          state.schema.nodes.mathBlock.create({ tex: group.text, oneLine: false }),
+        );
+        if (!replaced) {
+          return false;
+        }
+        tr.setSelection(NodeSelection.create(tr.doc, replaced.place)).scrollIntoView();
+        return true;
+      },
     };
   },
 
@@ -364,7 +370,9 @@ export const MathBlock = Node.create({
         }
         const tex = area.value.replace(/^\n+|\s+$/g, '');
         if (tex !== current.attrs.tex) {
-          editor.view.dispatch(editor.state.tr.setNodeMarkup(pos, undefined, { ...current.attrs, tex, oneLine: false }));
+          editor.view.dispatch(
+            editor.state.tr.setNodeMarkup(pos, undefined, { ...current.attrs, tex, oneLine: false }),
+          );
         }
       };
 
@@ -384,7 +392,11 @@ export const MathBlock = Node.create({
           area.value = String(current.attrs.tex ?? '');
           const pos = getPos();
           if (pos !== undefined) {
-            editor.chain().focus().setTextSelection(pos + current.nodeSize).run();
+            editor
+              .chain()
+              .focus()
+              .setTextSelection(pos + current.nodeSize)
+              .run();
           }
         }
       });

@@ -1,0 +1,6 @@
+*.md
+*.mdx
+dist/
+node_modules/
+test/fixtures/
+.vscode-test/

@@ -71,7 +71,11 @@ export const Emoji = Node.create({
   },
 
   renderHTML({ node }) {
-    return ['span', { class: 'rme-emoji', 'data-emoji': node.attrs.name, title: `:${node.attrs.name}:` }, emojiFor(node.attrs.name) ?? `:${node.attrs.name}:`];
+    return [
+      'span',
+      { class: 'rme-emoji', 'data-emoji': node.attrs.name, title: `:${node.attrs.name}:` },
+      emojiFor(node.attrs.name) ?? `:${node.attrs.name}:`,
+    ];
   },
 
   markdownTokenName: 'emoji',
@@ -131,7 +135,12 @@ export function createEmojiMenu(): Extension {
           allowSpaces: false,
           items: ({ query }) => searchEmoji(query),
           command: ({ editor, range, props }) => {
-            editor.chain().focus().deleteRange(range).insertContent({ type: 'emoji', attrs: { name: props.name } }).run();
+            editor
+              .chain()
+              .focus()
+              .deleteRange(range)
+              .insertContent({ type: 'emoji', attrs: { name: props.name } })
+              .run();
           },
           render: createSuggestionRenderer<EmojiMatch>({
             describe: (item) => ({ icon: item.emoji, title: `:${item.name}:` }),

@@ -3,7 +3,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadModule } from './helpers.mjs';
 
-const { indentChange, newLineChange, applyTextChange, INDENT } = await loadModule('webview/textIndent.ts', 'textIndent');
+const { indentChange, newLineChange, applyTextChange, INDENT } = await loadModule(
+  'webview/textIndent.ts',
+  'textIndent',
+);
 
 /** The text after a change. */
 const run = (value, start, end, change) => ({

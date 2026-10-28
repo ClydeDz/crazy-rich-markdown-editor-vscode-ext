@@ -53,7 +53,20 @@ const countNodes = (editor, name) => {
 
 /** Every format that is on at the selection. A shortcut must turn on its own format, and no other. */
 function activeFormats(editor) {
-  const names = ['bold', 'italic', 'underline', 'strike', 'code', 'superscript', 'subscript', 'bulletList', 'orderedList', 'taskList', 'blockquote', 'codeBlock'];
+  const names = [
+    'bold',
+    'italic',
+    'underline',
+    'strike',
+    'code',
+    'superscript',
+    'subscript',
+    'bulletList',
+    'orderedList',
+    'taskList',
+    'blockquote',
+    'codeBlock',
+  ];
   const on = names.filter((name) => editor.isActive(name));
   for (const level of [1, 2, 3, 4, 5, 6]) {
     if (editor.isActive('heading', { level })) on.push(`h${level}`);
@@ -167,7 +180,11 @@ test('each formatting shortcut turns on its own format and no other, and the sam
           editor.commands.setTextSelection({ from: 1, to: 5 });
           assert.deepEqual(activeFormats(editor), [], `${line.label}: nothing is on before the key`);
           assert.equal(press(editor, key, shape), true, `${line.label}: the editor handles ${key} (${shape} keyboard)`);
-          assert.deepEqual(activeFormats(editor), [expected], `${line.label}: ${key} turns on ${expected} only (${shape} keyboard)`);
+          assert.deepEqual(
+            activeFormats(editor),
+            [expected],
+            `${line.label}: ${key} turns on ${expected} only (${shape} keyboard)`,
+          );
           press(editor, key, shape);
           assert.deepEqual(activeFormats(editor), [], `${line.label}: ${key} again turns it off (${shape} keyboard)`);
           editor.destroy();
@@ -178,10 +195,22 @@ test('each formatting shortcut turns on its own format and no other, and the sam
 });
 
 test('the formatting shortcuts work with Caps Lock on, where the key has a capital letter and Shift is not pressed', () => {
-  for (const [label, key] of [['Bold', 'b'], ['Italic', 'i'], ['Underline', 'u'], ['Inline code', 'e']]) {
+  for (const [label, key] of [
+    ['Bold', 'b'],
+    ['Italic', 'i'],
+    ['Underline', 'u'],
+    ['Inline code', 'e'],
+  ]) {
     const editor = makeEditor(createEditor, 'some words here');
     editor.commands.setTextSelection({ from: 1, to: 5 });
-    const init = { bubbles: true, cancelable: true, key: key.toUpperCase(), keyCode: key.toUpperCase().charCodeAt(0), ctrlKey: !isMac, metaKey: isMac };
+    const init = {
+      bubbles: true,
+      cancelable: true,
+      key: key.toUpperCase(),
+      keyCode: key.toUpperCase().charCodeAt(0),
+      ctrlKey: !isMac,
+      metaKey: isMac,
+    };
     const event = new window.KeyboardEvent('keydown', init);
     editor.view.dom.dispatchEvent(event);
     assert.equal(event.defaultPrevented, true, `${label} with Caps Lock`);
@@ -307,16 +336,28 @@ function probeEditor() {
 
 test('the editor handles every listed key, with both kinds of keyboard, and no other key except the keys of ordinary text editing', () => {
   const handled = probeEditor();
-  const listed = new Set(groups.flatMap((entry) => entry.items.flatMap((line) => line.keys)).filter((key) => !NOT_IN_THE_EDITOR.includes(key)));
+  const listed = new Set(
+    groups
+      .flatMap((entry) => entry.items.flatMap((line) => line.keys))
+      .filter((key) => !NOT_IN_THE_EDITOR.includes(key)),
+  );
   assert.ok(listed.size >= 20, `the probe checks many keys: ${listed.size}`);
 
   const missing = [...listed].filter((key) => !handled[key]);
   assert.deepEqual(missing, [], 'a listed key that the editor does not handle');
   const onlyOneKeyboard = [...listed].filter((key) => handled[key] && handled[key].length < SHAPES.length);
-  assert.deepEqual(onlyOneKeyboard, [], 'a listed key that works only on one kind of keyboard (Option changes the key on a Mac)');
+  assert.deepEqual(
+    onlyOneKeyboard,
+    [],
+    'a listed key that works only on one kind of keyboard (Option changes the key on a Mac)',
+  );
 
   const extra = Object.keys(handled).filter((name) => !listed.has(name) && !ORDINARY.test(name));
-  assert.deepEqual(extra, [], 'a key that the editor handles and the list does not name. It is taken from VS Code, and nobody knows it.');
+  assert.deepEqual(
+    extra,
+    [],
+    'a key that the editor handles and the list does not name. It is taken from VS Code, and nobody knows it.',
+  );
 });
 
 test('the keys that VS Code needs for the whole window stay free: the editor does not handle them', () => {
@@ -381,6 +422,10 @@ test('Tab handles the key in a code block with a selection that ends in another 
   // The selection leaves the code block, so the key does what it did before.
   const before = editor.getJSON();
   press(editor, 'Tab');
-  assert.equal(JSON.stringify(editor.getJSON().content[1]), JSON.stringify(before.content[1]), 'the code stays as it is');
+  assert.equal(
+    JSON.stringify(editor.getJSON().content[1]),
+    JSON.stringify(before.content[1]),
+    'the code stays as it is',
+  );
   editor.destroy();
 });

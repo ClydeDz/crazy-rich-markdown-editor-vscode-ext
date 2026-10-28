@@ -54,7 +54,9 @@ function loadMermaid(): Promise<MermaidApi> {
 }
 
 function isLightTheme(): boolean {
-  return document.body.classList.contains('vscode-light') || document.body.classList.contains('vscode-high-contrast-light');
+  return (
+    document.body.classList.contains('vscode-light') || document.body.classList.contains('vscode-high-contrast-light')
+  );
 }
 
 /** Draw a mermaid diagram. It gives the SVG, or throws with the message of mermaid. */
@@ -86,7 +88,12 @@ export function isDrawable(language: string): boolean {
  * Draw the source of a code block into an element.
  * It works for the languages `mermaid` and `math`, as on GitHub. It returns false for other languages.
  */
-export async function drawInto(target: HTMLElement, language: string, source: string, isCurrent: () => boolean): Promise<boolean> {
+export async function drawInto(
+  target: HTMLElement,
+  language: string,
+  source: string,
+  isCurrent: () => boolean,
+): Promise<boolean> {
   if (!isDrawable(language)) {
     return false;
   }

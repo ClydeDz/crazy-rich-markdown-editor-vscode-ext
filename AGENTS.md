@@ -14,13 +14,14 @@ Crazy Rich Markdown Editor: A VS Code extension that opens `.md` files (and `.md
 | Task                    | Command                                                 |
 | ----------------------- | ------------------------------------------------------- |
 | Build                   | `yarn build`                                            |
+| Lint (Prettier)         | `yarn lint`                                             |
 | Typecheck               | `yarn typecheck`                                        |
 | Unit tests (jsdom)      | `yarn test`                                             |
 | Tests in a real VS Code | `yarn test:vscode` (add `RME_ONLY="<name>"` to run one) |
 | Test the tests          | `yarn mutate`                                           |
 | Package                 | `yarn package`                                          |
 
-Run `yarn test` before you report a change as done. Run `yarn test:vscode` when you change code that talks to VS Code or the real webview. CI runs the unit tests on every pull request, but the VS Code tests only on `main` (`.github/workflows/test.yml`), so a pull request does not catch a break there.
+Run `yarn lint` and `yarn test` before you report a change as done. Run `yarn test:vscode` when you change code that talks to VS Code or the real webview. CI runs the unit tests on every pull request, but the VS Code tests only on `main` (`.github/workflows/test.yml`), so a pull request does not catch a break there.
 
 ## Where things are
 

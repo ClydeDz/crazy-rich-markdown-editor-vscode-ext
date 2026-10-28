@@ -54,10 +54,7 @@ export const workspace = {
       const windows = process.platform === 'win32';
       const normalizedBase = windows ? base.toLowerCase() : base;
       const normalizedFile = windows ? file.toLowerCase() : file;
-      return (
-        normalizedFile === normalizedBase ||
-        normalizedFile.startsWith(`${normalizedBase}/`)
-      );
+      return normalizedFile === normalizedBase || normalizedFile.startsWith(`${normalizedBase}/`);
     });
   },
   fs: {

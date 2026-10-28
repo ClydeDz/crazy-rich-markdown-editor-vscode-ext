@@ -62,7 +62,12 @@ const mousedown = (target) => {
   return event;
 };
 /** Ctrl or Cmd plus K, as the editor reads it. */
-const modK = (editor) => Boolean(editor.view.someProp('handleKeyDown', (handler) => handler(editor.view, keydown({ key: 'k', ctrlKey: true, metaKey: /Mac/.test(navigator.platform) }))));
+const modK = (editor) =>
+  Boolean(
+    editor.view.someProp('handleKeyDown', (handler) =>
+      handler(editor.view, keydown({ key: 'k', ctrlKey: true, metaKey: /Mac/.test(navigator.platform) })),
+    ),
+  );
 
 // ---------- The buttons ----------
 
@@ -75,7 +80,11 @@ test('the toolbar and its buttons are labelled, and every button is a plain butt
   for (const button of bar.querySelectorAll('.rme-actions .rme-btn, .rme-menu-item')) {
     assert.equal(button.type, 'button', `${button.dataset.action} does not submit a form`);
   }
-  assert.equal(bar.querySelector('form button[type="submit"]').type, 'submit', 'only the button that sends the link field submits');
+  assert.equal(
+    bar.querySelector('form button[type="submit"]').type,
+    'submit',
+    'only the button that sends the link field submits',
+  );
   assert.equal(more().getAttribute('aria-haspopup'), 'menu');
   assert.equal(more().getAttribute('aria-expanded'), 'false');
   assert.equal(more().title, 'More formats');
@@ -99,7 +108,11 @@ test('each button has a title with its shortcut, a label for screen readers, and
   assert.equal(button('bold').getAttribute('aria-label'), 'Bold');
   assert.ok(button('bold').querySelector('svg'), 'an icon');
   assert.equal(button('bold').classList.contains('rme-btn-text'), false);
-  for (const [id, label] of [['h1', 'H1'], ['h2', 'H2'], ['h3', 'H3']]) {
+  for (const [id, label] of [
+    ['h1', 'H1'],
+    ['h2', 'H2'],
+    ['h3', 'H3'],
+  ]) {
     assert.equal(button(id).textContent, label, id);
     assert.equal(button(id).classList.contains('rme-btn-text'), true, id);
     assert.equal(button(id).querySelector('svg'), null, id);
@@ -112,7 +125,21 @@ test('each button has a title with its shortcut, a label for screen readers, and
 test('the items of the More menu are checkboxes that show their state, with a label and a shortcut', () => {
   const { editor, menu } = setup('x^up^ word');
   const items = [...menu().querySelectorAll('.rme-menu-item')];
-  assert.deepEqual(items.map((item) => item.dataset.action), ['superscript', 'subscript', 'alert-note', 'alert-tip', 'alert-important', 'alert-warning', 'alert-caution', 'mathBlock', 'diagram', 'clear']);
+  assert.deepEqual(
+    items.map((item) => item.dataset.action),
+    [
+      'superscript',
+      'subscript',
+      'alert-note',
+      'alert-tip',
+      'alert-important',
+      'alert-warning',
+      'alert-caution',
+      'mathBlock',
+      'diagram',
+      'clear',
+    ],
+  );
   for (const item of items) {
     assert.equal(item.getAttribute('role'), 'menuitemcheckbox');
     assert.equal(item.getAttribute('aria-checked'), 'false');
@@ -123,8 +150,12 @@ test('the items of the More menu are checkboxes that show their state, with a la
   assert.equal(superscript.querySelector('.rme-menu-label').textContent, 'Superscript');
   assert.match(superscript.querySelector('.rme-menu-hint').textContent, /^(⌘\.|Ctrl\+\.)$/);
   assert.equal(items[2].querySelector('.rme-menu-hint'), null, 'an alert has no shortcut');
-  assert.deepEqual(items.slice(7, 9).map((item) => item.querySelector('.rme-menu-label').textContent), ['Math block', 'Diagram']);
-  for (const item of items.slice(7, 9)) assert.equal(item.querySelector('.rme-menu-hint'), null, `${item.dataset.action} has no shortcut`);
+  assert.deepEqual(
+    items.slice(7, 9).map((item) => item.querySelector('.rme-menu-label').textContent),
+    ['Math block', 'Diagram'],
+  );
+  for (const item of items.slice(7, 9))
+    assert.equal(item.querySelector('.rme-menu-hint'), null, `${item.dataset.action} has no shortcut`);
   assert.equal(menu().querySelectorAll('[role="separator"]').length, 3, 'three lines between the groups');
   editor.destroy();
 });
@@ -215,7 +246,11 @@ test('the More menu leaves no listener on the page behind when it closes, howeve
       assert.equal(menu().hidden, true, name);
     });
     // ProseMirror adds a listener of its own for the selection. The menu adds only mouse and key listeners.
-    assert.deepEqual(leaked.filter((entry) => /^(mousedown|keydown)\|/.test(entry)), [], `after ${name}`);
+    assert.deepEqual(
+      leaked.filter((entry) => /^(mousedown|keydown)\|/.test(entry)),
+      [],
+      `after ${name}`,
+    );
   }
   editor.destroy();
 });
@@ -382,7 +417,10 @@ test('the table toolbar is a labelled toolbar with five buttons that do not subm
   const { editor, tableBar, tableButton } = tableSetup();
   assert.equal(tableBar.getAttribute('role'), 'toolbar');
   assert.equal(tableBar.getAttribute('aria-label'), 'Table');
-  assert.deepEqual([...tableBar.querySelectorAll('button')].map((button) => button.dataset.action), ['addRow', 'addColumn', 'deleteRow', 'deleteColumn', 'deleteTable']);
+  assert.deepEqual(
+    [...tableBar.querySelectorAll('button')].map((button) => button.dataset.action),
+    ['addRow', 'addColumn', 'deleteRow', 'deleteColumn', 'deleteTable'],
+  );
   for (const button of tableBar.querySelectorAll('button')) {
     assert.equal(button.type, 'button');
     assert.equal(mousedown(button).defaultPrevented, true, 'the cursor stays in the cell');
@@ -434,7 +472,11 @@ test('the Code block button puts all selected lines in one code block', () => {
   assert.equal(getMarkdown(editor), '```\none\ntwo\nthree\n```');
   assert.equal(button('codeBlock').classList.contains('is-active'), true, 'the button shows the state');
   button('codeBlock').click();
-  assert.equal(editor.getJSON().content.some((node) => node.type === 'codeBlock'), false, 'the second click takes the block away');
+  assert.equal(
+    editor.getJSON().content.some((node) => node.type === 'codeBlock'),
+    false,
+    'the second click takes the block away',
+  );
   editor.destroy();
 });
 
@@ -466,13 +508,18 @@ test('the More menu has math and diagram, and no other block that the slash menu
   for (const absent of ['Table', 'Footnote', 'Divider', 'Image or video', 'Code block']) {
     assert.equal(labels.includes(absent), false, absent);
   }
-  assert.deepEqual(labels.filter((label) => /math|diagram/i.test(label)), ['Math block', 'Diagram']);
+  assert.deepEqual(
+    labels.filter((label) => /math|diagram/i.test(label)),
+    ['Math block', 'Diagram'],
+  );
   editor.destroy();
 });
 
 test('the items for math and diagram do not appear in the list of shortcuts, since they have none', async () => {
   const { toolbarShortcutGroups } = await loadModule('webview/toolbar.ts', 'toolbar-shortcuts');
-  const titles = toolbarShortcutGroups().flat().map((item) => item.title);
+  const titles = toolbarShortcutGroups()
+    .flat()
+    .map((item) => item.title);
   assert.equal(titles.includes('Math block'), false);
   assert.equal(titles.includes('Diagram'), false);
 });

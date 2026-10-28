@@ -77,10 +77,7 @@ const LISTS: ShortcutItem[] = [
   format('Task list', FORMAT_KEYS.taskList),
 ];
 
-const BLOCKS: ShortcutItem[] = [
-  format('Quote', FORMAT_KEYS.blockquote),
-  format('Code block', FORMAT_KEYS.codeBlock),
-];
+const BLOCKS: ShortcutItem[] = [format('Quote', FORMAT_KEYS.blockquote), format('Code block', FORMAT_KEYS.codeBlock)];
 
 /** Shortcuts that are not on the toolbar. The tests press each one and check what it does. */
 const EDITING: ShortcutItem[] = [

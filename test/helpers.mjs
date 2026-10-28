@@ -29,10 +29,28 @@ export function installDom() {
   });
   const { window } = dom;
   const names = [
-    'window', 'document', 'navigator', 'Node', 'Element', 'HTMLElement', 'DocumentFragment',
-    'DOMParser', 'MutationObserver', 'getComputedStyle', 'requestAnimationFrame',
-    'cancelAnimationFrame', 'Range', 'Selection', 'Event', 'KeyboardEvent', 'MouseEvent',
-    'CustomEvent', 'HTMLInputElement', 'ResizeObserver', 'XMLSerializer', 'URL',
+    'window',
+    'document',
+    'navigator',
+    'Node',
+    'Element',
+    'HTMLElement',
+    'DocumentFragment',
+    'DOMParser',
+    'MutationObserver',
+    'getComputedStyle',
+    'requestAnimationFrame',
+    'cancelAnimationFrame',
+    'Range',
+    'Selection',
+    'Event',
+    'KeyboardEvent',
+    'MouseEvent',
+    'CustomEvent',
+    'HTMLInputElement',
+    'ResizeObserver',
+    'XMLSerializer',
+    'URL',
   ];
   for (const name of names) {
     if (name === 'window') {
@@ -48,10 +66,23 @@ export function installDom() {
     }
   }
   if (!window.ResizeObserver) {
-    globalThis.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
+    globalThis.ResizeObserver = class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    };
   }
   // jsdom has no layout, so give ProseMirror the geometry calls it asks for.
-  window.Range.prototype.getBoundingClientRect = () => ({ x: 0, y: 0, top: 0, left: 0, bottom: 0, right: 0, width: 0, height: 0 });
+  window.Range.prototype.getBoundingClientRect = () => ({
+    x: 0,
+    y: 0,
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
+    width: 0,
+    height: 0,
+  });
   window.Range.prototype.getClientRects = () => ({ length: 0, item: () => null, [Symbol.iterator]: function* () {} });
   window.document.elementFromPoint = () => null;
   // jsdom does not scroll. A test can read the elements that the code asked to scroll into view.
@@ -69,7 +100,12 @@ export function installDom() {
   });
   after(() => {
     assert.deepEqual(
-      hiddenErrors.map((error) => String((error && error.stack) || error).split('\n').slice(0, 3).join(' | ')),
+      hiddenErrors.map((error) =>
+        String((error && error.stack) || error)
+          .split('\n')
+          .slice(0, 3)
+          .join(' | '),
+      ),
       [],
       'an event listener threw an error that jsdom did not report',
     );
@@ -109,7 +145,8 @@ const idOfListener = (listener) => {
   if (!listenerIds.has(listener)) listenerIds.set(listener, ++nextListenerId);
   return listenerIds.get(listener);
 };
-const isCapture = (options) => options === true || (typeof options === 'object' && options !== null && options.capture === true);
+const isCapture = (options) =>
+  options === true || (typeof options === 'object' && options !== null && options.capture === true);
 
 /**
  * Run `body`, and return the listeners that it added to `target` (the document or the window) and did not remove.
@@ -120,7 +157,8 @@ export function leakedListeners(target, body) {
   const live = new Set();
   const add = target.addEventListener;
   const remove = target.removeEventListener;
-  const key = (type, listener, options) => `${type}|${isCapture(options) ? 'capture' : 'bubble'}|${idOfListener(listener)}`;
+  const key = (type, listener, options) =>
+    `${type}|${isCapture(options) ? 'capture' : 'bubble'}|${idOfListener(listener)}`;
   target.addEventListener = function (type, listener, options) {
     live.add(key(type, listener, options));
     return add.call(this, type, listener, options);

@@ -25,12 +25,20 @@ const cli = `${app}/Contents/Resources/app/bin/code`;
 const binary = `${app}/Contents/MacOS/Code`;
 const pageMenu = process.argv.includes('--page-menu');
 const lightTheme = process.argv.includes('--light');
-const zoomLive = process.argv.includes('--zoom-live') ? process.argv[process.argv.indexOf('--zoom-live') + 1] : undefined;
+const zoomLive = process.argv.includes('--zoom-live')
+  ? process.argv[process.argv.indexOf('--zoom-live') + 1]
+  : undefined;
 const shotsIndex = process.argv.indexOf('--screenshots');
 const shotsDir = shotsIndex >= 0 ? process.argv[shotsIndex + 1] : undefined;
 const vsix =
   process.argv.find((arg, index) => index > 1 && arg.endsWith('.vsix')) ??
-  path.join(root, readdirSync(root).filter((file) => file.endsWith('.vsix')).sort().at(-1) ?? 'missing.vsix');
+  path.join(
+    root,
+    readdirSync(root)
+      .filter((file) => file.endsWith('.vsix'))
+      .sort()
+      .at(-1) ?? 'missing.vsix',
+  );
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const work = mkdtempSync(path.join(tmpdir(), 'rmecdp'));
@@ -75,7 +83,10 @@ if (process.argv.includes('--git')) {
 /** A small client for a DevTools or Node inspector WebSocket. */
 async function connect(url) {
   const socket = new WebSocket(url);
-  await new Promise((resolve, reject) => { socket.onopen = resolve; socket.onerror = reject; });
+  await new Promise((resolve, reject) => {
+    socket.onopen = resolve;
+    socket.onerror = reject;
+  });
   let nextId = 1;
   const pending = new Map();
   socket.onmessage = (event) => {
@@ -111,13 +122,21 @@ async function waitForJson(url, timeoutMs = 60000) {
 
 let child;
 try {
-  execFileSync(cli, [`--user-data-dir=${work}/u`, `--extensions-dir=${work}/e`, '--install-extension', vsix], { stdio: 'pipe' });
+  execFileSync(cli, [`--user-data-dir=${work}/u`, `--extensions-dir=${work}/e`, '--install-extension', vsix], {
+    stdio: 'pipe',
+  });
   child = spawn(
     binary,
     [
-      `--user-data-dir=${work}/u`, `--extensions-dir=${work}/e`, '--disable-workspace-trust', '--skip-welcome',
-      '--skip-release-notes', '--remote-debugging-port=9333', '--inspect=9229',
-      path.join(work, 'ws'), path.join(work, 'ws/sample.md'),
+      `--user-data-dir=${work}/u`,
+      `--extensions-dir=${work}/e`,
+      '--disable-workspace-trust',
+      '--skip-welcome',
+      '--skip-release-notes',
+      '--remote-debugging-port=9333',
+      '--inspect=9229',
+      path.join(work, 'ws'),
+      path.join(work, 'ws/sample.md'),
     ],
     { stdio: 'ignore' },
   );
@@ -125,8 +144,9 @@ try {
   // Hook the native menu in the main process. The hook records the items and does not show the menu.
   const inspectorList = await waitForJson('http://127.0.0.1:9229/json/list');
   const main = await connect(inspectorList[0].webSocketDebuggerUrl);
-  if (!pageMenu) await main.send('Runtime.evaluate', {
-    expression: `(() => {
+  if (!pageMenu)
+    await main.send('Runtime.evaluate', {
+      expression: `(() => {
       const { Menu } = process.mainModule.require('electron');
       globalThis.__menus = [];
       Menu.prototype.popup = function (options) {
@@ -134,7 +154,7 @@ try {
         if (options && typeof options.callback === 'function') options.callback();
       };
     })()`,
-  });
+    });
 
   const version = await waitForJson('http://127.0.0.1:9333/json/version');
   const browser = await connect(version.webSocketDebuggerUrl);
@@ -146,15 +166,27 @@ try {
   }
   const { sessionId } = await browser.send('Target.attachToTarget', { targetId: page.targetId, flatten: true });
   const evaluate = async (expression) => {
-    const result = await browser.send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true }, sessionId);
+    const result = await browser.send(
+      'Runtime.evaluate',
+      { expression, awaitPromise: true, returnByValue: true },
+      sessionId,
+    );
     if (result.exceptionDetails) throw new Error(JSON.stringify(result.exceptionDetails).slice(0, 400));
     return result.result.value;
   };
   const click = async (x, y) => {
     await browser.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y }, sessionId);
     await sleep(150);
-    await browser.send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', buttons: 1, clickCount: 1 }, sessionId);
-    await browser.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', buttons: 0, clickCount: 1 }, sessionId);
+    await browser.send(
+      'Input.dispatchMouseEvent',
+      { type: 'mousePressed', x, y, button: 'left', buttons: 1, clickCount: 1 },
+      sessionId,
+    );
+    await browser.send(
+      'Input.dispatchMouseEvent',
+      { type: 'mouseReleased', x, y, button: 'left', buttons: 0, clickCount: 1 },
+      sessionId,
+    );
   };
 
   // The file opens as text the first time. Press the title bar button that opens the rich editor.
@@ -181,29 +213,41 @@ try {
   if (zoomLive !== undefined) {
     // Change the zoom of the window while it is open, as a user does with Cmd and +. VS Code applies the setting at once.
     mkdirSync(path.join(work, 'u/User'), { recursive: true });
-    writeFileSync(path.join(work, 'u/User/settings.json'), JSON.stringify({ ...settings, 'window.zoomLevel': Number(zoomLive) }));
+    writeFileSync(
+      path.join(work, 'u/User/settings.json'),
+      JSON.stringify({ ...settings, 'window.zoomLevel': Number(zoomLive) }),
+    );
     await sleep(3000);
     await shoot('editor-zoomed.png');
   }
 
-  const button = await evaluate(`(() => { const el = document.querySelector('.breadcrumbs-editor-type'); const r = el.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2, text: el.textContent.trim() }; })()`);
+  const button = await evaluate(
+    `(() => { const el = document.querySelector('.breadcrumbs-editor-type'); const r = el.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2, text: el.textContent.trim() }; })()`,
+  );
   await click(button.x, button.y);
   await sleep(1200);
   let menus;
   if (pageMenu) {
     await shoot('menu.png');
-    const labels = await evaluate(`[...document.querySelectorAll('.context-view .monaco-menu .action-item, .context-view .monaco-menu .action-label')].map((e) => ({ label: (e.getAttribute('aria-label') || e.textContent || '').replace(/\\s+/g, ' ').trim(), checked: e.getAttribute('aria-checked') === 'true' })).filter((i) => i.label)`);
+    const labels = await evaluate(
+      `[...document.querySelectorAll('.context-view .monaco-menu .action-item, .context-view .monaco-menu .action-label')].map((e) => ({ label: (e.getAttribute('aria-label') || e.textContent || '').replace(/\\s+/g, ' ').trim(), checked: e.getAttribute('aria-checked') === 'true' })).filter((i) => i.label)`,
+    );
     const seen = new Set();
     menus = [labels.filter((item) => (seen.has(item.label) ? false : seen.add(item.label)))];
   } else {
-    menus = JSON.parse((await main.send('Runtime.evaluate', { expression: 'JSON.stringify(globalThis.__menus)', returnByValue: true })).result.value);
+    menus = JSON.parse(
+      (await main.send('Runtime.evaluate', { expression: 'JSON.stringify(globalThis.__menus)', returnByValue: true }))
+        .result.value,
+    );
   }
 
   // How the Extensions list shows the extension.
   await click(25, 233);
   await sleep(2500);
   await shoot('extensions.png');
-  const rows = await evaluate(`[...document.querySelectorAll('.extensions-list .monaco-list-row')].map((row) => row.innerText.replace(/\\n+/g, ' | ')).filter((text) => /rich|markdown/i.test(text))`);
+  const rows = await evaluate(
+    `[...document.querySelectorAll('.extensions-list .monaco-list-row')].map((row) => row.innerText.replace(/\\n+/g, ' | ')).filter((text) => /rich|markdown/i.test(text))`,
+  );
 
   console.log('Editor type button:', JSON.stringify(button.text));
   console.log('Editor type menu:');

@@ -27,7 +27,12 @@ export const FootnoteRef = Node.create({
   },
 
   parseHTML() {
-    return [{ tag: 'sup[data-footnote-ref]', getAttrs: (el) => ({ id: (el as HTMLElement).getAttribute('data-footnote-ref') }) }];
+    return [
+      {
+        tag: 'sup[data-footnote-ref]',
+        getAttrs: (el) => ({ id: (el as HTMLElement).getAttribute('data-footnote-ref') }),
+      },
+    ];
   },
 
   renderHTML({ node }) {
@@ -72,7 +77,12 @@ export const FootnoteDefinition = Node.create({
   },
 
   parseHTML() {
-    return [{ tag: 'div[data-footnote-definition]', getAttrs: (el) => ({ id: (el as HTMLElement).getAttribute('data-footnote-definition') }) }];
+    return [
+      {
+        tag: 'div[data-footnote-definition]',
+        getAttrs: (el) => ({ id: (el as HTMLElement).getAttribute('data-footnote-definition') }),
+      },
+    ];
   },
 
   renderHTML({ node }) {
@@ -125,7 +135,11 @@ export const FootnoteDefinition = Node.create({
   parseMarkdown(token: any, helpers: any) {
     const parseBlockChildren = helpers.parseBlockChildren ?? helpers.parseChildren;
     const children = parseBlockChildren(token.tokens ?? []);
-    return helpers.createNode('footnoteDefinition', { id: token.id }, children.length > 0 ? children : [{ type: 'paragraph' }]);
+    return helpers.createNode(
+      'footnoteDefinition',
+      { id: token.id },
+      children.length > 0 ? children : [{ type: 'paragraph' }],
+    );
   },
 
   renderMarkdown(node, h) {

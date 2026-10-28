@@ -84,10 +84,7 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
     return this.stats.get(uri.toString());
   }
 
-  async resolveCustomTextEditor(
-    document: vscode.TextDocument,
-    panel: vscode.WebviewPanel,
-  ): Promise<void> {
+  async resolveCustomTextEditor(document: vscode.TextDocument, panel: vscode.WebviewPanel): Promise<void> {
     const webview = panel.webview;
     const documentFolder = vscode.Uri.joinPath(document.uri, '..');
     const distUri = vscode.Uri.joinPath(this.context.extensionUri, 'dist');

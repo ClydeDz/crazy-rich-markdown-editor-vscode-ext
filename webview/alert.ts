@@ -195,9 +195,7 @@ export const Alert = Node.create({
         if (pos === undefined) {
           return;
         }
-        editor.view.dispatch(
-          editor.state.tr.setNodeMarkup(pos, undefined, { ...current.attrs, type: select.value }),
-        );
+        editor.view.dispatch(editor.state.tr.setNodeMarkup(pos, undefined, { ...current.attrs, type: select.value }));
         editor.view.focus();
       });
 
@@ -205,8 +203,7 @@ export const Alert = Node.create({
         dom,
         contentDOM: body,
         stopEvent: (event) => header.contains(event.target as globalThis.Node),
-        ignoreMutation: (mutation) =>
-          mutation.type === 'selection' ? false : !body.contains(mutation.target),
+        ignoreMutation: (mutation) => (mutation.type === 'selection' ? false : !body.contains(mutation.target)),
         update(updated) {
           if (updated.type !== current.type) {
             return false;

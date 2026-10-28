@@ -21,11 +21,14 @@ if (!vscodeExecutablePath && (process.env.CI || process.env.RME_DOWNLOAD_VSCODE)
   vscodeExecutablePath = await downloadAndUnzipVSCode(process.env.VSCODE_VERSION ?? 'stable');
 }
 if (!vscodeExecutablePath || !existsSync(vscodeExecutablePath)) {
-  console.error(`VS Code not found at ${vscodeExecutablePath ?? MAC_VSCODE}. Set VSCODE_EXECUTABLE, or RME_DOWNLOAD_VSCODE=1 to download it.`);
+  console.error(
+    `VS Code not found at ${vscodeExecutablePath ?? MAC_VSCODE}. Set VSCODE_EXECUTABLE, or RME_DOWNLOAD_VSCODE=1 to download it.`,
+  );
   process.exit(2);
 }
 // A Linux CI machine runs as a normal user inside a container. The sandbox of Electron cannot start there.
-const ciLinuxArgs = process.env.CI && process.platform === 'linux' ? ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'] : [];
+const ciLinuxArgs =
+  process.env.CI && process.platform === 'linux' ? ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'] : [];
 
 // The extension must be built. The suite also needs the provider as a CommonJS module.
 await build({
