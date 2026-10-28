@@ -2,13 +2,17 @@
   "name": "crazy-rich-markdown-editor",
   "displayName": "Crazy Rich Markdown Editor",
   "description": "Edit Markdown files as rich text with a floating formatting toolbar. Supports GitHub Flavored Markdown, and keeps the code of MDX files as it is. The file stays raw Markdown on disk.",
-  "version": "0.16.0",
+  "version": "0.16.1",
   "publisher": "clydedsouza",
   "icon": "logo.png",
   "packageManager": "yarn@1.22.22",
   "license": "MIT",
   "engines": {
     "vscode": "^1.85.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ClydeDz/crazy-rich-markdown-editor-vscode-ext"
   },
   "categories": [
     "Notebooks",
