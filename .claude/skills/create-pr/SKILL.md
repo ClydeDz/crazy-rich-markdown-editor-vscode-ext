@@ -23,7 +23,7 @@ The template is `.github/pull_request_template.md`. Its checklist is the list of
    - `yarn typecheck`
    - `yarn test` (note the number of tests that passed)
    - `yarn test:vscode` when the change touches `src/`, the real webview, keys or focus. It is slow. If you skip it, say why. CI does not run it on a pull request (only on `main`), so this local run is the only check before the merge.
-   - `yarn package` and check that the file count is 30. Remove the new `.vsix` if the user did not ask for it.
+   - `yarn package` and check that the file count is 28. Remove the new `.vsix` if the user did not ask for it.
    If a check fails, stop. Show the failure. Do not open a pull request with a failing check.
 4. Fill the template from `.github/pull_request_template.md`:
    - Write **What and why** and **Changes** from the diff, in short plain sentences. Do not copy commit messages without reading them.

@@ -24,6 +24,9 @@ export function activate(context: vscode.ExtensionContext): ExtensionApi {
     vscode.commands.registerCommand('crazyRichMarkdown.openSource', async () => {
       await vscode.commands.executeCommand('workbench.action.reopenTextEditor');
     }),
+
+    vscode.commands.registerCommand('crazyRichMarkdown.addToCopilotChat', () => provider.addToCopilotChat()),
+    vscode.commands.registerCommand('crazyRichMarkdown.addToClaudeCodeChat', () => provider.addToClaudeCodeChat()),
   );
 
   return { getStats: (uri) => provider.getStats(uri) };

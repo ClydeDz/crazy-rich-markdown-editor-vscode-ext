@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,6 +11,7 @@ import { runCheckPublish } from '../scripts/check-publish.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const workflow = readFileSync(path.join(root, '.github', 'workflows', 'publish.yml'), 'utf8');
+const require = createRequire(import.meta.url);
 
 test('publishedVersions reads the versions from the output of vsce show', () => {
   const output = JSON.stringify({
@@ -153,6 +155,46 @@ test('every action in the workflow has a version', () => {
 
 test('the package leaves out the workflow files', () => {
   assert.match(readFileSync(path.join(root, '.vscodeignore'), 'utf8'), /^\.github\/\*\*$/m);
+});
+
+// The count of files in the .vsix. The pull request template and the create-pr and release skills
+// say this number, so a change of the package moves the test and the three checklists together.
+const PACKAGE_FILES = 28;
+
+/**
+ * The files that `yarn package` puts in the .vsix. `dist/` is built when it is missing, because
+ * the unit tests of CI run without a build.
+ */
+async function packagedFiles() {
+  if (!existsSync(path.join(root, 'dist', 'extension.js'))) {
+    const build = spawnSync(process.execPath, [path.join(root, 'esbuild.mjs'), '--production'], {
+      cwd: root,
+      encoding: 'utf8',
+    });
+    assert.equal(build.status, 0, build.stderr || build.stdout);
+  }
+  const { listFiles, PackageManager } = require('@vscode/vsce');
+  return listFiles({ cwd: root, packageManager: PackageManager.None });
+}
+
+test('the package holds exactly 28 files, so a file that sneaks in is noticed', async () => {
+  const files = await packagedFiles();
+  assert.equal(
+    files.length,
+    PACKAGE_FILES,
+    `the package changed. Update PACKAGE_FILES and the three checklists: ${files.join(', ')}`,
+  );
+});
+
+test('the checklists name the file count that the package has', () => {
+  const checklists = [
+    ['.github/pull_request_template.md', `package of ${PACKAGE_FILES} files`],
+    ['.claude/skills/create-pr/SKILL.md', `file count is ${PACKAGE_FILES}`],
+    ['.claude/skills/release/SKILL.md', `file count must stay at ${PACKAGE_FILES}`],
+  ];
+  for (const [file, phrase] of checklists) {
+    assert.ok(readFileSync(path.join(root, file), 'utf8').includes(phrase), `${file} must say "${phrase}"`);
+  }
 });
 
 // TODO: Check validity of test after publishing

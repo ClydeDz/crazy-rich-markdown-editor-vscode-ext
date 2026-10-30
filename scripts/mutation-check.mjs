@@ -44,7 +44,9 @@ const TIMEOUT_MS = { unit: 180_000, vscode: 480_000 };
 
 // ---------- Choose the mutants ----------
 
-const read = (file) => readFileSync(path.join(root, file), 'utf8');
+// A checkout can be CRLF (git autocrlf on Windows). Anchors and offsets are written against
+// LF text, so the source is normalized here and again where the mutant is applied.
+const read = (file) => readFileSync(path.join(root, file), 'utf8').replace(/\r\n/g, '\n');
 
 function handMutants() {
   return HAND_MUTANTS.map((hand) => {
@@ -137,7 +139,12 @@ function makeJob(name) {
     recursive: true,
     filter: (source) => !SKIP.has(path.basename(source)) && !source.endsWith('.vsix'),
   });
-  symlinkSync(path.join(root, 'node_modules'), path.join(directory, 'node_modules'));
+  // A directory junction is the same link without the Windows privilege a symlink needs.
+  symlinkSync(
+    path.join(root, 'node_modules'),
+    path.join(directory, 'node_modules'),
+    process.platform === 'win32' ? 'junction' : 'dir',
+  );
   return directory;
 }
 
@@ -209,7 +216,7 @@ async function worker(suite, directory, queue) {
   for (let item = queue.shift(); item; item = queue.shift()) {
     const file = path.join(directory, item.file);
     const original = readFileSync(file, 'utf8');
-    writeFileSync(file, applyMutant(original, item.mutant));
+    writeFileSync(file, applyMutant(original.replace(/\r\n/g, '\n'), item.mutant));
     let outcome;
     try {
       outcome = await runSuite(suite, directory);

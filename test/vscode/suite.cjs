@@ -145,7 +145,7 @@ test("the webview page has a strict CSP and loads the bundle", async () => {
   assert.match(html, /script-src 'nonce-[0-9a-f]{32}'/);
   assert.match(html, /<script nonce="[0-9a-f]{32}" src=".*dist\/webview\.js"/);
   assert.match(html, /href=".*dist\/webview\.css"/);
-  assert.match(html, /<div id="editor">/);
+  assert.ok(html.includes(`<div id="editor" data-vscode-context='{"webviewSection":"editor"}'>`));
   assert.match(html, /<div id="stats" class="rme-stats" hidden><\/div>/, "the page has the bar for the counts");
   assert.doesNotMatch(html, /unsafe-eval/);
   fake.dispose();
@@ -1095,6 +1095,132 @@ test("the Markdown and MDX editors use their configured names", async () => {
   assert.equal(editors[1].displayName, "MDX Editor");
 });
 
+test("the webview context menu offers both chat actions without replacing clipboard actions", () => {
+  const extension = vscode.extensions.getExtension("clydedsouza.crazy-rich-markdown-editor");
+  const manifest = extension.packageJSON.contributes;
+  const menu = manifest.menus["webview/context"];
+  assert.deepEqual(
+    menu.map((item) => item.command),
+    ["crazyRichMarkdown.addToCopilotChat", "crazyRichMarkdown.addToClaudeCodeChat"],
+  );
+  assert.ok(menu.every((item) => item.when.includes("crazyRichMarkdown.editor") && item.when.includes("mdxEditor")));
+  assert.ok(
+    manifest.commands.some((item) => item.command === "crazyRichMarkdown.addToCopilotChat"),
+    "Copilot Chat command is contributed",
+  );
+  assert.ok(
+    manifest.commands.some((item) => item.command === "crazyRichMarkdown.addToClaudeCodeChat"),
+    "Claude Code command is contributed",
+  );
+});
+
+test("the Copilot chat action attaches the selected source range without filling the prompt", async () => {
+  const { document, provider, fake } = await openWithProvider("chat-selection.md", "first line\n\nsecond line\n");
+  const calls = [];
+  const original = vscode.commands.executeCommand;
+  let attachedSelection;
+  vscode.commands.executeCommand = (...args) => {
+    calls.push(args);
+    if (args[0] === "workbench.action.chat.attachSelection") {
+      attachedSelection = vscode.window.activeTextEditor?.selection;
+    }
+    return Promise.resolve(true);
+  };
+  try {
+    fake.send({ type: "contextSelection", text: "first line\nsecond line" });
+    await provider.addToCopilotChat();
+    assert.ok(
+      attachedSelection && new vscode.Range(0, 0, 2, 11).isEqual(attachedSelection),
+      "Copilot receives the selected source range",
+    );
+    assert.deepEqual(calls, [
+      ["workbench.action.chat.attachSelection"],
+      ["workbench.action.chat.open", { query: "", isPartialQuery: true }],
+    ]);
+    assert.equal(
+      vscode.window.tabGroups.all
+        .flatMap((group) => group.tabs)
+        .some(
+          (tab) => tab.input instanceof vscode.TabInputText && tab.input.uri.toString() === document.uri.toString(),
+        ),
+      false,
+      "the temporary source editor is closed after attaching",
+    );
+  } finally {
+    vscode.commands.executeCommand = original;
+    fake.dispose();
+  }
+});
+
+test("the Claude Code action opens a chat when none is open, with the selected source range", async () => {
+  const { provider, fake } = await openWithProvider("claude-selection.md", "selected text\n");
+  const getExtension = vscode.extensions.getExtension;
+  vscode.extensions.getExtension = (id) =>
+    id === "anthropic.claude-code" ? {} : getExtension.call(vscode.extensions, id);
+  const calls = [];
+  const original = vscode.commands.executeCommand;
+  let openedSelection;
+  vscode.commands.executeCommand = (...args) => {
+    calls.push(args);
+    if (args[0] === "claude-vscode.editor.open") {
+      openedSelection = vscode.window.activeTextEditor?.selection;
+    }
+    // No chat is open, so the reference has nowhere to go and a new chat must open.
+    if (args[0] === "claude-vscode.insertAtMention") {
+      return Promise.reject(new Error("no open chat"));
+    }
+    return Promise.resolve(true);
+  };
+  try {
+    fake.send({ type: "contextSelection", text: "selected text" });
+    await provider.addToClaudeCodeChat();
+    assert.ok(new vscode.Range(0, 0, 0, 13).isEqual(openedSelection), "Claude Code receives the selected source range");
+    assert.deepEqual(
+      calls,
+      [["claude-vscode.insertAtMention"], ["claude-vscode.editor.open"], ["claude-vscode.focus"]],
+      "it tries the open chat first, then opens one and focuses it",
+    );
+  } finally {
+    vscode.commands.executeCommand = original;
+    vscode.extensions.getExtension = getExtension;
+    fake.dispose();
+  }
+});
+
+test("the Claude Code action adds the selection to the chat that is already open", async () => {
+  const { provider, fake } = await openWithProvider("claude-existing-chat.md", "selected text\n");
+  const getExtension = vscode.extensions.getExtension;
+  vscode.extensions.getExtension = (id) =>
+    id === "anthropic.claude-code" ? {} : getExtension.call(vscode.extensions, id);
+  const calls = [];
+  const original = vscode.commands.executeCommand;
+  let mentionedSelection;
+  vscode.commands.executeCommand = (...args) => {
+    calls.push(args);
+    if (args[0] === "claude-vscode.insertAtMention") {
+      mentionedSelection = vscode.window.activeTextEditor?.selection;
+    }
+    return Promise.resolve(true);
+  };
+  try {
+    fake.send({ type: "contextSelection", text: "selected text" });
+    await provider.addToClaudeCodeChat();
+    assert.ok(
+      mentionedSelection && new vscode.Range(0, 0, 0, 13).isEqual(mentionedSelection),
+      "Claude Code receives the selected source range",
+    );
+    assert.deepEqual(
+      calls,
+      [["claude-vscode.insertAtMention"], ["claude-vscode.focus"]],
+      "it fills the open chat and never opens a second one",
+    );
+  } finally {
+    vscode.commands.executeCommand = original;
+    vscode.extensions.getExtension = getExtension;
+    fake.dispose();
+  }
+});
+
 // ---------- A real webview, driven from the test ----------
 // These tests load the real editor bundle in a real VS Code webview.
 // An extra script in the page does what a user does, and reports what it sees.
@@ -1310,6 +1436,25 @@ test("real webview: the floating toolbar shows above the selected text", async (
     "more",
   ]) {
     assert.ok(shown.buttons.includes(action), `button ${action}`);
+  }
+});
+
+test("real webview: right-click sends selected lines with native clipboard items enabled", async () => {
+  const { run, document } = await startRealWebview();
+  try {
+    await run("setContent", { markdown: "first line\n\nsecond line\n" });
+    const result = await run("contextMenuSelection", { first: "first line", last: "second line" });
+    assert.equal(result.text, "first line\n\nsecond line", "the complete multiline selection is sent to VS Code");
+    assert.deepEqual(
+      JSON.parse(result.context),
+      { webviewSection: "editor" },
+      "the editor context is set without disabling Cut, Copy or Paste",
+    );
+  } finally {
+    await sleep(500);
+    await replaceAll(document, REAL_DOC);
+    await run("setContent", { markdown: REAL_DOC });
+    await run("select", { text: "world" });
   }
 });
 
@@ -2271,6 +2416,18 @@ test("real webview: an MDX file shows its code in boxes with colors, keeps the t
       () => document.getText() === expected.replace("<Badge>new</Badge>.", "<Badge>new</Badge>. more"),
       `the file after typing: ${JSON.stringify(document.getText())}`,
     );
+  } finally {
+    panel.dispose();
+  }
+});
+
+test("real webview: right-click sends selected MDX code from its text area", async () => {
+  const source = "<Card>\n  Hello from MDX\n</Card>\n\n# Title\n";
+  const { run, panel } = await launchRealWebview("selection.mdx", source);
+  try {
+    const result = await run("contextMenuTextArea");
+    assert.equal(result.text, "<Card>\n  Hello from MDX\n</Card>", "the selected MDX source is captured");
+    assert.equal(result.context, '{"webviewSection":"editor"}', "the MDX block has the editor context section");
   } finally {
     panel.dispose();
   }

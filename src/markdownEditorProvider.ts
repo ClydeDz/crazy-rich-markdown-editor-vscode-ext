@@ -13,6 +13,7 @@ import {
   saveAsset,
 } from './assets';
 import { FileAuthor, readGitAuthors } from './fileInfo';
+import { findSelectionOffsets } from './chatSelection';
 import { HostMessage, MediaItem, WebviewMessage } from './protocol';
 import { coalesceRefresh } from './refreshQueue';
 import { minimalChange } from './textDiff';
@@ -66,6 +67,7 @@ export interface EditorStats {
 
 export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
   private readonly stats = new Map<string, EditorStats>();
+  private contextSelection: { panel: vscode.WebviewPanel; document: vscode.TextDocument; text: string } | undefined;
 
   constructor(private readonly context: vscode.ExtensionContext) {}
 
@@ -278,6 +280,10 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
             break;
           }
 
+          case 'contextSelection':
+            this.contextSelection = { panel, document, text: message.text };
+            break;
+
           case 'pickMedia':
             await this.pickMedia(document.uri, assetFolder(), post);
             break;
@@ -309,7 +315,121 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
       disposed = true;
       subscriptions.forEach((subscription) => subscription.dispose());
       this.stats.delete(document.uri.toString());
+      if (this.contextSelection?.panel === panel) {
+        this.contextSelection = undefined;
+      }
     });
+  }
+
+  async addToCopilotChat(): Promise<void> {
+    const selection = this.selectedSourceRange();
+    if (!selection) {
+      return;
+    }
+
+    try {
+      await this.withSelectedTextEditor(selection, async () => {
+        await vscode.commands.executeCommand('workbench.action.chat.attachSelection');
+      });
+      await vscode.commands.executeCommand('workbench.action.chat.open', { query: '', isPartialQuery: true });
+    } catch (error) {
+      void vscode.window.showErrorMessage(`Cannot add this selection to Copilot Chat. ${errorText(error)}`);
+    }
+  }
+
+  async addToClaudeCodeChat(): Promise<void> {
+    const selection = this.selectedSourceRange();
+    if (!selection) {
+      return;
+    }
+    if (!vscode.extensions.getExtension('anthropic.claude-code')) {
+      void vscode.window.showInformationMessage('Install the Claude Code extension to use this action.');
+      return;
+    }
+
+    try {
+      await this.withSelectedTextEditor(selection, async () => {
+        // `insertAtMention` reads the selection of the active text editor and writes an
+        // `@file#L1-L2` reference into the prompt box of the Claude Code chat that is already
+        // open, so no second chat appears. Without an open chat it has nowhere to write and
+        // fails; then open one, as before.
+        if (await this.insertClaudeMention()) {
+          return;
+        }
+        await vscode.commands.executeCommand('claude-vscode.editor.open');
+      });
+      await vscode.commands.executeCommand('claude-vscode.focus');
+    } catch (error) {
+      void vscode.window.showErrorMessage(`Cannot add this selection to Claude Code. ${errorText(error)}`);
+    }
+  }
+
+  /** False when no open Claude Code chat can take the reference, so the caller opens one. */
+  private async insertClaudeMention(): Promise<boolean> {
+    try {
+      await vscode.commands.executeCommand('claude-vscode.insertAtMention');
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private selectedSourceRange():
+    { document: vscode.TextDocument; range: vscode.Range; panel: vscode.WebviewPanel } | undefined {
+    const selection = this.contextSelection;
+    if (!selection || selection.text.trim().length === 0) {
+      void vscode.window.showInformationMessage('Select text in the Markdown editor first.');
+      return undefined;
+    }
+    const offsets = findSelectionOffsets(selection.document.getText(), selection.text);
+    if (!offsets) {
+      void vscode.window.showInformationMessage(
+        'Could not match this selection to the Markdown source. Try selecting a shorter text range.',
+      );
+      return undefined;
+    }
+    return {
+      document: selection.document,
+      panel: selection.panel,
+      range: new vscode.Range(selection.document.positionAt(offsets.start), selection.document.positionAt(offsets.end)),
+    };
+  }
+
+  private async withSelectedTextEditor<T>(
+    selection: { document: vscode.TextDocument; range: vscode.Range; panel: vscode.WebviewPanel },
+    action: () => Promise<T>,
+  ): Promise<T> {
+    const existingTextTab = vscode.window.tabGroups.all
+      .flatMap((group) => group.tabs)
+      .find(
+        (tab) =>
+          tab.input instanceof vscode.TabInputText && tab.input.uri.toString() === selection.document.uri.toString(),
+      );
+    const editor = await vscode.window.showTextDocument(selection.document, {
+      viewColumn: vscode.ViewColumn.Beside,
+      preview: false,
+    });
+    const previousSelection = existingTextTab ? editor.selection : undefined;
+    editor.selection = new vscode.Selection(selection.range.start, selection.range.end);
+
+    try {
+      return await action();
+    } finally {
+      if (previousSelection) {
+        editor.selection = previousSelection;
+      } else {
+        const textTab = vscode.window.tabGroups.all
+          .flatMap((group) => group.tabs)
+          .find(
+            (tab) =>
+              tab.input instanceof vscode.TabInputText &&
+              tab.input.uri.toString() === selection.document.uri.toString(),
+          );
+        if (textTab) {
+          await vscode.window.tabGroups.close(textTab);
+        }
+      }
+    }
   }
 
   /** The people who changed the file in the last Git commits. It is empty when the setting is off or Git has none. */
@@ -463,9 +583,14 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
   <div id="app">
     <details id="frontmatter" class="rme-frontmatter" hidden>
       <summary>Front matter</summary>
-      <textarea id="frontmatter-input" spellcheck="false" rows="4"></textarea>
+      <textarea
+        id="frontmatter-input"
+        data-vscode-context='{"webviewSection":"editor"}'
+        spellcheck="false"
+        rows="4"
+      ></textarea>
     </details>
-    <div id="editor"></div>
+    <div id="editor" data-vscode-context='{"webviewSection":"editor"}'></div>
   </div>
   <script nonce="${nonce}" src="${script}" data-mermaid="${mermaid}"></script>
 </body>

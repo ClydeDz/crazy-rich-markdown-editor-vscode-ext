@@ -201,6 +201,32 @@ function start(message: Extract<HostMessage, { type: 'init' }>): void {
     }
   });
 
+  const sendContextSelection = (text: string): void => {
+    vscode.postMessage({ type: 'contextSelection', text });
+  };
+  editorElement.addEventListener('contextmenu', (event) => {
+    const target = event.target;
+    if (target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement) {
+      const start = target.selectionStart ?? 0;
+      const end = target.selectionEnd ?? start;
+      sendContextSelection(target.value.slice(start, end));
+      return;
+    }
+
+    const selected = window.getSelection()?.toString() ?? '';
+    if (selected.length > 0) {
+      sendContextSelection(selected);
+      return;
+    }
+
+    const { selection } = editor!.state;
+    const text = selection.empty ? '' : editor!.state.doc.textBetween(selection.from, selection.to, '\n');
+    sendContextSelection(text);
+  });
+  frontMatterInput.addEventListener('contextmenu', () => {
+    sendContextSelection(frontMatterInput.value.slice(frontMatterInput.selectionStart, frontMatterInput.selectionEnd));
+  });
+
   // VS Code starts its own handling of a file drag, and opens the dropped file as a new editor, unless the page
   // has already handled the first drag event. The text area handles it, but the margins of the page do not.
   // These listeners make a file drop work on the whole page, and they take a drop outside the text area too.

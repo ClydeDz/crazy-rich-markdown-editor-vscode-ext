@@ -152,6 +152,34 @@
       };
     },
 
+    async contextMenuSelection({ first, last }) {
+      pm().focus();
+      const from = positionOf(first);
+      editor().commands.setTextSelection({ from, to: positionOf(last) + last.length });
+      const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+      pm().dispatchEvent(event);
+      await sleep(50);
+      const message = sent.filter((item) => item.type === 'contextSelection').at(-1);
+      return {
+        text: message && message.text,
+        context: document.querySelector('#editor').dataset.vscodeContext,
+      };
+    },
+
+    async contextMenuTextArea() {
+      const input = document.querySelector('.rme-raw-input');
+      input.focus();
+      input.setSelectionRange(0, input.value.length);
+      const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+      input.dispatchEvent(event);
+      await sleep(50);
+      const message = sent.filter((item) => item.type === 'contextSelection').at(-1);
+      return {
+        text: message && message.text,
+        context: document.querySelector('#editor').dataset.vscodeContext,
+      };
+    },
+
     // What the blocks of the page are: the code blocks with their language, and the drawn math blocks.
     async lineBlocks() {
       const blocks = [...pm().querySelectorAll('.rme-code')];

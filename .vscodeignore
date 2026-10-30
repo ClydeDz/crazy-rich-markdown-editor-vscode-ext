@@ -18,3 +18,5 @@ AGENTS.md
 docs/**
 *.vsix
 .vscode-test/**
+.prettierignore
+.freebuff/**

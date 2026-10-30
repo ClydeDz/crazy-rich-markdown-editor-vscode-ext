@@ -16,7 +16,7 @@ The argument is the new version, or `patch`, `minor` or `major`. When the user g
 1. Read the current `version` in `package.json`. Work out the new version.
 2. Replace the old version with the new one in `package.json` and in `README.md`. The README has the `.vsix` name in its install steps. Use `sed -i '' 's/<old>/<new>/g'` and check that both files changed.
 3. Run `yarn test`. If a test fails, stop. Show the failure. Do not package.
-4. Run `yarn package`. It must print `Packaged: ...rich-markdown-editor-<new>.vsix`. The file count must stay at 30. A higher count means a new file is in the package: check `.vscodeignore`.
+4. Run `yarn package`. It must print `Packaged: ...rich-markdown-editor-<new>.vsix`. The file count must stay at 28. A higher count means a new file is in the package: check `.vscodeignore`.
 5. Install it:
    `"/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code" --install-extension rich-markdown-editor-<new>.vsix --force`
    The output must say `successfully installed`.

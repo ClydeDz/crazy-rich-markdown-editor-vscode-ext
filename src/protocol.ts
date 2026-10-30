@@ -37,6 +37,7 @@ export type HostMessage =
 export type WebviewMessage =
   | { type: 'ready' }
   | { type: 'edit'; text: string }
+  | { type: 'contextSelection'; text: string }
   | { type: 'openLink'; href: string }
   /** Ask the host to open the settings of this extension, from the button in the bar at the top. */
   | { type: 'openSettings' }

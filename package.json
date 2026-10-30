@@ -2,7 +2,7 @@
   "name": "crazy-rich-markdown-editor",
   "displayName": "Crazy Rich Markdown Editor",
   "description": "Edit Markdown files as rich text with a floating formatting toolbar. Supports GitHub Flavored Markdown, and keeps the code of MDX files as it is. The file stays raw Markdown on disk.",
-  "version": "0.20.1",
+  "version": "0.21.0",
   "publisher": "clydedsouza",
   "icon": "logo.png",
   "packageManager": "yarn@1.22.22",
@@ -65,6 +65,16 @@
         "title": "Open Markdown Source (Raw Text)",
         "category": "Markdown",
         "icon": "$(code)"
+      },
+      {
+        "command": "crazyRichMarkdown.addToCopilotChat",
+        "title": "Add to Copilot Chat",
+        "category": "Chat"
+      },
+      {
+        "command": "crazyRichMarkdown.addToClaudeCodeChat",
+        "title": "Add to Claude Code Chat",
+        "category": "Chat"
       }
     ],
     "menus": {
@@ -85,6 +95,18 @@
           "command": "crazyRichMarkdown.openRich",
           "when": "resourceLangId == markdown || resourceExtname == .mdx",
           "group": "navigation"
+        }
+      ],
+      "webview/context": [
+        {
+          "command": "crazyRichMarkdown.addToCopilotChat",
+          "when": "(webviewId == 'crazyRichMarkdown.editor' || webviewId == 'crazyRichMarkdown.mdxEditor') && webviewSection == editor",
+          "group": "navigation@1"
+        },
+        {
+          "command": "crazyRichMarkdown.addToClaudeCodeChat",
+          "when": "(webviewId == 'crazyRichMarkdown.editor' || webviewId == 'crazyRichMarkdown.mdxEditor') && webviewSection == editor",
+          "group": "navigation@2"
         }
       ]
     },
