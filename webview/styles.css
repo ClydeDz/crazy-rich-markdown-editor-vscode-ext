@@ -285,10 +285,60 @@ html.rme-no-bar {
   margin: 0;
 }
 
-.ProseMirror img {
+.ProseMirror .rme-image {
+  display: inline-block;
+  vertical-align: middle;
+  max-width: 100%;
+}
+.ProseMirror .rme-image img {
+  display: block;
   max-width: 100%;
   height: auto;
   border-radius: 4px;
+}
+.ProseMirror .rme-image.ProseMirror-selectednode img {
+  outline: 2px solid var(--vscode-focusBorder);
+}
+.rme-image-fields {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.rme-image-field-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.rme-image-field-label {
+  color: var(--rme-muted);
+  font-size: 10px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.rme-image-field {
+  box-sizing: border-box;
+  width: 140px;
+  max-width: 24vw;
+  min-width: 70px;
+  margin: 0;
+  padding: 3px 5px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  outline: none;
+  background: var(--vscode-input-background, transparent);
+  color: var(--vscode-input-foreground, var(--vscode-editor-foreground));
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.4;
+  user-select: text;
+}
+.rme-image-field:hover,
+.rme-image-field:focus {
+  border-color: var(--vscode-input-border, var(--rme-border));
+}
+.rme-image-field:focus {
+  color: var(--vscode-input-foreground, var(--vscode-editor-foreground));
 }
 .ProseMirror img.ProseMirror-selectednode {
   outline: 2px solid var(--vscode-focusBorder);

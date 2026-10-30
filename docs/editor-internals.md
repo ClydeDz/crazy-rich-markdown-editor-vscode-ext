@@ -17,6 +17,7 @@
 - Front matter is not in the ProseMirror document. `webview/main.ts` splits it from the body and keeps it in a panel above the editor. `webview/frontMatterView.ts` colors it (YAML) and draws its trash button. `webview/textIndent.ts` does Tab and Enter in the field. YAML needs spaces, so Tab types two spaces.
 - A file has at most one front matter block. The slash item **Front matter** shows only while there is none.
 - `webview/blockHandle.ts` draws the grip and the trash button at the left of a top level block. A dropped block lands between top level blocks, never inside a list. The page padding at the left (`#app` in `styles.css`) leaves room for it.
+- Selecting an image opens a floating toolbar with editable alt text and title fields. They update the image attributes and round-trip to Markdown; videos do not have these fields.
 - A tab in code is two columns wide (`tab-size` in `styles.css`).
 
 ## Layout

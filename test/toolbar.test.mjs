@@ -1,5 +1,4 @@
-// Tests of the floating toolbar (webview/toolbar.ts) that the older tests in editor.test.mjs do not reach:
-// the attributes of the buttons, the More menu and its listeners, Ctrl or Cmd plus K, link editing, and the table toolbar.
+// Tests of the floating toolbars (webview/toolbar.ts): their controls, menus, link editing, and image/table actions.
 import test, { afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { leakedListeners, loadModule, makeEditor } from './helpers.mjs';
@@ -16,7 +15,8 @@ const created = [];
 // A menu that a test leaves open keeps listeners on the document. They would take part in the next test.
 afterEach(() => {
   for (const bar of created.splice(0)) {
-    if (bar.querySelector('[data-action="more"]').getAttribute('aria-expanded') === 'true') {
+    const more = bar.querySelector('[data-action="more"]');
+    if (more?.getAttribute('aria-expanded') === 'true') {
       bar.querySelector('[data-action="more"]').click();
     }
     bar.remove();
@@ -28,14 +28,16 @@ function setup(markdown) {
   const editor = makeEditor(createEditor, markdown, { extensions: toolbars.extensions });
   toolbars.bind(editor);
   const bar = toolbars.textBar;
-  // The user works with the focus in the text. The floating toolbar is on the page only while text is selected,
-  // and these tests need it there, so that its field can take the focus.
-  if (!bar.isConnected) document.body.append(bar);
+  const imageBar = toolbars.imageBar;
+  for (const toolbar of [bar, imageBar]) {
+    if (!toolbar.isConnected) document.body.append(toolbar);
+    created.push(toolbar);
+  }
   editor.view.dom.focus();
-  created.push(bar);
   return {
     editor,
     bar,
+    imageBar,
     button: (id) => bar.querySelector(`[data-action="${id}"]`),
     menu: () => bar.querySelector('.rme-menu'),
     more: () => bar.querySelector('[data-action="more"]'),
@@ -43,6 +45,37 @@ function setup(markdown) {
     input: () => bar.querySelector('form input'),
   };
 }
+
+test('the image toolbar edits alt and title text for the selected image', async () => {
+  const { editor, imageBar } = setup('![old alt](a.png "old title")\n\n![second](b.png)');
+  const positions = [];
+  editor.state.doc.descendants((node, pos) => {
+    if (node.type.name === 'image') positions.push(pos);
+  });
+  editor.commands.setNodeSelection(positions[0]);
+  await settle();
+
+  assert.equal(imageBar.getAttribute('role'), 'toolbar');
+  assert.equal(imageBar.getAttribute('aria-label'), 'Image');
+  const alt = imageBar.querySelector('[aria-label="Alt text"]');
+  const title = imageBar.querySelector('[aria-label="Title (optional)"]');
+  assert.equal(alt.previousElementSibling.textContent, 'Alt text');
+  assert.equal(title.previousElementSibling.textContent, 'Title text');
+  assert.equal(alt.value, 'old alt');
+  assert.equal(title.value, 'old title');
+
+  alt.value = 'new alt';
+  alt.dispatchEvent(new window.Event('input', { bubbles: true }));
+  title.value = 'new title';
+  title.dispatchEvent(new window.Event('input', { bubbles: true }));
+  assert.match(getMarkdown(editor), /!\[new alt\]\(a\.png "new title"\)/);
+
+  editor.commands.setNodeSelection(positions[1]);
+  assert.equal(alt.value, 'second');
+  assert.equal(title.value, '');
+  await settle();
+  editor.destroy();
+});
 
 function select(editor, text) {
   let found;

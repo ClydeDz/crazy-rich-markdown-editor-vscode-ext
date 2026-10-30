@@ -195,6 +195,8 @@ You can add images and videos in three ways:
 
 The editor copies the file into an **asset folder** and writes a relative link. It does not link to the original path. A video is written as an HTML `video` tag with a relative `src` and the `controls` attribute. GitHub shows this tag as a player.
 
+Select an image to open its floating toolbar. Use **Alt text** to edit the text shown to assistive technology and **Title text** to set an optional title. The fields stay in the toolbar instead of taking up space below the image, so they do not change its preview size. Changes are saved in the image's Markdown attributes. Videos do not have these fields.
+
 Rules for the asset folder:
 
 - A file that is already in the asset folder is not copied again.

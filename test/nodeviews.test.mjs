@@ -75,6 +75,11 @@ test('a node view shows the new attributes of a node that it accepts', () => {
   assert.equal(views.image.spec.update(copy(views.image, { src: 'b.png', alt: 'new alt', title: 'new title' })), true);
   assert.equal(views.image.dom.alt, 'new alt');
   assert.equal(views.image.dom.title, 'new title');
+  assert.equal(views.image.desc.dom.querySelector('.rme-image-fields'), null);
+  assert.deepEqual(
+    [...views.image.desc.dom.children].map((child) => child.tagName),
+    ['IMG'],
+  );
   assert.ok(views.image.dom.src.endsWith('b.png'));
 
   assert.equal(views.alert.spec.update(copy(views.alert, { type: 'caution' })), true);

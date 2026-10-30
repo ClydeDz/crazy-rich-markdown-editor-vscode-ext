@@ -1,6 +1,6 @@
 import { Editor, Extension } from '@tiptap/core';
 import { BubbleMenu } from '@tiptap/extension-bubble-menu';
-import { TextSelection } from '@tiptap/pm/state';
+import { NodeSelection, TextSelection } from '@tiptap/pm/state';
 import { ALERT_TITLES, ALERT_TYPES, AlertType } from './alert';
 import { icons } from './icons';
 import { formatShortcut } from './keys';
@@ -300,9 +300,20 @@ function isFocusInside(editor: Editor, element: HTMLElement): boolean {
   return editor.view.hasFocus() || element.contains(document.activeElement);
 }
 
+function selectedImage(editor: Editor) {
+  const { selection, doc } = editor.state;
+  if (selection.toJSON().type !== 'node') {
+    return undefined;
+  }
+  const node = doc.nodeAt(selection.from);
+  return node?.type.name === 'image' ? { node, pos: selection.from } : undefined;
+}
+
 export interface FloatingToolbars {
   /** The element of the text toolbar. */
   textBar: HTMLElement;
+  /** The element of the image toolbar. */
+  imageBar: HTMLElement;
   /** Extensions that mount the floating toolbars on an editor. */
   extensions: Extension[];
   /** Connect the toolbars to the editor after it exists. */
@@ -323,6 +334,46 @@ export function createFloatingToolbars(): FloatingToolbars {
   tableBar.className = 'rme-toolbar rme-table-toolbar';
   tableBar.setAttribute('role', 'toolbar');
   tableBar.setAttribute('aria-label', 'Table');
+
+  const imageBar = document.createElement('div');
+  imageBar.className = 'rme-toolbar rme-image-toolbar';
+  imageBar.setAttribute('role', 'toolbar');
+  imageBar.setAttribute('aria-label', 'Image');
+
+  const imageFields = document.createElement('div');
+  imageFields.className = 'rme-image-fields';
+  for (const [labelText, ariaLabel, attribute] of [
+    ['Alt text', 'Alt text', 'alt'],
+    ['Title text', 'Title (optional)', 'title'],
+  ] as const) {
+    const label = document.createElement('label');
+    label.className = 'rme-image-field-row';
+    const text = document.createElement('span');
+    text.className = 'rme-image-field-label';
+    text.textContent = labelText;
+    const input = document.createElement('input');
+    input.className = 'rme-image-field';
+    input.type = 'text';
+    input.setAttribute('aria-label', ariaLabel);
+    input.addEventListener('input', () => {
+      if (!boundEditor) {
+        return;
+      }
+      const selected = selectedImage(boundEditor);
+      if (!selected) {
+        return;
+      }
+      const transaction = boundEditor.state.tr.setNodeMarkup(selected.pos, undefined, {
+        ...selected.node.attrs,
+        [attribute]: input.value,
+      });
+      transaction.setSelection(NodeSelection.create(transaction.doc, selected.pos));
+      boundEditor.view.dispatch(transaction);
+    });
+    label.append(text, input);
+    imageFields.append(label);
+  }
+  imageBar.append(imageFields);
 
   const actionsRow = document.createElement('div');
   actionsRow.className = 'rme-actions';
@@ -581,6 +632,21 @@ export function createFloatingToolbars(): FloatingToolbars {
     },
   });
 
+  const imageBubble = BubbleMenu.extend({ name: 'imageBubbleMenu' }).configure({
+    element: imageBar,
+    pluginKey: 'rmeImageBar',
+    updateDelay: 40,
+    options: {
+      placement: 'top',
+      offset: 8,
+      flip: true,
+      shift: { padding: 8 },
+    },
+    shouldShow: ({ editor, state, element }) => {
+      return editor.isEditable && selectedImage(editor) !== undefined && isFocusInside(editor, element);
+    },
+  });
+
   // Cmd+K and Ctrl+K open the link field when text is selected.
   const linkShortcut = Extension.create({
     name: 'rmeLinkShortcut',
@@ -599,18 +665,33 @@ export function createFloatingToolbars(): FloatingToolbars {
 
   return {
     textBar,
-    extensions: [textBubble, tableBubble, linkShortcut],
+    imageBar,
+    extensions: [textBubble, tableBubble, imageBubble, linkShortcut],
     bind(editor: Editor) {
       boundEditor = editor;
+      const syncImageFields = (): void => {
+        const selected = selectedImage(editor)?.node;
+        for (const [attribute, input] of [
+          ['alt', imageBar.querySelector<HTMLInputElement>('[aria-label="Alt text"]')],
+          ['title', imageBar.querySelector<HTMLInputElement>('[aria-label="Title (optional)"]')],
+        ] as const) {
+          if (input) {
+            input.value = selected ? String(selected.attrs[attribute] ?? '') : '';
+          }
+        }
+      };
       editor.on('transaction', syncActiveState);
+      editor.on('transaction', syncImageFields);
       editor.on('selectionUpdate', () => {
         closeMenu();
+        syncImageFields();
         // A new selection ends link editing.
         if (linkMode && editor.state.selection.empty) {
           closeLinkMode(false);
         }
       });
       syncActiveState();
+      syncImageFields();
     },
   };
 }

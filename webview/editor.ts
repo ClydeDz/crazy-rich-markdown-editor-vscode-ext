@@ -60,24 +60,36 @@ export function createImageResolver(baseUri: string): (src: string) => string {
 function createImageExtension(resolve: (src: string) => string) {
   return Image.extend({
     addNodeView() {
-      return ({ node }) => {
+      return ({ node, getPos, editor }) => {
+        let current = node;
+
+        const dom = document.createElement('span');
+        dom.className = 'rme-image';
+        dom.contentEditable = 'false';
+
         const img = document.createElement('img');
-        const apply = (attrs: Record<string, any>): void => {
+        dom.append(img);
+
+        const apply = (attrs: Record<string, unknown>): void => {
           img.src = resolve(String(attrs.src ?? ''));
-          img.alt = attrs.alt ?? '';
-          if (attrs.title) {
-            img.title = attrs.title;
+          img.alt = String(attrs.alt ?? '');
+          const title = String(attrs.title ?? '');
+          if (title) {
+            img.title = title;
           } else {
             img.removeAttribute('title');
           }
         };
         apply(node.attrs);
+
         return {
-          dom: img,
+          dom,
+          ignoreMutation: () => true,
           update(updated) {
-            if (updated.type !== node.type) {
+            if (updated.type !== current.type) {
               return false;
             }
+            current = updated;
             apply(updated.attrs);
             return true;
           },
