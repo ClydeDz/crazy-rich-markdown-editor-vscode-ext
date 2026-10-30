@@ -69,6 +69,14 @@ export const AUTO_FILES = [
 
 export const HAND_MUTANTS = [
   {
+    id: "find-replace-shortcut",
+    suite: "vscode",
+    file: "webview/findReplace.ts",
+    find: "    if (!mode) return;",
+    replace: "    if (true) return;",
+    why: "the real webview does not open Find or Replace from its shortcuts",
+  },
+  {
     id: "mdx-flag-sent",
     suite: "vscode",
     file: "src/markdownEditorProvider.ts",

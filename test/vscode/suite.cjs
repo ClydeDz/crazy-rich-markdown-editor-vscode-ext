@@ -1949,6 +1949,11 @@ test("real webview: the editor handles every listed key with supported keyboard 
  * Each key means the same in every rich text editor, so the user expects it. [chord, command of VS Code, the reason]
  */
 const SHADOWED_ON_PURPOSE = [
+  ["Mod-f", "editor.action.webvieweditor.showFind", "Find. The rich editor opens its own find bar"],
+  ["Mod-f", "markdown.editor.cursorRight", "Find. VS Code's Markdown editor binds Ctrl+F to move right"],
+  ...(process.platform === "darwin"
+    ? [["Mod-Alt-f", "editor.action.startFindReplaceAction", "Replace on macOS. Cmd+H hides VS Code"]]
+    : [["Mod-h", "markdown.editor.deleteLeft", "Replace. VS Code's Markdown editor binds Ctrl+H to delete left"]]),
   ["Mod-b", "workbench.action.toggleSidebarVisibility", "Bold. Cmd or Ctrl plus B is the key of bold everywhere"],
   [
     "Mod-i",
@@ -2023,6 +2028,29 @@ test("real webview: the keys that the editor handles take only these keys from V
     assert.ok(handled[chord], `${chord} is still handled by the editor`);
   }
   await restoreRealDocument();
+});
+
+test("real webview: Find and Replace shortcuts highlight matches and save replacements", async () => {
+  const { run, document } = await startRealWebview();
+  try {
+    const result = await run("findReplace", {
+      markdown: "One **one** ONE",
+      query: "one",
+      replacement: "two",
+    });
+    assert.equal(result.handled, true, "the find shortcut is handled in the webview");
+    assert.equal(result.focused, true, "the find field gets focus");
+    assert.equal(result.count, "1 of 3", "all case-insensitive matches are counted");
+    assert.equal(result.highlights, 3, "all matches are highlighted in the page");
+    assert.equal(result.replaceHandled, true, "the replace shortcut is handled in the webview");
+    assert.equal(result.replaceFocused, true, "the replacement field gets focus");
+    await waitFor(() => document.getText() === "two **two** two\n", "the replacements to reach the Markdown file");
+    assert.equal(document.getText(), "two **two** two\n", "replace current and replace all save to the file");
+  } finally {
+    await sleep(500);
+    await replaceAll(document, REAL_DOC);
+    await run("setContent", { markdown: REAL_DOC });
+  }
 });
 
 test("real webview: the width setting changes the writing column", async () => {

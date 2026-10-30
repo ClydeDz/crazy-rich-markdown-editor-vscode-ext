@@ -1,7 +1,7 @@
 import 'katex/dist/katex.min.css';
 import './styles.css';
 import type { Editor } from '@tiptap/core';
-import { createEditor, createImageResolver, getMarkdown, setMarkdown } from './editor';
+import { createEditor, createFindReplaceBar, createImageResolver, getMarkdown, setMarkdown } from './editor';
 import { videoHtml } from './media';
 import { joinFrontMatter, splitFrontMatter } from './frontMatter';
 import { enhanceFrontMatter } from './frontMatterView';
@@ -188,6 +188,7 @@ function start(message: Extract<HostMessage, { type: 'init' }>): void {
       createMediaInput({ onFiles: (files) => void sendFiles(files) }),
     ],
   });
+  createFindReplaceBar(editor);
   toolbars.bind(editor);
   refreshStats();
   stats?.show();

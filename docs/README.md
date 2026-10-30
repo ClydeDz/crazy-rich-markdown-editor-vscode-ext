@@ -41,9 +41,15 @@ To hide the whole bar, set `crazyRichMarkdown.showInfoBar` to `false`. The chang
 Click **Shortcuts** in the bar to see every keyboard shortcut of the editor. The window shows the keys that fit your system: `⌘` on macOS, and `Ctrl` on Windows and Linux. The groups are:
 
 - Text, Headings, Lists and Blocks: the shortcuts of the floating toolbar. One table in `webview/shortcuts.ts` gives the keys to the toolbar buttons, to the editor, and to this window, so the three always agree.
-- Editing: undo and redo, a new line in the same paragraph, `Tab` in lists and tables, `Backspace` at the start of an alert, and save.
+- Editing: find and replace, undo and redo, a new line in the same paragraph, `Tab` in lists and tables, `Backspace` at the start of an alert, and save.
 - Menus: the keys of the block menu (`/`) and the emoji menu (`:`).
 - Links: `Cmd` or `Ctrl` plus click opens a link, or goes to the note of a footnote.
+
+#### Find and replace
+
+Press `Cmd+F` (macOS) or `Ctrl+F` (Windows and Linux) to find text in the editable Markdown body. Use the arrows or `Enter` to move between matches. Press `Cmd+Option+F` on macOS or `Ctrl+H` on Windows and Linux to show the replacement field. Replace the current match or all matches; `Esc` closes the bar.
+
+Find and replace covers editable rich-text content, including code blocks. It does not search front matter or the contents of raw HTML and MDX blocks. To search or replace those parts, open the raw Markdown text editor from the title bar.
 
 #### How the keys were chosen
 

@@ -143,7 +143,6 @@ const KEYS_FOR_VS_CODE = [
   ['Mod-Alt-6', 'a heading level that the toolbar does not have'],
   ['Mod-w', 'Close Editor'],
   ['Mod-n', 'New File'],
-  ['Mod-f', 'Find'],
   ['Mod-g', 'Find next'],
   ['Mod-/', 'Toggle Comment'],
   ['Mod-\\', 'Split Editor'],

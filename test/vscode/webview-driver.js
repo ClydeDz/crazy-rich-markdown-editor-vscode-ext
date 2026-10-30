@@ -525,6 +525,43 @@
       return { links: [...pm().querySelectorAll('a')].map((a) => a.getAttribute('href')) };
     },
 
+    async findReplace({ markdown, query, replacement }) {
+      editor().commands.setContent(markdown, { contentType: 'markdown', emitUpdate: false });
+      const mac = /Mac/.test(navigator.platform);
+      const keyEvent = (key, modifiers) =>
+        new KeyboardEvent('keydown', { key, ...modifiers, bubbles: true, cancelable: true });
+
+      pm().focus();
+      const findEvent = keyEvent('f', mac ? { metaKey: true } : { ctrlKey: true });
+      pm().dispatchEvent(findEvent);
+      await sleep(50);
+      const bar = document.querySelector('.rme-find-bar');
+      const findInput = bar.querySelector('[aria-label="Find"]');
+      findInput.value = query;
+      findInput.dispatchEvent(new Event('input', { bubbles: true }));
+      const found = {
+        handled: findEvent.defaultPrevented,
+        focused: document.activeElement === findInput,
+        count: bar.querySelector('.rme-find-count').textContent,
+        highlights: pm().querySelectorAll('.rme-find-match').length,
+      };
+
+      const replaceEvent = keyEvent(mac ? 'f' : 'h', mac ? { metaKey: true, altKey: true } : { ctrlKey: true });
+      pm().dispatchEvent(replaceEvent);
+      await sleep(50);
+      const replaceInput = bar.querySelector('[aria-label="Replace"]');
+      replaceInput.value = replacement;
+      bar.querySelector('[data-action="replace"]').click();
+      bar.querySelector('[data-action="replace-all"]').click();
+      await sleep(50);
+      return {
+        ...found,
+        replaceHandled: replaceEvent.defaultPrevented,
+        replaceFocused: document.activeElement === replaceInput,
+        remaining: bar.querySelector('.rme-find-count').textContent,
+      };
+    },
+
     // Click a link in the text, with or without Ctrl or Cmd. The page may start a scroll.
     async clickLink({ href, meta, ctrl }) {
       const link = pm().querySelector(`a[href="${href}"]`);

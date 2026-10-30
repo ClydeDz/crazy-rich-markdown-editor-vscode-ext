@@ -22,6 +22,9 @@ import { MathBlock, MathInline } from './math';
 import { createVideo, patchVideoParagraphs } from './media';
 import { escapeMarkdownText, tidyMarkdown } from './markdownText';
 import { HtmlBlock, LinkDefinition } from './rawBlocks';
+import { createFindReplaceBar, FindReplace } from './findReplace';
+
+export { createFindReplaceBar };
 
 export interface CreateEditorOptions {
   element: HTMLElement;
@@ -189,6 +192,7 @@ export function createEditor(options: CreateEditorOptions): Editor {
     },
     extensions: [
       FormatKeymap,
+      FindReplace,
       KeymapStarterKit.configure({
         // These come from the files in this folder.
         codeBlock: false,

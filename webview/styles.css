@@ -102,10 +102,115 @@ html.rme-no-bar {
   fill: currentColor;
 }
 
+/* ---------- Find and replace ---------- */
+
+.rme-find-bar {
+  position: fixed;
+  top: 8px;
+  right: 12px;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: calc(100vw - 24px);
+  padding: 6px;
+  color: var(--vscode-editorWidget-foreground, var(--vscode-editor-foreground));
+  background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+  border: 1px solid var(--rme-border);
+  border-radius: 5px;
+  box-shadow: 0 2px 8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.3));
+}
+
+.rme-find-bar[hidden] {
+  display: none;
+}
+
+.rme-find-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rme-find-input {
+  box-sizing: border-box;
+  width: 190px;
+  min-width: 70px;
+  height: 26px;
+  padding: 3px 6px;
+  color: var(--vscode-input-foreground, var(--vscode-editor-foreground));
+  background: var(--vscode-input-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-input-border, var(--rme-border));
+  border-radius: 2px;
+  outline: none;
+  font: inherit;
+  font-size: 12px;
+}
+
+.rme-find-input:focus {
+  border-color: var(--vscode-focusBorder, currentColor);
+}
+
+.rme-find-count {
+  min-width: 64px;
+  color: var(--rme-muted);
+  font-size: 11px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.rme-find-button {
+  min-width: 26px;
+  height: 26px;
+  padding: 0 5px;
+  color: var(--vscode-editorWidget-foreground, var(--vscode-editor-foreground));
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.rme-find-button:hover,
+.rme-find-button[aria-pressed='true'] {
+  background: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.2));
+}
+
+.rme-find-button:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder, currentColor);
+}
+
+.rme-replace-row {
+  display: none;
+}
+
+.rme-find-bar.has-replace .rme-replace-row {
+  display: flex;
+}
+
+.ProseMirror .rme-find-match {
+  background: var(--vscode-editor-findMatchBackground, rgba(255, 196, 0, 0.35));
+}
+
+.ProseMirror .rme-find-match-active {
+  outline: 1px solid var(--vscode-editor-findMatchHighlightBorder, var(--vscode-focusBorder));
+  background: var(--vscode-editor-findMatchHighlightBackground, rgba(255, 160, 0, 0.5));
+}
+
 /* On a narrow editor the counts matter more than the date. */
 @media (max-width: 700px) {
   .rme-stat[data-stat='modified'] {
     display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .rme-find-bar {
+    right: 6px;
+  }
+
+  .rme-find-input {
+    width: 130px;
   }
 }
 

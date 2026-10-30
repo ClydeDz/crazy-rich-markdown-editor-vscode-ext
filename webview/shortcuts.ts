@@ -51,6 +51,8 @@ export interface ShortcutGroup {
   items: ShortcutItem[];
 }
 
+export const REPLACE_KEY = typeof navigator !== 'undefined' && /Mac/.test(navigator.platform) ? 'Mod-Alt-f' : 'Mod-h';
+
 const format = (label: string, key: string, note?: string): ShortcutItem => ({ label, keys: [key], note });
 
 /** The shortcuts of the toolbar buttons. The label of each line is the title of its button. */
@@ -81,6 +83,8 @@ const BLOCKS: ShortcutItem[] = [format('Quote', FORMAT_KEYS.blockquote), format(
 
 /** Shortcuts that are not on the toolbar. The tests press each one and check what it does. */
 const EDITING: ShortcutItem[] = [
+  { label: 'Find', keys: ['Mod-f'] },
+  { label: 'Replace', keys: [REPLACE_KEY] },
   { label: 'Undo', keys: ['Mod-z'] },
   { label: 'Redo', keys: ['Mod-Shift-z', 'Mod-y'] },
   { label: 'New line in the same paragraph', keys: ['Shift-Enter', 'Mod-Enter'] },
