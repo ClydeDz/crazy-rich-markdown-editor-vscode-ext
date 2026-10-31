@@ -17,6 +17,7 @@ package-lock.json
 AGENTS.md
 docs/**
 *.vsix
+logo-1024.png
 .vscode-test/**
 .prettierignore
 .freebuff/**
