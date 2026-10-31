@@ -4,7 +4,13 @@
 
 - `yarn test` runs `test/*.test.mjs` in jsdom. It needs no VS Code.
 - `yarn test:vscode` builds, then runs `test/vscode/suite.cjs` in a real VS Code with a real webview. `RME_ONLY=<text>|<text>` runs only the named tests.
-- `yarn mutate` changes the code in temporary copies and checks that a test fails. Keep `--test-concurrency=3` and `--jobs 3`: more makes the machine slow and causes false timeouts. Hand-made changes are in `scripts/mutations.mjs`. A survivor that no test can see goes there with its reason. Do not write a test for it.
+- `yarn mutate` changes the code in temporary copies and checks that a test fails. Keep `--test-concurrency=3` and `--jobs 3`: more makes the machine slow and causes false timeouts. On Windows, its test processes stay hidden instead of opening console windows. To run it in the background and save its output, use PowerShell:
+
+  ```powershell
+  Start-Process -FilePath 'yarn.cmd' -ArgumentList 'mutate' -WorkingDirectory $PWD.Path -WindowStyle Hidden -RedirectStandardOutput (Join-Path $PWD 'mutation.log') -RedirectStandardError (Join-Path $PWD 'mutation-error.log')
+  ```
+
+  Hand-made changes are in `scripts/mutations.mjs`. A survivor that no test can see goes there with its reason. Do not write a test for it.
 - Code that talks to VS Code (a fake panel, a captured listener) needs a test in `test/vscode/suite.cjs` and a hand-made mutant. Logic that can leave the provider goes to a small module (for example `src/refreshQueue.ts`), so a unit test sees it.
 
 ## MDX tests

@@ -6,6 +6,7 @@ import { loadModule, makeEditor } from './helpers.mjs';
 const { createEditor, getMarkdown } = await loadModule('webview/editor.ts', 'editor');
 const { createMediaInput, isMediaFile } = await loadModule('webview/mediaInput.ts', 'mediaInput');
 const { escapeMarkdownText } = await loadModule('webview/markdownText.ts', 'markdownText');
+const { markdownSlice } = await loadModule('webview/pasteMarkdown.ts', 'pasteMarkdown');
 const { searchEmoji, EMOJI } = await loadModule('webview/emoji.ts', 'emoji');
 
 const press = (editor, key) =>
@@ -30,6 +31,168 @@ const namesOf = (editor) => {
   });
   return names;
 };
+
+// ---------- Paste of Markdown source ----------
+
+/** A paste of the clipboard, as the editor reads it. The event carries both flavours of the clipboard. */
+function pasteClipboard(editor, { text = '', html = '' }) {
+  const data = {
+    getData: (type) => (type === 'text/plain' ? text : type === 'text/html' ? html : ''),
+    types: html ? ['text/html', 'text/plain'] : ['text/plain'],
+    files: [],
+  };
+  const event = new window.Event('paste', { bubbles: true, cancelable: true });
+  Object.defineProperty(event, 'clipboardData', { value: data });
+  editor.view.dom.dispatchEvent(event);
+  return event;
+}
+
+const imagesIn = (editor) => {
+  const found = [];
+  editor.state.doc.descendants((node) => {
+    if (node.type.name === 'image') found.push(node);
+  });
+  return found;
+};
+
+test('a paste of Markdown source shows it formatted', () => {
+  const editor = makeEditor(createEditor, '');
+  editor.commands.focus('end');
+  const event = pasteClipboard(editor, { text: '# big reveal' });
+  assert.equal(event.defaultPrevented, true, 'the editor takes the paste');
+  const [first] = editor.getJSON().content;
+  assert.equal(first.type, 'heading');
+  assert.equal(first.attrs.level, 1, 'the pasted heading is a heading of level 1');
+  assert.equal(first.content[0].text, 'big reveal');
+  assert.equal(getMarkdown(editor), '# big reveal', 'the file holds the Markdown that was pasted');
+  editor.destroy();
+});
+
+test('a pasted code block of Markdown is read as Markdown in an MDX file too', () => {
+  const editor = makeEditor(createEditor, '', { mdx: true });
+  editor.commands.focus('end');
+  pasteClipboard(editor, {
+    text: '# big reveal',
+    html: '<pre><code class="language-markdown"># big reveal</code></pre>',
+  });
+  assert.equal(editor.getJSON().content[0].type, 'heading', 'the Markdown shows as a heading');
+  assert.equal(namesOf(editor).includes('codeBlock'), false, 'no code block holds the Markdown');
+  editor.destroy();
+});
+
+test('a paste of a badge shows the badge and not a code block', () => {
+  const editor = makeEditor(createEditor, '');
+  editor.commands.focus('end');
+  pasteClipboard(editor, { text: '[![build](https://img.shields.io/badge/build-passing)](https://example.com)' });
+  const badges = imagesIn(editor);
+  assert.equal(badges.length, 1, 'the badge is a picture');
+  assert.equal(badges[0].attrs.src, 'https://img.shields.io/badge/build-passing');
+  assert.equal(namesOf(editor).includes('codeBlock'), false, 'no code block holds the badge');
+  editor.destroy();
+});
+
+test('a pasted code block of Markdown is read as Markdown', () => {
+  const editor = makeEditor(createEditor, '');
+  editor.commands.focus('end');
+  pasteClipboard(editor, {
+    text: '# big reveal',
+    html: '<p></p><div><pre><code class="language-markdown"># big reveal</code></pre></div><p></p>',
+  });
+  const [first] = editor.getJSON().content;
+  assert.equal(first.type, 'heading', 'the Markdown shows as a heading');
+  assert.equal(namesOf(editor).includes('codeBlock'), false, 'no code block holds the Markdown');
+  assert.equal(getMarkdown(editor), '# big reveal');
+  editor.destroy();
+});
+
+test('a pasted code block of another language stays a code block', () => {
+  const editor = makeEditor(createEditor, '');
+  editor.commands.focus('end');
+  pasteClipboard(editor, { text: 'print(1)', html: '<pre><code class="language-python">print(1)</code></pre>' });
+  const [first] = editor.getJSON().content;
+  assert.equal(first.type, 'codeBlock');
+  assert.equal(first.attrs.language, 'python');
+  assert.equal(getMarkdown(editor), '```python\nprint(1)\n```');
+  editor.destroy();
+});
+
+test('a pasted fence of another language becomes a code block in that language', () => {
+  const editor = makeEditor(createEditor, '');
+  editor.commands.focus('end');
+  pasteClipboard(editor, { text: '```python\nprint(1)\n```' });
+  const [first] = editor.getJSON().content;
+  assert.equal(first.type, 'codeBlock');
+  assert.equal(first.attrs.language, 'python');
+  editor.destroy();
+});
+
+test('a paste inside a code block stays text', () => {
+  const code = 'const x = 1;';
+  const editor = makeEditor(createEditor, `\`\`\`js\n${code}\n\`\`\``);
+  editor.commands.setTextSelection(positionOf(editor, code) + code.length);
+  pasteClipboard(editor, { text: '# not a heading' });
+  const [first] = editor.getJSON().content;
+  assert.equal(first.type, 'codeBlock');
+  assert.equal(first.attrs.language, 'js');
+  assert.equal(first.content[0].text, `${code}# not a heading`, 'the code keeps the text as it is');
+  assert.equal(namesOf(editor).includes('heading'), false, 'the text is not read as Markdown');
+  editor.destroy();
+});
+
+test('a paste of files is left to the media handler', () => {
+  const editor = makeEditor(createEditor, 'Some text here.');
+  const plugin = editor.state.plugins.find(
+    (candidate) => candidate.props.handlePaste && String(candidate.key).startsWith('rmePasteMarkdown'),
+  );
+  assert.ok(plugin, 'the editor has the plugin for Markdown paste');
+  // A paste of files has no text on the clipboard, so this one carries files only.
+  const event = {
+    clipboardData: { files: [new window.File(['x'], 'a.png', { type: 'image/png' })] },
+    preventDefault() {
+      throw new Error('the paste must not be taken');
+    },
+  };
+  assert.equal(plugin.props.handlePaste(editor.view, event), false);
+  editor.destroy();
+});
+
+test('a paste into a raw text box is not read as Markdown', () => {
+  const editor = makeEditor(createEditor, 'Some text here.');
+  const plugin = editor.state.plugins.find(
+    (candidate) => candidate.props.handlePaste && String(candidate.key).startsWith('rmePasteMarkdown'),
+  );
+  assert.ok(plugin, 'the editor has the plugin for Markdown paste');
+  // The box of a raw block, an MDX box or the front matter holds its own text.
+  const event = {
+    target: document.createElement('textarea'),
+    clipboardData: { files: [], getData: (type) => (type === 'text/plain' ? '# nope' : '') },
+    preventDefault() {
+      throw new Error('the paste must not be taken');
+    },
+  };
+  assert.equal(plugin.props.handlePaste(editor.view, event), false);
+  editor.destroy();
+});
+
+test('one paragraph of pasted Markdown joins the line, and a block lands beside it', () => {
+  const editor = makeEditor(createEditor, 'Some text.');
+  const { schema } = editor.state;
+  const manager = editor.markdown;
+  assert.equal(markdownSlice(manager.parse('a word'), schema).openStart, 1, 'a paragraph joins the line');
+  assert.equal(markdownSlice(manager.parse('# title'), schema).openStart, 0, 'a heading lands as a block');
+  assert.equal(
+    markdownSlice(manager.parse('```js\nconst x = 1;\n```'), schema).openStart,
+    0,
+    'a code block lands as a block',
+  );
+  editor.destroy();
+});
+
+test('Markdown that holds no block gives no slice, so the paste is not taken', () => {
+  const editor = makeEditor(createEditor, 'Some text.');
+  assert.equal(markdownSlice({ type: 'doc', content: [] }, editor.state.schema), null);
+  editor.destroy();
+});
 
 // ---------- Paste and drop of images and videos ----------
 

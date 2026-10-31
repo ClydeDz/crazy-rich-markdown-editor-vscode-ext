@@ -18,6 +18,10 @@
 //   webview/alert.ts    `all.length > 0` and `depth > 0`: the first is always true inside the callback, and depth 0 is the document.
 //   webview/footnotes.ts  `target === undefined` in the search for a note: the notes are top level, so the search ends the same way.
 //   webview/codeBlock.ts  the first `preview.hidden = true`: the next line of code sets it again at once.
+//   webview/editor.ts  the `0` in scrollThreshold: jsdom never scrolls a page, so the offset of the cursor under the stats bar cannot show.
+//   webview/editor.ts  `dom.contentEditable = 'false'` in the image node view: ProseMirror sets contentEditable to false
+//     itself for a node view without a contentDOM (`if (!dom.hasAttribute("contenteditable"))`), so the value is the
+//     same with the line and without it, in a browser and in jsdom alike.
 //   scripts/mutation-lib.mjs  the width of the text in a report: only the look of the report.
 //   webview/selectedLines.ts  `return false` after a line is read: the children of a line are text and small nodes, and none is a line, so the walk into them finds nothing.
 //   webview/mdx.ts      `return -1` to `-2` (in skipTemplate and skipGroup): every caller tests `< 0`, so any negative number means the same.
@@ -56,6 +60,7 @@ export const AUTO_FILES = [
   "webview/math.ts",
   "webview/media.ts",
   "webview/mediaInput.ts",
+  "webview/pasteMarkdown.ts",
   "webview/rawBlocks.ts",
   "webview/codeBlock.ts",
   "webview/selectedLines.ts",

@@ -12,6 +12,7 @@ Edit Markdown as formatted text in VS Code. Your files stay plain Markdown.
 - **Keep portable files.** Work with GitHub Flavored Markdown, including tables, task lists, alerts, footnotes, math and Mermaid diagrams. Save as Markdown that works with your existing tools.
 - **Work with MDX, too.** Open an `.mdx` file with the editor, format its Markdown, and keep imports, JSX and expressions intact.
 - **Add media quickly.** Paste or drop images and videos; the editor saves them alongside your project and inserts Markdown links. Select an image to edit its alt text and optional title without changing its preview size.
+- **Paste Markdown and see it formatted.** Paste `# big reveal` or a shields.io badge and it lands as a heading or a badge, not a code block. Code in other languages still pastes as a code block.
 - **Add selections as chat context.** Right-click selected text to attach its source range to Copilot Chat or Claude Code without sending a prompt.
 
 ## Get started

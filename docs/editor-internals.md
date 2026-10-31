@@ -11,6 +11,7 @@
 
 - The Markdown parser has read plain text before the editor sees it. A backslash before punctuation (`\,` `\;` `\{` `\\`) is gone, and `<br/>` is a hard break. Text that a command takes from a paragraph cannot get these back.
 - Inline atoms: `mathInline`, `emoji`, `footnoteRef`, `htmlInline`.
+- A paste of text is read as Markdown (`webview/pasteMarkdown.ts`): plain text and a pasted code block in the language `markdown` (or `md`) land as Markdown, and one paragraph joins the line at the cursor (`markdownSlice` gives an open slice). Rich text, a code block of another language, files, and a paste inside a raw box (code block, MDX box, table cell) keep the paste they had before.
 
 ## Parts outside the document
 

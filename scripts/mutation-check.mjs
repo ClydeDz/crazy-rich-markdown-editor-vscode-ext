@@ -132,7 +132,8 @@ function cleanUp() {
 process.on('exit', cleanUp);
 for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => process.exit(130));
 
-const SKIP = new Set(['node_modules', 'dist', '.git', '.claude', '.build']);
+// The skills of `.claude` are part of the project: a test reads the checklists that they hold.
+const SKIP = new Set(['node_modules', 'dist', '.git', '.build']);
 function makeJob(name) {
   const directory = path.join(scratch, name);
   cpSync(root, directory, {
@@ -168,8 +169,9 @@ function run(command, commandArgs, cwd, timeoutMs) {
   return new Promise((resolve) => {
     const child = spawn(command, commandArgs, {
       cwd,
-      detached: true,
+      detached: process.platform !== 'win32',
       stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
       env: { ...process.env, CI: 'true' },
     });
     let output = '';
@@ -178,10 +180,27 @@ function run(command, commandArgs, cwd, timeoutMs) {
     let timedOut = false;
     const timer = setTimeout(() => {
       timedOut = true;
-      try {
-        process.kill(-child.pid, 'SIGKILL');
-      } catch {
-        // The process has ended.
+      if (process.platform === 'win32') {
+        const killer = spawn('taskkill', ['/pid', String(child.pid), '/t', '/f'], {
+          stdio: 'ignore',
+          windowsHide: true,
+        });
+        killer.on('error', (error) => {
+          console.error(`Could not stop timed-out test process tree: ${error.message}`);
+          child.kill('SIGKILL');
+        });
+        killer.on('close', (code) => {
+          if (code !== 0 && child.exitCode === null && child.signalCode === null) {
+            console.error(`Could not stop timed-out test process tree (taskkill exited with ${code}).`);
+            child.kill('SIGKILL');
+          }
+        });
+      } else {
+        try {
+          process.kill(-child.pid, 'SIGKILL');
+        } catch {
+          // The process has ended.
+        }
       }
     }, timeoutMs);
     child.on('close', (code) => {

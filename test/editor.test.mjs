@@ -340,6 +340,12 @@ test('a bare address that ends with punctuation uses angle brackets', () => {
   editor.destroy();
 });
 
+test('a mailto link with a title keeps its title', () => {
+  const editor = makeEditor(createEditor, '[me@example.com](mailto:me@example.com "Boss")');
+  assert.equal(getMarkdown(editor), '[me@example.com](mailto:me@example.com "Boss")');
+  editor.destroy();
+});
+
 test('underline, subscript and superscript are marks in the document', () => {
   const editor = makeEditor(createEditor, 'H<sub>2</sub>O E=mc<sup>2</sup> <ins>under</ins>');
   const marks = new Set();

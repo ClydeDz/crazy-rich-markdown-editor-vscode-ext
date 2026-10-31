@@ -21,6 +21,7 @@ import { SeparateBulletList, SeparateOrderedList, patchEmptyListItems } from './
 import { MathBlock, MathInline } from './math';
 import { createVideo, patchVideoParagraphs } from './media';
 import { escapeMarkdownText, tidyMarkdown } from './markdownText';
+import { createPasteMarkdown } from './pasteMarkdown';
 import { HtmlBlock, LinkDefinition } from './rawBlocks';
 import { createFindReplaceBar, FindReplace } from './findReplace';
 
@@ -210,6 +211,7 @@ export function createEditor(options: CreateEditorOptions): Editor {
         defaultProtocol: 'https',
       }),
       Markdown,
+      createPasteMarkdown(),
       UnderlineMark,
       SubscriptMark,
       SuperscriptMark,

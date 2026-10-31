@@ -181,6 +181,12 @@ Type `/` at the start of an empty line to open a menu. It inserts headings, list
 
 You can also type Markdown. For example, `# ` at the start of a line makes a heading, `- ` makes a list, `> ` makes a quote, and ` ``` ` makes a code block. `**text**` makes bold text.
 
+### Pasting Markdown
+
+A paste is Markdown source, and the editor shows it formatted at once. Paste `# big reveal` and the line becomes a heading. Paste a badge such as `[![build](https://img.shields.io/badge/build-passing)](https://example.com)` and the badge shows as a picture. A pasted code block in the language `markdown` (or `md`) is read the same way: its text lands as Markdown in the file.
+
+A paste of another language keeps its code block, and rich text copied from another program keeps its formatting. A paste inside a code block, an MDX box or a table cell stays text, and a paste of files still goes to the asset folder.
+
 ## Code blocks
 
 Each code block has a language button at the top right. Click it to open a list. Type to search. Choose a language, or type a name that is not in the list and press `Enter`. Choose **Plain text** to remove the language.
