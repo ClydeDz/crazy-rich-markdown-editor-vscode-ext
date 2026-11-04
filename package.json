@@ -2,7 +2,7 @@
   "name": "crazy-rich-markdown-editor",
   "displayName": "Crazy Rich Markdown Editor",
   "description": "Edit Markdown files as rich text with a floating formatting toolbar. Supports GitHub Flavored Markdown, and keeps the code of MDX files as it is. The file stays raw Markdown on disk.",
-  "version": "0.22.1",
+  "version": "0.23.0",
   "publisher": "clydedsouza",
   "icon": "logo.png",
   "packageManager": "yarn@1.22.22",
@@ -123,6 +123,11 @@
           "type": "boolean",
           "default": true,
           "markdownDescription": "Show the bar at the top of the editor. It shows the people who changed the file in Git, the time that the file was saved, and the number of lines, words and characters. When this setting is off, the editor does not run Git. To hide only the people from Git, use `#crazyRichMarkdown.showLastAuthors#`."
+        },
+        "crazyRichMarkdown.showLineNumbers": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Show the line numbers of the Markdown file at the left of the editor. A number sits next to the start of each block, each item of a list, each row of a table and each line of a paragraph. Hold the pointer over a number to see the lines that its block covers. A code block has one number, and the front matter has none."
         },
         "crazyRichMarkdown.showLastAuthors": {
           "type": "boolean",

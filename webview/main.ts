@@ -15,6 +15,8 @@ import { createShortcutsModal } from './shortcutsModal';
 import { applyTextChange, indentChange, newLineChange } from './textIndent';
 import { createStatsBar, documentStats, proseText } from './stats';
 import type { FileInfo } from './stats';
+import { createLineNumbers, sourcePosition } from './lineNumbers';
+import type { LineNumbers } from './lineNumbers';
 import { createFloatingToolbars } from './toolbar';
 
 interface VsCodeApi {
@@ -23,9 +25,17 @@ interface VsCodeApi {
 declare function acquireVsCodeApi(): VsCodeApi;
 
 type HostMessage =
-  | { type: 'init'; text: string; baseUri: string; maxContentWidth: number; showInfoBar: boolean; mdx?: boolean }
+  | {
+      type: 'init';
+      text: string;
+      baseUri: string;
+      maxContentWidth: number;
+      showInfoBar: boolean;
+      showLineNumbers: boolean;
+      mdx?: boolean;
+    }
   | { type: 'update'; text: string }
-  | { type: 'config'; maxContentWidth: number; showInfoBar: boolean }
+  | { type: 'config'; maxContentWidth: number; showInfoBar: boolean; showLineNumbers: boolean }
   | { type: 'insertMedia'; items: { kind: 'image' | 'video'; src: string; alt: string }[] }
   | ({ type: 'fileInfo' } & FileInfo);
 
@@ -64,6 +74,7 @@ const stats = statsElement
   : undefined;
 
 let editor: Editor | undefined;
+let lineNumbers: LineNumbers | undefined;
 let frontMatter: string | undefined;
 /** The blank lines between the front matter and the body. */
 let frontMatterGap = '\n';
@@ -127,6 +138,7 @@ function sendEdit(): void {
     vscode.postMessage({ type: 'edit', text });
   }
   refreshStats();
+  lineNumbers?.refresh();
 }
 
 function scheduleEdit(): void {
@@ -188,6 +200,9 @@ function start(message: Extract<HostMessage, { type: 'init' }>): void {
       createMediaInput({ onFiles: (files) => void sendFiles(files) }),
     ],
   });
+  // The numbers at the left count from the start of the file, so they need the text of the whole file.
+  lineNumbers = createLineNumbers(editor, { source: () => sourcePosition(syncedText) });
+  lineNumbers.setEnabled(message.showLineNumbers);
   createFindReplaceBar(editor);
   toolbars.bind(editor);
   refreshStats();
@@ -310,6 +325,7 @@ function update(text: string): void {
   const size = editor.state.doc.content.size;
   editor.commands.setTextSelection({ from: Math.min(from, size), to: Math.min(to, size) });
   refreshStats();
+  lineNumbers?.refresh();
 }
 
 frontMatterDetails.addEventListener('toggle', autosizeFrontMatter);
@@ -373,6 +389,7 @@ window.addEventListener('message', (event: MessageEvent<HostMessage>) => {
     case 'config':
       applyWidth(message.maxContentWidth);
       stats?.setEnabled(message.showInfoBar);
+      lineNumbers?.setEnabled(message.showLineNumbers);
       // A bar that was off has old numbers.
       refreshStats();
       break;

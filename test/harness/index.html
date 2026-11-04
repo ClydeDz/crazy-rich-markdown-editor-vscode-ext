@@ -108,6 +108,7 @@
                     baseUri: location.origin + '/test/harness',
                     maxContentWidth: 820,
                     showInfoBar: params.get('bar') !== 'off',
+                    showLineNumbers: params.get('lines') === 'on',
                     mdx: /\.mdx$/i.test(file),
                   },
                   '*',

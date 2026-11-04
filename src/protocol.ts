@@ -18,11 +18,13 @@ export type HostMessage =
       maxContentWidth: number;
       /** False when the user turned off the bar at the top. */
       showInfoBar: boolean;
+      /** True when the user turned on the line numbers at the left. */
+      showLineNumbers: boolean;
       /** True for an `.mdx` file. The editor then keeps `import`, `export`, JSX and `{expressions}` as they are. */
       mdx: boolean;
     }
   | { type: 'update'; text: string }
-  | { type: 'config'; maxContentWidth: number; showInfoBar: boolean }
+  | { type: 'config'; maxContentWidth: number; showInfoBar: boolean; showLineNumbers: boolean }
   | { type: 'insertMedia'; items: MediaItem[] }
   /** The facts about the file for the bar at the top. `authors` is empty when Git has none. */
   | {

@@ -173,6 +173,18 @@ Move the pointer over a block to see a grip and a trash button at its left. A bl
 
 In a code block, a diagram block or a math block, `Tab` types a tab. In a code block, `Shift+Tab` takes a tab away. With several lines selected, `Tab` and `Shift+Tab` indent and outdent each line.
 
+### Line numbers
+
+The editor can show the line numbers of the Markdown file at the left of the page, the same numbers that the raw file has in the text editor. So when a reader says "look at lines 9 to 12", you find those lines here in the same place.
+
+The numbers are off by default. Turn them on with `crazyRichMarkdown.showLineNumbers`, or from the settings that the bar at the top opens. The change takes effect at once, without a reload.
+
+- A number sits next to each line of the file that the page shows on a line of its own: the first line of a block (a paragraph, a heading, a quote), each item of a list (including a nested item and a task), each row of a table, the body of an alert under its title, and each line of a paragraph that the file breaks, such as a stack of badges.
+- The numbers count from the start of the file. The front matter is at the top of the file, so it moves the numbers down. The front matter panel has no numbers of its own.
+- Hold the pointer over a number to see every line that the block covers. A code block that fills lines 9 to 12 shows `9` at its first line, and its title says "Lines 9 to 12".
+- A code block keeps one number at its first line: the lines of the code are the lines of the code, not of the page.
+- The numbers take room at the left of the page, so the writing column gets narrower by 48 pixels while they are on.
+
 ### Slash menu
 
 Type `/` at the start of an empty line to open a menu. It inserts headings, lists, task lists, quotes, alerts, code blocks, tables, math blocks, diagrams, footnotes, dividers, and images or videos. Keep typing to filter the list. Use the arrow keys and `Enter` to choose. In an `.mdx` file the menu also has **MDX code** (see "MDX files").
@@ -340,6 +352,7 @@ A line that starts with `import` or `export` is read as code, as MDX does. A lin
 | ------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `crazyRichMarkdown.maxContentWidth` | `820`    | Maximum width in pixels of the writing column.                                                                               |
 | `crazyRichMarkdown.showInfoBar`     | `true`   | Show the bar at the top of the editor: the authors from Git, the time of the last save, and the lines, words and characters. |
+| `crazyRichMarkdown.showLineNumbers` | `false`  | Show the line numbers of the Markdown file at the left of the editor, at the start of each block, list item, table row and line. |
 | `crazyRichMarkdown.showLastAuthors` | `true`   | Show the people who changed the file in the last Git commits, in the bar at the top.                                         |
 | `crazyRichMarkdown.assetFolder`      | `assets` | Folder for images and videos that you insert, paste or drop.                                                                 |
 

@@ -461,6 +461,7 @@ test("ready makes the host send the document text", async () => {
   assert.equal(typeof init.baseUri, "string");
   assert.equal(init.maxContentWidth, 820);
   assert.equal(init.showInfoBar, true, "the bar at the top is on by default");
+  assert.equal(init.showLineNumbers, false, "the line numbers are off by default");
   fake.dispose();
 });
 
@@ -579,6 +580,18 @@ test("the width setting reaches the webview", async () => {
     await waitFor(() => fake.of("config").some((m) => m.maxContentWidth === 640), "config message");
   } finally {
     await config.update("maxContentWidth", undefined, vscode.ConfigurationTarget.Workspace);
+  }
+  fake.dispose();
+});
+
+test("the line numbers setting reaches the webview", async () => {
+  const { fake } = await openWithProvider("numbers.md", "x\n");
+  const config = vscode.workspace.getConfiguration("crazyRichMarkdown");
+  await config.update("showLineNumbers", true, vscode.ConfigurationTarget.Workspace);
+  try {
+    await waitFor(() => fake.of("config").some((m) => m.showLineNumbers === true), "config message");
+  } finally {
+    await config.update("showLineNumbers", undefined, vscode.ConfigurationTarget.Workspace);
   }
   fake.dispose();
 });
@@ -2205,12 +2218,14 @@ test("real webview: the width setting changes the writing column", async () => {
     type: "config",
     maxContentWidth: 555,
     showInfoBar: true,
+    showLineNumbers: false,
   });
   await waitFor(async () => (await run("width")).property === "555px", "the new width");
   await panel.webview.postMessage({
     type: "config",
     maxContentWidth: 820,
     showInfoBar: true,
+    showLineNumbers: false,
   });
   await waitFor(async () => (await run("width")).property === "820px", "the old width again");
 });

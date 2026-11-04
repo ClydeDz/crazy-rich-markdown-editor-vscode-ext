@@ -130,6 +130,9 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
     const showInfoBar = (): boolean =>
       vscode.workspace.getConfiguration('crazyRichMarkdown').get<boolean>('showInfoBar', true);
 
+    const showLineNumbers = (): boolean =>
+      vscode.workspace.getConfiguration('crazyRichMarkdown').get<boolean>('showLineNumbers', false);
+
     const pushDocumentToWebview = (): void => {
       stats.updates++;
       webviewText = document.getText();
@@ -215,9 +218,15 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
       vscode.workspace.onDidChangeConfiguration((event) => {
         if (
           event.affectsConfiguration('crazyRichMarkdown.maxContentWidth') ||
-          event.affectsConfiguration('crazyRichMarkdown.showInfoBar')
+          event.affectsConfiguration('crazyRichMarkdown.showInfoBar') ||
+          event.affectsConfiguration('crazyRichMarkdown.showLineNumbers')
         ) {
-          post({ type: 'config', maxContentWidth: maxContentWidth(), showInfoBar: showInfoBar() });
+          post({
+            type: 'config',
+            maxContentWidth: maxContentWidth(),
+            showInfoBar: showInfoBar(),
+            showLineNumbers: showLineNumbers(),
+          });
         }
         // A bar that was off has no date and no authors yet.
         if (event.affectsConfiguration('crazyRichMarkdown.showInfoBar')) {
@@ -266,6 +275,7 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
               baseUri: webview.asWebviewUri(documentFolder).toString(),
               maxContentWidth: maxContentWidth(),
               showInfoBar: showInfoBar(),
+              showLineNumbers: showLineNumbers(),
               mdx: isMdxFile(document.uri),
             });
             void refreshFileInfo(true);

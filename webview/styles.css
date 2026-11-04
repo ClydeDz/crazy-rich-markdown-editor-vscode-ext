@@ -229,8 +229,42 @@ html.rme-no-bar {
   box-sizing: border-box;
 }
 
+/* The numbers sit left of the handle of a block, so the page keeps room for both. */
+html.rme-has-line-numbers #app {
+  padding-left: 96px;
+}
+
 #editor {
   position: relative;
+}
+
+/* ---------- Line numbers ---------- */
+
+.rme-line-numbers {
+  position: absolute;
+  top: 0;
+  /* The handle of a block takes the 48 pixels at the left of the text. The numbers stay left of it. */
+  right: calc(100% + 52px);
+  width: 36px;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--vscode-editorLineNumber-foreground, var(--rme-muted));
+  user-select: none;
+  /* A click in the space at the left of the text keeps the cursor where it was. */
+  pointer-events: none;
+}
+
+.rme-line-numbers[hidden] {
+  display: none;
+}
+
+.rme-line-number {
+  position: absolute;
+  right: 0;
+  padding: 2px 4px 0;
+  white-space: nowrap;
+  text-align: right;
 }
 
 /* ---------- Writing surface ---------- */

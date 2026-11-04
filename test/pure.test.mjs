@@ -148,6 +148,7 @@ test('settings use the crazyRichMarkdown prefix', () => {
   assert.deepEqual(names, [
     'crazyRichMarkdown.maxContentWidth',
     'crazyRichMarkdown.showInfoBar',
+    'crazyRichMarkdown.showLineNumbers',
     'crazyRichMarkdown.showLastAuthors',
     'crazyRichMarkdown.assetFolder',
   ]);

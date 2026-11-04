@@ -21,6 +21,16 @@
 - Selecting an image opens a floating toolbar with editable alt text and title fields. They update the image attributes and round-trip to Markdown; videos do not have these fields.
 - A tab in code is two columns wide (`tab-size` in `styles.css`).
 
+## Line numbers
+
+- `webview/lineNumbers.ts` draws a number at the left of each line of the file that the page shows on a line of its own. The numbers count the lines of the Markdown file, not the lines of the page, so they need the text of the file: `main.ts` keeps the last text that both sides agree on (`syncedText`) and gives `sourcePosition` its body and the line where that body starts.
+- `documentSections` gives each top level block its Markdown from `editor.markdown.serialize` for that node alone, and the lines inside it where a line of the file starts one: each item of a list (also a nested item and a task), each row of a table, and each line of a text block. A text block is cut at a `hardBreak` and at a `\n` in its text, because the page uses `white-space: pre-wrap`; the words of a cut line are its text, and a picture gives its alt text (`leafWords`). A code block gives no lines inside: the block has its number, and the lines of the code are not lines of the page.
+- `blockLineNumbers` looks each block up in the body, in order, so a file that the user wrote keeps its own lines when the editor writes a block in another way (a table pads its cells, a loose list drops a blank line). A block that cannot be found takes the next line that has text.
+- `lineNumbers` then looks each line inside a block up between the lines of that block, in order, starting after the line that the block already has. The words of the page and the words of the file are compared with `compareWords`, which drops the Markdown and the marker of a list item (`-`, `2.`, `- [x]`), and only the start of the line is compared, because the file writes the words inside its markup. A line that is not found gives no number and does not move the lines after it.
+- The numbers are not part of the ProseMirror document. They are a column in the page, and each number sits at the height of its line, measured with `getBoundingClientRect` of `view.nodeDOM(pos)`. A line inside a block of text has no node of its own, so it uses `view.coordsAtPos(pos)`, and a number that neither call can place stays hidden. A `ResizeObserver` on the editor and the window `resize` event move the numbers again when a picture or a diagram changes the height of a line.
+- `yarn test:vscode` and the browser harness (`?lines=on&file=<name>`) show the numbers in a real page. jsdom has no layout, so the unit test moves the items and the rows with a stub of `getBoundingClientRect`.
+- Not done: one number for each line of a code block, and a number for each line of a cell that the file breaks.
+
 ## Layout
 
 - A code block header holds the language button. `RichCodeBlock` in `webview/codeBlock.ts` binds Tab and Shift+Tab, and drops Tiptap's Cmd+Alt+C.
