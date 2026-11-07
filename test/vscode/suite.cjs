@@ -1783,6 +1783,58 @@ test("real webview: the settings button is at the end of the bar, and a click op
   }
 });
 
+test("real webview: the contents button at the far left lists the headings and scrolls to the one that is clicked", async () => {
+  const source = ["# Start", ""];
+  for (let index = 1; index <= 6; index++) {
+    source.push(`## Section ${index}`, "", ...Array.from({ length: 12 }, () => "A line of text in the section."), "");
+  }
+  const { run, panel } = await launchRealWebview("contents.md", source.join("\n"));
+  try {
+    const closed = await run("contentsState");
+    assert.equal(closed.found, true, "the bar has a contents button");
+    assert.equal(closed.first, true, "the button is the far left item of the bar");
+    assert.equal(closed.text, "Contents");
+    assert.equal(closed.label, "Show the table of contents");
+    assert.equal(closed.open, false);
+    assert.equal(closed.visible, false, "a closed panel takes no room on the page");
+
+    const opened = await run("contentsOpen");
+    assert.equal(opened.open, true);
+    assert.equal(opened.visible, true);
+    assert.equal(opened.expanded, "true");
+    assert.deepEqual(
+      opened.headings.map((heading) => heading.text),
+      ["Start", "Section 1", "Section 2", "Section 3", "Section 4", "Section 5", "Section 6"],
+    );
+    assert.deepEqual(
+      opened.headings.map((heading) => heading.level),
+      ["1", "2", "2", "2", "2", "2", "2"],
+    );
+    assert.match(opened.activeClass, /rme-toc-filter/, "the focus is in the filter");
+    assert.ok(opened.top >= 0 && opened.top < 80, `the panel hangs under the bar: ${opened.top}`);
+    assert.ok(opened.left >= 0 && opened.right <= opened.width, "the panel fits the width of the page");
+
+    const jumped = await run("contentsClick", { index: 6 });
+    assert.equal(jumped.open, false, "the panel closes after a jump");
+    assert.ok(jumped.scrolled > jumped.before, `the page scrolled down: ${jumped.before} to ${jumped.scrolled}`);
+    assert.ok(
+      jumped.headingTop !== null && jumped.headingTop < 120,
+      `the heading is at the top of the page: ${jumped.headingTop}`,
+    );
+
+    await run("contentsOpen");
+    const filtered = await run("contentsFilter", { value: "section 3" });
+    assert.deepEqual(filtered.visibleHeadings, ["Section 3"], "the filter hides the other headings");
+
+    const escaped = await run("contentsEscape");
+    assert.equal(escaped.open, false);
+    assert.equal(escaped.expanded, "false");
+    assert.match(escaped.activeClass, /rme-stats-button/, "the focus is back on the button");
+  } finally {
+    panel.dispose();
+  }
+});
+
 test("real webview: the shortcuts button opens the list over the page, and Escape, the dark layer and the links work", async () => {
   const { run } = await startRealWebview();
   const external = spy(vscode.env, "openExternal", () => true);

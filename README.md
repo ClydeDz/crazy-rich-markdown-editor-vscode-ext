@@ -14,6 +14,7 @@ Edit Markdown as formatted text in VS Code. Your files stay plain Markdown.
 - **Add media quickly.** Paste or drop images and videos; the editor saves them alongside your project and inserts Markdown links. Select an image to edit its alt text and optional title without changing its preview size.
 - **Paste Markdown and see it formatted.** Paste `# big reveal` or a shields.io badge and it lands as a heading or a badge, not a code block. Code in other languages still pastes as a code block.
 - **Find the line a reader means.** Turn on `crazyRichMarkdown.showLineNumbers` to show the line numbers of the Markdown file at the left, at every block, list item, table row and line of text.
+- **See the structure of a long document.** Open the table of contents at the far left of the top bar to list every heading from level 1 to 6, filter the list, and click a heading to scroll to its section.
 - **Add selections as chat context.** Right-click selected text to attach its source range to Copilot Chat or Claude Code without sending a prompt.
 
 ## Get started
@@ -34,7 +35,7 @@ You can also click the handle icon (6 dots icon) located at the left of the bloc
 
 ![delete or move](docs/images/delete-or-move.png)
 
-Both markdown and mdx editors support have a toolbar at the top which show meta information like who modified this file last (using Git, if it exists) and when was it modified, and also character and word count. You can also reach for the extension settings from here and view the keyboard shorcut bindings from here. 
+Both markdown and mdx editors support have a toolbar at the top which show meta information like who modified this file last (using Git, if it exists) and when was it modified, and also character and word count. You can also reach for the extension settings from here and view the keyboard shorcut bindings from here. The **Contents** button at the far left lists every heading in the document. Type in the filter to narrow the list, and click a heading to scroll to that section. On a narrow editor the text between the buttons gets shorter first, so the contents button and the settings and shortcuts buttons stay in reach.
 
 ![mdx editor](docs/images/mdx-editor.png)
 

@@ -13,6 +13,11 @@
   Hand-made changes are in `scripts/mutations.mjs`. A survivor that no test can see goes there with its reason. Do not write a test for it.
 - Code that talks to VS Code (a fake panel, a captured listener) needs a test in `test/vscode/suite.cjs` and a hand-made mutant. Logic that can leave the provider goes to a small module (for example `src/refreshQueue.ts`), so a unit test sees it.
 
+## Table of contents tests
+
+- `test/tableofcontents.test.mjs`: the headings of the document (also in a quote, with marks, and without text), the button at the far left of the bar, the panel that opens and closes, the filter, the arrow keys, Escape and a click outside, the jump to a heading (with the `scrollIntoView` stub of `test/helpers.mjs`), the list following the document while it is open, and the listeners that `destroy` removes.
+- `test/vscode/suite.cjs`: in a real webview, the bar has the button as its first item, the panel lists the headings and fits the width of the page, a click scrolls the heading to the top, the filter hides the other headings, and Escape closes the panel and returns the focus.
+
 ## MDX tests
 
 - `test/mdx.test.mjs`: the scanner (`scanMdxBlock`) with its edge cases, a round trip of each sample in `SAMPLES` (the text must come back byte for byte), the boxes and their colors, the package settings (the MDX editor is an option, `.md` stays the default).

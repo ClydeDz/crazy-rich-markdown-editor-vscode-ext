@@ -84,6 +84,10 @@ export const icons = {
   ),
   video: svg('<rect x="2" y="5" width="14" height="14" rx="2"/><path d="m22 8-6 4 6 4z"/>'),
   chevronDown: svg('<polyline points="6 9 12 15 18 9"/>'),
+  toc: svg(
+    '<line x1="4" y1="6" x2="20" y2="6"/><line x1="9" y1="11" x2="20" y2="11"/><line x1="9" y1="16" x2="20" y2="16"/><line x1="4" y1="21" x2="20" y2="21"/>',
+  ),
+  filter: svg('<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>'),
   text: svg(
     '<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>',
   ),

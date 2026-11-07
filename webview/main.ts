@@ -14,6 +14,8 @@ import { shortcutGroups } from './shortcuts';
 import { createShortcutsModal } from './shortcutsModal';
 import { applyTextChange, indentChange, newLineChange } from './textIndent';
 import { createStatsBar, documentStats, proseText } from './stats';
+import { createTableOfContents } from './tableOfContents';
+import type { TableOfContents } from './tableOfContents';
 import type { FileInfo } from './stats';
 import { createLineNumbers, sourcePosition } from './lineNumbers';
 import type { LineNumbers } from './lineNumbers';
@@ -75,6 +77,7 @@ const stats = statsElement
 
 let editor: Editor | undefined;
 let lineNumbers: LineNumbers | undefined;
+let tableOfContents: TableOfContents | undefined;
 let frontMatter: string | undefined;
 /** The blank lines between the front matter and the body. */
 let frontMatterGap = '\n';
@@ -200,6 +203,8 @@ function start(message: Extract<HostMessage, { type: 'init' }>): void {
       createMediaInput({ onFiles: (files) => void sendFiles(files) }),
     ],
   });
+  // The table of contents is the button at the far left of the bar. It needs the bar to exist.
+  tableOfContents = statsElement ? createTableOfContents({ bar: statsElement, editor }) : undefined;
   // The numbers at the left count from the start of the file, so they need the text of the whole file.
   lineNumbers = createLineNumbers(editor, { source: () => sourcePosition(syncedText) });
   lineNumbers.setEnabled(message.showLineNumbers);
@@ -389,6 +394,10 @@ window.addEventListener('message', (event: MessageEvent<HostMessage>) => {
     case 'config':
       applyWidth(message.maxContentWidth);
       stats?.setEnabled(message.showInfoBar);
+      // The contents panel goes away with the bar that holds its button.
+      if (!message.showInfoBar) {
+        tableOfContents?.close();
+      }
       lineNumbers?.setEnabled(message.showLineNumbers);
       // A bar that was off has old numbers.
       refreshStats();

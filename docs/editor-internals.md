@@ -31,6 +31,14 @@
 - `yarn test:vscode` and the browser harness (`?lines=on&file=<name>`) show the numbers in a real page. jsdom has no layout, so the unit test moves the items and the rows with a stub of `getBoundingClientRect`.
 - Not done: one number for each line of a code block, and a number for each line of a cell that the file breaks.
 
+## Table of contents
+
+- `webview/tableOfContents.ts` builds the **Contents** button and its panel. `main.ts` puts the button at the far left of the bar (`#stats`) when the editor starts. It goes away with the bar when `crazyRichMarkdown.showInfoBar` is off, and `main.ts` closes the panel when the setting turns off.
+- `documentHeadings` walks the ProseMirror document and keeps the level, the text and the position of each heading. A heading inside a quote or a list counts. Markup in the heading does not: the list shows the words. A heading with no text shows `Untitled heading`, so no row is blank.
+- The panel is not a Tiptap node view. It is a fixed panel under the button, on the page, with the filter at the top and a list that scrolls. `position` uses the box of the button, so the panel hangs below the sticky bar and stays inside a narrow page.
+- A click on a heading calls `headingElement` (the DOM heading for the position of the node) and `scrollIntoView`. The `scroll-padding-top` on `html` in `styles.css` keeps the heading below the bar. The panel closes after the jump.
+- The panel reads the headings when it opens and on each transaction while it is open; while it is closed it does no work for a key press. Escape and a click outside close it. Escape does not reach VS Code, and the focus goes back to the button when the panel had it. The arrow keys move through the headings that the filter shows.
+
 ## Layout
 
 - A code block header holds the language button. `RichCodeBlock` in `webview/codeBlock.ts` binds Tab and Shift+Tab, and drops Tiptap's Cmd+Alt+C.

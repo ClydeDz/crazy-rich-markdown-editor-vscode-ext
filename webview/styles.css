@@ -49,12 +49,8 @@ html.rme-no-bar {
   display: none;
 }
 
+/* The facts and the counts get shorter before the buttons do. A narrow page cuts them with an ellipsis. */
 .rme-stat {
-  flex: none;
-}
-
-/* A long list of names gets shorter before anything else does. */
-.rme-stat[data-stat='authors'] {
   flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
@@ -100,6 +96,146 @@ html.rme-no-bar {
   width: 14px;
   height: 14px;
   fill: currentColor;
+}
+
+/* The table of contents button sits at the far left, away from the facts and the other buttons. */
+.rme-stats-button[data-action='contents'] {
+  margin-right: auto;
+}
+
+.rme-stats-button[aria-expanded='true'] {
+  color: var(--vscode-foreground, inherit);
+  background: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.2));
+}
+
+/* ---------- Table of contents ---------- */
+
+/* The panel hangs under its button, over the text. It keeps its own height and scrolls its list. */
+.rme-toc {
+  position: fixed;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 320px;
+  max-width: calc(100vw - 16px);
+  max-height: min(70vh, 520px);
+  overflow: hidden;
+  color: var(--vscode-editorWidget-foreground, var(--vscode-editor-foreground));
+  background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+  border: 1px solid var(--rme-border);
+  border-radius: 5px;
+  box-shadow: 0 2px 8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.3));
+  font-size: 12px;
+}
+
+.rme-toc[hidden],
+.rme-toc-entry[hidden],
+.rme-toc-empty[hidden] {
+  display: none;
+}
+
+.rme-toc-filter-row {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border-bottom: 1px solid var(--rme-rule);
+}
+
+.rme-toc-filter-icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--rme-muted);
+}
+
+.rme-toc-filter-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.rme-toc-filter {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 24px;
+  padding: 3px 6px;
+  color: var(--vscode-input-foreground, var(--vscode-editor-foreground));
+  background: var(--vscode-input-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-input-border, var(--rme-border));
+  border-radius: 2px;
+  outline: none;
+  font: inherit;
+}
+
+.rme-toc-filter:focus {
+  border-color: var(--vscode-focusBorder, currentColor);
+}
+
+.rme-toc-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 4px 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.rme-toc-entry {
+  margin: 0;
+}
+
+.rme-toc-item {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 4px 10px;
+  overflow: hidden;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font: inherit;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.rme-toc-item:hover {
+  background: var(--vscode-list-hoverBackground, rgba(128, 128, 128, 0.2));
+}
+
+.rme-toc-item:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder, currentColor);
+  outline-offset: -1px;
+}
+
+/* The level of the heading moves it to the right, as the levels of the document show the structure. */
+.rme-toc-item[data-level='2'] {
+  padding-left: 22px;
+}
+
+.rme-toc-item[data-level='3'] {
+  padding-left: 34px;
+}
+
+.rme-toc-item[data-level='4'] {
+  padding-left: 46px;
+}
+
+.rme-toc-item[data-level='5'] {
+  padding-left: 58px;
+}
+
+.rme-toc-item[data-level='6'] {
+  padding-left: 70px;
+}
+
+.rme-toc-empty {
+  margin: 0;
+  padding: 8px 10px;
+  color: var(--rme-muted);
 }
 
 /* ---------- Find and replace ---------- */

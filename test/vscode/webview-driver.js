@@ -86,6 +86,31 @@
     };
   };
 
+  // The table of contents: the button at the far left of the bar, and the panel with the headings.
+  const contentsState = () => {
+    const bar = document.querySelector('.rme-stats');
+    const button = bar && bar.querySelector('[data-action="contents"]');
+    const panel = document.querySelector('.rme-toc');
+    const rect = panel && panel.getBoundingClientRect();
+    const items = panel ? [...panel.querySelectorAll('.rme-toc-item')] : [];
+    return {
+      found: Boolean(button),
+      first: Boolean(button) && bar.firstElementChild === button,
+      label: button ? button.getAttribute('aria-label') : '',
+      text: button ? button.textContent : '',
+      expanded: button ? button.getAttribute('aria-expanded') : '',
+      open: Boolean(panel) && !panel.hidden,
+      visible: Boolean(rect) && rect.width > 0 && rect.height > 0,
+      top: rect ? rect.top : null,
+      left: rect ? rect.left : null,
+      right: rect ? rect.right : null,
+      width: innerWidth,
+      headings: items.map((item) => ({ text: item.textContent, level: item.dataset.level })),
+      visibleHeadings: items.filter((item) => !item.parentElement.hidden).map((item) => item.textContent),
+      activeClass: document.activeElement ? document.activeElement.className : '',
+    };
+  };
+
   const handlers = {
     async ping() {
       return { ready: Boolean(editor()) };
@@ -373,6 +398,56 @@
         color: style.color,
         background: getComputedStyle(document.body).backgroundColor,
       };
+    },
+
+    // The table of contents button and panel.
+    async contentsState() {
+      return contentsState();
+    },
+
+    async contentsOpen() {
+      const button = document.querySelector('.rme-stats [data-action="contents"]');
+      button.focus();
+      button.click();
+      await sleep(50);
+      return contentsState();
+    },
+
+    async contentsFilter({ value }) {
+      const filter = document.querySelector('.rme-toc-filter');
+      filter.value = value;
+      filter.dispatchEvent(new Event('input', { bubbles: true }));
+      await sleep(50);
+      return contentsState();
+    },
+
+    // Click a heading and measure where the page went. The scroll of the page is smooth, so it needs a moment.
+    async contentsClick({ index }) {
+      const before = window.scrollY;
+      const item = document.querySelectorAll('.rme-toc-item')[index];
+      const text = item.textContent;
+      item.click();
+      await sleep(1000);
+      const heading = [...pm().querySelectorAll('h1, h2, h3, h4, h5, h6')].find(
+        (element) => element.textContent === text,
+      );
+      const rect = heading && heading.getBoundingClientRect();
+      const state = {
+        ...contentsState(),
+        before,
+        scrolled: window.scrollY,
+        headingTop: rect ? rect.top : null,
+      };
+      window.scrollTo(0, 0);
+      return state;
+    },
+
+    async contentsEscape() {
+      document.activeElement.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+      );
+      await sleep(50);
+      return contentsState();
     },
 
     async shortcutsState() {
