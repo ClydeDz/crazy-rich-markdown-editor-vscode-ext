@@ -1,7 +1,8 @@
 import { Node } from '@tiptap/core';
 import { highlightInto } from './highlightDom';
+import { fillHtmlPreview } from './htmlPreview';
 
-interface RawBlockOptions {
+export interface RawBlockOptions {
   /** Name of the node in the document schema. */
   name: string;
   /** Name of the Markdown token that the node keeps. */
@@ -19,6 +20,13 @@ interface RawBlockOptions {
     start: (src: string) => number;
     tokenize: (src: string) => { type: string; raw: string; text: string } | undefined;
   };
+  /** Show the text as the page shows it. The text box then opens when the block is selected. */
+  render?: boolean;
+}
+
+export interface RawBlockOptionsForEditor {
+  /** Map the address of an image or a video to one that the page can load. */
+  resolveSrc: (src: string) => string;
 }
 
 /**
@@ -26,14 +34,18 @@ interface RawBlockOptions {
  * It keeps the original Markdown text and writes it back without a change.
  * The user can edit the text in a small text box.
  */
-export function createRawBlock({ name, tokenName, label, placeholder, language, tokenizer }: RawBlockOptions) {
+export function createRawBlock({ name, tokenName, label, placeholder, language, tokenizer, render }: RawBlockOptions) {
   const labelOf = (raw: string): string => (typeof label === 'function' ? label(raw) : label);
-  return Node.create({
+  return Node.create<RawBlockOptionsForEditor>({
     name,
     group: 'block',
     atom: true,
     selectable: true,
     draggable: false,
+
+    addOptions() {
+      return { resolveSrc: (src: string) => src };
+    },
 
     addAttributes() {
       return { raw: { default: '' } };
@@ -72,6 +84,7 @@ export function createRawBlock({ name, tokenName, label, placeholder, language, 
     },
 
     addNodeView() {
+      const { resolveSrc } = this.options;
       return ({ node, getPos, editor }) => {
         let current = node;
 
@@ -83,6 +96,12 @@ export function createRawBlock({ name, tokenName, label, placeholder, language, 
         const labelElement = document.createElement('span');
         labelElement.className = 'rme-raw-label';
         labelElement.textContent = labelOf(String(node.attrs.raw ?? ''));
+
+        // The page shows the text itself. The text box opens when the block is selected, so it can be changed.
+        const preview = render ? document.createElement('div') : undefined;
+        if (preview) {
+          preview.className = 'rme-raw-preview';
+        }
 
         const field = document.createElement('div');
         field.className = 'rme-raw-field';
@@ -124,6 +143,11 @@ export function createRawBlock({ name, tokenName, label, placeholder, language, 
           if (colors && language) {
             highlightInto(colors, language, raw);
           }
+          if (preview) {
+            const shown = fillHtmlPreview(preview, raw, { resolveSrc });
+            preview.hidden = !shown;
+            dom.classList.toggle('has-preview', shown);
+          }
           autosize();
         };
         show(String(node.attrs.raw ?? ''));
@@ -138,7 +162,11 @@ export function createRawBlock({ name, tokenName, label, placeholder, language, 
         });
 
         field.append(area);
-        dom.append(labelElement, field);
+        dom.append(labelElement);
+        if (preview) {
+          dom.append(preview);
+        }
+        dom.append(field);
         // The block is not in the page yet. Measure it again each time its width changes.
         let lastWidth = 0;
         const observer =
@@ -182,7 +210,12 @@ export function createRawBlock({ name, tokenName, label, placeholder, language, 
 }
 
 /** HTML blocks such as `<details>`, `<div>` and `<!-- comments -->`. */
-export const HtmlBlock = createRawBlock({ name: 'htmlBlock', tokenName: 'html', label: 'HTML' });
+export const HtmlBlock = createRawBlock({
+  name: 'htmlBlock',
+  tokenName: 'html',
+  label: 'HTML',
+  render: true,
+});
 
 /** Link reference definitions such as `[docs]: https://example.com`. */
 export const LinkDefinition = createRawBlock({

@@ -50,6 +50,7 @@ export const AUTO_FILES = [
   "webview/entities.ts",
   "webview/htmlMarks.ts",
   "webview/inlineHtml.ts",
+  "webview/htmlPreview.ts",
   "webview/lists.ts",
   "webview/languages.ts",
   "webview/languagePicker.ts",

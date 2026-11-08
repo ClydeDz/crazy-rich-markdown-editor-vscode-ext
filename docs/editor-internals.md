@@ -11,6 +11,9 @@
 
 - The Markdown parser has read plain text before the editor sees it. A backslash before punctuation (`\,` `\;` `\{` `\\`) is gone, and `<br/>` is a hard break. Text that a command takes from a paragraph cannot get these back.
 - Inline atoms: `mathInline`, `emoji`, `footnoteRef`, `htmlInline`.
+- HTML is not read into the document. An element inside a line (`htmlInline`) and a block of HTML (`htmlBlock`) keep their exact text, and `webview/htmlPreview.ts` draws a clean copy of it in the page, as GitHub and the VS Code preview do. The copy drops scripts, event handlers and `javascript:` addresses before it goes into the page, and it maps the address of an image or a video with the same resolver as an image node.
+- HTML that shows nothing in the page (a comment, an empty anchor `<a name="top"></a>`, an unknown tag, a script alone) leaves the text of the HTML in a chip, or in the text box of the block, so that the user still sees it.
+- An `htmlBlock` that is drawn keeps its own frame and its text box for when the block is selected.
 - A paste of text is read as Markdown (`webview/pasteMarkdown.ts`): plain text and a pasted code block in the language `markdown` (or `md`) land as Markdown, and one paragraph joins the line at the cursor (`markdownSlice` gives an open slice). Rich text, a code block of another language, files, and a paste inside a raw box (code block, MDX box, table cell) keep the paste they had before.
 
 ## Parts outside the document

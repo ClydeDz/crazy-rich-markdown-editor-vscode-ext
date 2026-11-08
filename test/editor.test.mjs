@@ -506,11 +506,53 @@ test('a fence is longer than any run of backticks in the code', () => {
   again.destroy();
 });
 
-test('HTML in a line is kept as a chip that holds the HTML', () => {
-  const editor = makeEditor(createEditor, 'a <kbd>Ctrl</kbd> b <!-- c --> d');
-  const chips = [...editor.view.dom.querySelectorAll('.rme-html-inline')].map((chip) => chip.textContent);
-  assert.deepEqual(chips, ['<kbd>Ctrl</kbd>', '<!-- c -->']);
-  assert.equal(getMarkdown(editor), 'a <kbd>Ctrl</kbd> b <!-- c --> d');
+test('HTML in a line shows as the page shows it, and the file keeps the HTML as it is', () => {
+  const editor = makeEditor(createEditor, 'a <kbd>Ctrl</kbd> b');
+  const chip = editor.view.dom.querySelector('.rme-html-inline');
+  assert.equal(chip.classList.contains('is-rendered'), true, 'the HTML is drawn, not its text');
+  assert.equal(chip.querySelector('kbd')?.textContent, 'Ctrl');
+  let raw = '';
+  editor.state.doc.descendants((node) => {
+    if (node.type.name === 'htmlInline') raw = node.attrs.raw;
+  });
+  assert.equal(raw, '<kbd>Ctrl</kbd>', 'the text of the HTML stays');
+  assert.equal(getMarkdown(editor), 'a <kbd>Ctrl</kbd> b');
+  editor.destroy();
+});
+
+test('HTML that shows nothing stays a chip that holds its text', () => {
+  const editor = makeEditor(createEditor, 'a <!-- c --> b <a name="top"></a> c');
+  const chips = [...editor.view.dom.querySelectorAll('.rme-html-inline')]
+    .filter((chip) => !chip.classList.contains('is-rendered'))
+    .map((chip) => chip.textContent);
+  assert.deepEqual(chips, ['<!-- c -->', '<a name="top"></a>'], 'a comment and an empty anchor keep their text');
+  assert.equal(getMarkdown(editor), 'a <!-- c --> b <a name="top"></a> c');
+  editor.destroy();
+});
+
+test('a script, an event handler and a script address stay in the file, and not in the page', () => {
+  const markdown =
+    'x <span onclick="alert(1)">hi</span> <a href="javascript:alert(1)">go</a> <script>alert(1)</script> y';
+  const editor = makeEditor(createEditor, markdown);
+  const drawn = [...editor.view.dom.querySelectorAll('.rme-html-inline.is-rendered')];
+  assert.equal(drawn.length, 2, 'the span and the link are drawn');
+  assert.equal(editor.view.dom.querySelector('script'), null, 'no script in the page');
+  assert.equal(editor.view.dom.querySelector('[onclick]'), null, 'no event handler');
+  assert.equal(editor.view.dom.querySelector('a[href]'), null, 'no script address');
+  assert.equal(editor.view.dom.querySelector('.rme-html-inline a').textContent, 'go', 'the words stay');
+  assert.equal(getMarkdown(editor), markdown, 'the file keeps all of it');
+  editor.destroy();
+});
+
+test('an image inside HTML loads from the address that the page can use, and the file keeps its own', () => {
+  const markdown = 'a badge <img src="assets/badge.svg" width="150"> here';
+  const editor = makeEditor(createEditor, markdown, {
+    resolveImageSrc: (src) => `https://webview.test/base/${src}`,
+  });
+  const image = editor.view.dom.querySelector('.rme-html-inline.is-rendered img');
+  assert.equal(image.getAttribute('src'), 'https://webview.test/base/assets/badge.svg');
+  assert.equal(image.getAttribute('width'), '150');
+  assert.equal(getMarkdown(editor), markdown);
   editor.destroy();
 });
 

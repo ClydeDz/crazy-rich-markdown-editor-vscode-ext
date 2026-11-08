@@ -460,7 +460,8 @@ html.rme-has-line-numbers #app {
 .ProseMirror a {
   color: var(--vscode-textLink-foreground);
   text-decoration: none;
-  cursor: text;
+  /* A pointer tells the user that a click with Ctrl or Cmd opens the link. */
+  cursor: pointer;
 }
 .ProseMirror a:hover {
   color: var(--vscode-textLink-activeForeground, var(--vscode-textLink-foreground));
@@ -716,6 +717,32 @@ html.rme-has-line-numbers #app {
 /* A raw block with a language (MDX) has a colored copy of its text behind a text box with clear text. */
 .rme-raw-field {
   position: relative;
+}
+/* HTML that the page shows needs no frame of the editor, and its text box opens when it is selected. */
+.rme-raw.has-preview {
+  padding: 0;
+  border-color: transparent;
+  background: none;
+}
+.rme-raw.has-preview.is-selected {
+  padding: 6px 10px 8px;
+  border-color: var(--rme-border);
+  background: var(--rme-code-bg);
+}
+.rme-raw.has-preview .rme-raw-label,
+.rme-raw.has-preview .rme-raw-field {
+  display: none;
+}
+.rme-raw.has-preview.is-selected .rme-raw-label {
+  display: block;
+}
+.rme-raw.has-preview.is-selected .rme-raw-field {
+  display: block;
+}
+.rme-raw-preview img,
+.rme-raw-preview video {
+  max-width: 100%;
+  height: auto;
 }
 .rme-raw.has-colors .rme-raw-label {
   /* A component name keeps its case. */
@@ -1061,6 +1088,22 @@ html.rme-has-line-numbers #app {
 }
 .rme-html-inline.is-comment {
   font-style: italic;
+}
+/* HTML that the page shows keeps no box of its own. */
+.rme-html-inline.is-rendered {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  white-space: normal;
+}
+.rme-html-inline.is-rendered img,
+.rme-html-inline.is-rendered video {
+  vertical-align: middle;
+  max-width: 100%;
+  height: auto;
 }
 .rme-html-inline.ProseMirror-selectednode {
   outline: 2px solid var(--vscode-focusBorder);

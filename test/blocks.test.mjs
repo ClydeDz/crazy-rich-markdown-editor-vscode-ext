@@ -45,6 +45,29 @@ test('a raw block has a label and a text area with the text that the editor keep
   editor.destroy();
 });
 
+test('an HTML block shows as the page shows it, and its text box holds the HTML when it is selected', () => {
+  const markdown = '<details><summary>More</summary>Hidden text</details>';
+  const editor = makeEditor(createEditor, markdown);
+  const block = dom(editor).querySelector('.rme-raw');
+  assert.equal(block.classList.contains('has-preview'), true, 'the block is drawn');
+  assert.equal(block.querySelector('.rme-raw-preview summary').textContent, 'More');
+  assert.equal(block.querySelector('textarea').value, markdown, 'the text box keeps the HTML');
+
+  const [{ pos }] = nodesNamed(editor, 'htmlBlock');
+  editor.commands.setNodeSelection(pos);
+  assert.equal(block.classList.contains('is-selected'), true, 'a selected block opens its text box');
+  assert.equal(getMarkdown(editor), markdown);
+  editor.destroy();
+});
+
+test('an HTML comment block keeps its text box, because the page shows nothing for it', () => {
+  const editor = makeEditor(createEditor, '<!-- hidden -->');
+  const block = dom(editor).querySelector('.rme-raw');
+  assert.equal(block.classList.contains('has-preview'), false);
+  assert.equal(block.querySelector('.rme-raw-preview').hidden, true);
+  editor.destroy();
+});
+
 test('typing in the text area of a raw block changes the document, and the text area grows', () => {
   const height = { current: 0 };
   withScrollHeight(height, () => {

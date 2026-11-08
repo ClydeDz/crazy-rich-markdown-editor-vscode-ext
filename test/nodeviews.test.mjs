@@ -145,7 +145,7 @@ test('the fields inside a node view get their own events, and the rest of the no
 
 test('a node view that fills its own page tells the editor to ignore the changes', () => {
   const { views, editor } = nodeViews();
-  for (const name of ['mathInline', 'mathBlock', 'htmlBlock', 'linkDefinition', 'video']) {
+  for (const name of ['mathInline', 'mathBlock', 'htmlInline', 'htmlBlock', 'linkDefinition', 'video']) {
     const view = views[name];
     assert.equal(view.spec.ignoreMutation(mutation('childList', view.dom)), true, `${name}: a change of the page`);
     assert.equal(

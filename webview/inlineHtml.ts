@@ -1,16 +1,27 @@
 import { Node } from '@tiptap/core';
 import type { Editor } from '@tiptap/core';
+import { fillHtmlPreview } from './htmlPreview';
+
+export interface HtmlInlineOptions {
+  /** Map the address of an image or a video to one that the page can load. */
+  resolveSrc: (src: string) => string;
+}
 
 /**
  * HTML inside a line of text, such as `<kbd>Ctrl</kbd>`, `<a name="top"></a>` or `<!-- note -->`.
- * The editor cannot show it as rich text. It keeps the HTML and writes it back without a change.
+ * The editor shows the HTML as the page shows it, and keeps the HTML as its own text in the document,
+ * so it writes the HTML back without a change.
  */
-export const HtmlInline = Node.create({
+export const HtmlInline = Node.create<HtmlInlineOptions>({
   name: 'htmlInline',
   group: 'inline',
   inline: true,
   atom: true,
   selectable: true,
+
+  addOptions() {
+    return { resolveSrc: (src: string) => src };
+  },
 
   addAttributes() {
     return { raw: { default: '' } };
@@ -34,19 +45,30 @@ export const HtmlInline = Node.create({
   },
 
   addNodeView() {
+    const { resolveSrc } = this.options;
     return ({ node }) => {
       let current = node;
       const dom = document.createElement('span');
       dom.className = 'rme-html-inline';
       dom.contentEditable = 'false';
-      dom.title = 'HTML in the text. The editor keeps it as it is.';
+      const preview = document.createElement('span');
+      preview.className = 'rme-html-inline-preview';
       const show = (raw: string): void => {
-        dom.textContent = raw;
-        dom.classList.toggle('is-comment', raw.startsWith('<!--'));
+        const shown = fillHtmlPreview(preview, raw, { resolveSrc });
+        dom.replaceChildren(shown ? preview : document.createTextNode(raw));
+        dom.classList.toggle('is-rendered', shown);
+        dom.classList.toggle('is-comment', !shown && raw.startsWith('<!--'));
+        if (shown) {
+          dom.removeAttribute('title');
+        } else {
+          dom.title = 'HTML in the text. The editor keeps it as it is.';
+        }
       };
       show(String(node.attrs.raw ?? ''));
       return {
         dom,
+        // The page of the HTML is not the text of the file. A picture that loads must not count as an edit.
+        ignoreMutation: () => true,
         update(updated) {
           if (updated.type !== current.type) {
             return false;

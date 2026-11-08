@@ -136,7 +136,7 @@ test('the packages that Tiptap asks for as peers are direct dependencies, so Yar
 });
 
 test('the extension package leaves out the lockfile and the Yarn settings', () => {
-  const ignore = read('.vscodeignore').split('\n');
+  const ignore = read('.vscodeignore').split(/\r?\n/);
   for (const name of ['yarn.lock', '.yarnrc', '.npmrc'])
     assert.ok(ignore.includes(name), `${name} is in .vscodeignore`);
 });
