@@ -99,9 +99,26 @@ export function createRawBlock({ name, tokenName, label, placeholder, language, 
 
         // The page shows the text itself. The text box opens when the block is selected, so it can be changed.
         const preview = render ? document.createElement('div') : undefined;
+        // The summary of a details element opens and closes it. The page does it, so that it works the same in every
+        // page, and the click does not select the block and open its text box.
+        const onPreviewClick = (event: Event): void => {
+          const summary = event.target instanceof Element ? event.target.closest('summary') : null;
+          const owner = summary?.parentElement;
+          if (summary && owner?.tagName === 'DETAILS') {
+            event.preventDefault();
+            owner.toggleAttribute('open', !owner.hasAttribute('open'));
+          }
+        };
         if (preview) {
           preview.className = 'rme-raw-preview';
+          preview.addEventListener('click', onPreviewClick);
         }
+        // A click on a summary belongs to the details element, not to the selection of the block.
+        const onSummary = (target: EventTarget | null): boolean =>
+          preview !== undefined &&
+          target instanceof Element &&
+          preview.contains(target) &&
+          target.closest('summary') !== null;
 
         const field = document.createElement('div');
         field.className = 'rme-raw-field';
@@ -144,7 +161,15 @@ export function createRawBlock({ name, tokenName, label, placeholder, language, 
             highlightInto(colors, language, raw);
           }
           if (preview) {
+            // The copy in the page is made again, and the user should keep the details elements that they opened.
+            const opened = [...preview.querySelectorAll('details')].map((element) => element.hasAttribute('open'));
             const shown = fillHtmlPreview(preview, raw, { resolveSrc });
+            [...preview.querySelectorAll('details')].forEach((element, index) => {
+              // The first copy has no state of the user. The file then says which elements are open.
+              if (index < opened.length && opened[index] !== element.hasAttribute('open')) {
+                element.toggleAttribute('open', opened[index]);
+              }
+            });
             preview.hidden = !shown;
             dom.classList.toggle('has-preview', shown);
           }
@@ -182,7 +207,7 @@ export function createRawBlock({ name, tokenName, label, placeholder, language, 
 
         return {
           dom,
-          stopEvent: (event) => event.target === area,
+          stopEvent: (event) => event.target === area || onSummary(event.target),
           ignoreMutation: () => true,
           update(updated) {
             if (updated.type !== current.type) {
@@ -209,12 +234,46 @@ export function createRawBlock({ name, tokenName, label, placeholder, language, 
   });
 }
 
+/**
+ * The whole `<details>` element at the start of `src`, with the elements inside it, or undefined when it has no end
+ * tag. The Markdown parser ends an HTML block at a blank line, which would cut the element off from its content.
+ */
+function detailsElement(src: string): string | undefined {
+  if (!/^<details\b/i.test(src)) {
+    return undefined;
+  }
+  let depth = 0;
+  for (const found of src.matchAll(/<\/?details\b/gi)) {
+    if (found[0].startsWith('</')) {
+      depth -= 1;
+      if (depth === 0) {
+        // The match stops at the name of the tag. The element ends at the next `>`.
+        const end = src.indexOf('>', (found.index ?? 0) + found[0].length);
+        return end >= 0 ? src.slice(0, end + 1) : undefined;
+      }
+    } else {
+      depth += 1;
+    }
+  }
+  return undefined;
+}
+
 /** HTML blocks such as `<details>`, `<div>` and `<!-- comments -->`. */
 export const HtmlBlock = createRawBlock({
   name: 'htmlBlock',
   tokenName: 'html',
   label: 'HTML',
   render: true,
+  tokenizer: {
+    name: 'detailsBlock',
+    level: 'block',
+    // The block starts a line, never in the middle of a paragraph.
+    start: () => -1,
+    tokenize: (src: string) => {
+      const raw = detailsElement(src);
+      return raw ? { type: 'html', raw, text: raw } : undefined;
+    },
+  },
 });
 
 /** Link reference definitions such as `[docs]: https://example.com`. */

@@ -1393,7 +1393,7 @@ test("real webview: the GitHub parts show as rich content", async () => {
   assert.deepEqual(counts.languageLabels, ["TypeScript", "Plain text", "Mermaid"]);
   assert.equal(counts.katexInline, 1, "inline math is drawn");
   assert.equal(counts.katexBlock, 1, "a math block is drawn");
-  assert.equal(counts.htmlBlocks, 2, "the HTML blocks are kept");
+  assert.equal(counts.htmlBlocks, 1, "the details element with its blank lines is one HTML block");
 });
 
 test("real webview: a mermaid diagram is drawn by the real library, and math fonts load", async () => {

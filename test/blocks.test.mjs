@@ -60,6 +60,62 @@ test('an HTML block shows as the page shows it, and its text box holds the HTML 
   editor.destroy();
 });
 
+test('a details element with a blank line inside stays one block, and its content sits inside the details', () => {
+  const markdown = '<details>\n<summary>More</summary>\n\nHidden text.\n\n</details>\n\nAfter';
+  const editor = makeEditor(createEditor, markdown);
+  assert.equal(nodesNamed(editor, 'htmlBlock').length, 1, 'one block, not one on each side of the blank line');
+  const block = dom(editor).querySelector('.rme-raw');
+  const details = block.querySelector('.rme-raw-preview details');
+  assert.ok(details, 'the page draws the details element');
+  assert.equal(details.querySelector('summary').textContent, 'More');
+  assert.ok(details.textContent.includes('Hidden text.'), 'the hidden text is inside the details');
+  assert.equal(details.hasAttribute('open'), false, 'the element starts as the file writes it');
+  assert.equal(getMarkdown(editor), markdown, 'the file comes back as it was');
+  editor.destroy();
+});
+
+test('a click on the summary opens and closes the details, and the page does the toggle itself', () => {
+  const editor = makeEditor(createEditor, '<details><summary>More</summary>\n\nHidden text.\n\n</details>');
+  const details = dom(editor).querySelector('.rme-raw-preview details');
+  const summary = details.querySelector('summary');
+  const click = () => {
+    const event = new window.MouseEvent('click', { bubbles: true, cancelable: true });
+    summary.dispatchEvent(event);
+    return event;
+  };
+  const first = click();
+  assert.equal(details.hasAttribute('open'), true, 'a click opens the details');
+  assert.equal(first.defaultPrevented, true, 'the browser does not toggle it a second time');
+  click();
+  assert.equal(details.hasAttribute('open'), false, 'the next click closes it again');
+  editor.destroy();
+});
+
+test('a details that the user opened stays open when the text of the block changes', () => {
+  const editor = makeEditor(createEditor, '<details><summary>More</summary>\n\nHidden text.\n\n</details>');
+  const block = dom(editor).querySelector('.rme-raw');
+  block.querySelector('summary').dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true }));
+  assert.equal(block.querySelector('details').hasAttribute('open'), true);
+  const [{ pos }] = nodesNamed(editor, 'htmlBlock');
+  editor.view.dispatch(
+    editor.state.tr.setNodeMarkup(pos, undefined, {
+      raw: '<details><summary>More</summary>\n\nOther text.\n\n</details>',
+    }),
+  );
+  const details = dom(editor).querySelector('.rme-raw-preview details');
+  assert.equal(details.hasAttribute('open'), true, 'the copy that the page makes again keeps the open state');
+  assert.ok(details.textContent.includes('Other text.'));
+  editor.destroy();
+});
+
+test('a details element without its end tag stays the HTML block of the Markdown parser', () => {
+  const markdown = '<details>\n<summary>More</summary>';
+  const editor = makeEditor(createEditor, markdown);
+  assert.equal(nodesNamed(editor, 'htmlBlock').length, 1);
+  assert.equal(getMarkdown(editor), markdown);
+  editor.destroy();
+});
+
 test('an HTML comment block keeps its text box, because the page shows nothing for it', () => {
   const editor = makeEditor(createEditor, '<!-- hidden -->');
   const block = dom(editor).querySelector('.rme-raw');
