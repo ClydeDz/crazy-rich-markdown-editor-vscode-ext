@@ -142,6 +142,9 @@ export function createTableOfContents(options: TableOfContentsOptions): TableOfC
   /** The signature of the list that the panel shows. A closed panel waits for its next open. */
   let renderedSignature = '';
   let frame = 0;
+  /** The heading of a jump that the page is still scrolling to, or -1. The bar names it until the page arrives. */
+  let jumping = -1;
+  let lastScrollY = window.scrollY;
 
   const visibleItems = (): HTMLButtonElement[] =>
     [...list.querySelectorAll<HTMLButtonElement>('.rme-toc-item')].filter(
@@ -165,7 +168,11 @@ export function createTableOfContents(options: TableOfContentsOptions): TableOfC
     empty.textContent = headings.length === 0 ? 'No headings in this document' : 'No headings match';
   }
 
-  function select(heading: TocHeading): void {
+  function select(index: number, heading: TocHeading): void {
+    // The bar names the heading at once. The smooth scroll takes a moment to put it under the bar.
+    jumping = index;
+    active = index;
+    applyActive();
     headingElement(editor, heading.pos)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
     close();
   }
@@ -192,6 +199,16 @@ export function createTableOfContents(options: TableOfContentsOptions): TableOfC
   /** Find the heading of the text at the top of the page. The headings are in document order. */
   function measure(): void {
     const limit = bar.getBoundingClientRect().bottom + UNDER_BAR;
+    // The last frame of a jump can come before the page has stopped near the heading, so the bar keeps the name of
+    // the heading of the jump until that heading is under the bar.
+    if (jumping !== -1) {
+      const target = elements[jumping]?.getBoundingClientRect();
+      if (target && target.top > limit) {
+        active = jumping;
+        return;
+      }
+      jumping = -1;
+    }
     let found = -1;
     for (let index = 0; index < headings.length; index += 1) {
       const element = elements[index];
@@ -211,7 +228,7 @@ export function createTableOfContents(options: TableOfContentsOptions): TableOfC
   }
 
   function render(): void {
-    const entries = headings.map((heading) => {
+    const entries = headings.map((heading, index) => {
       const entry = document.createElement('li');
       entry.className = 'rme-toc-entry';
       const item = document.createElement('button');
@@ -223,7 +240,7 @@ export function createTableOfContents(options: TableOfContentsOptions): TableOfC
       item.title = heading.text;
       // Keep the caret in the document when the user clicks a heading.
       item.addEventListener('mousedown', (event) => event.preventDefault());
-      item.addEventListener('click', () => select(heading));
+      item.addEventListener('click', () => select(index, heading));
       entry.append(item);
       return entry;
     });
@@ -258,6 +275,11 @@ export function createTableOfContents(options: TableOfContentsOptions): TableOfC
     }
     frame = requestAnimationFrame(() => {
       frame = 0;
+      // The user went back up, so the jump is over even when the heading of the jump did not reach the bar.
+      if (jumping !== -1 && window.scrollY < lastScrollY) {
+        jumping = -1;
+      }
+      lastScrollY = window.scrollY;
       measure();
       applyActive();
     });
@@ -371,6 +393,11 @@ export function createTableOfContents(options: TableOfContentsOptions): TableOfC
   };
   editor.on('update', onUpdate);
   window.addEventListener('scroll', onScroll, { passive: true });
+  // The page and the bar get their size after the first measurement. A page without a size puts every heading at the
+  // top, so a measurement then marks the last heading. Read the headings again when the bar gets a box, for example
+  // when it appears with the first counts.
+  const resizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(() => syncActive()) : undefined;
+  resizeObserver?.observe(bar);
   refresh();
 
   return {
@@ -385,6 +412,7 @@ export function createTableOfContents(options: TableOfContentsOptions): TableOfC
       cancelAnimationFrame(frame);
       editor.off('update', onUpdate);
       window.removeEventListener('scroll', onScroll);
+      resizeObserver?.disconnect();
       button.remove();
       headingLabel.remove();
       panel.remove();

@@ -21,7 +21,9 @@ Crazy Rich Markdown Editor: A VS Code extension that opens `.md` files (and `.md
 | Test the tests          | `yarn mutate`                                           |
 | Package                 | `yarn package`                                          |
 
-Run `yarn lint` and `yarn test` before you report a change as done. Run `yarn test:vscode` when you change code that talks to VS Code or the real webview. CI runs the unit tests on every pull request, but the VS Code tests only on `main` (`.github/workflows/test.yml`), so a pull request does not catch a break there.
+## Done means the tests pass
+
+Before you claim that a job is done, run `yarn lint`, `yarn test` and `yarn test:vscode`. Both the unit tests and the tests in a real VS Code must pass; a change is not done while any of them fails, times out or is skipped on purpose to get past it. CI runs the unit tests on every pull request, but the VS Code tests only on `main` (`.github/workflows/test.yml`), so a pull request does not catch a break there. When you report, say which checks ran and which did not.
 
 ## Where things are
 

@@ -201,6 +201,13 @@ test('a click on a heading scrolls it into view and closes the panel', () => {
   assert.equal(toc.isOpen(), false, 'the panel closes after the jump');
 });
 
+test('a click puts the heading of the jump in the bar at once, before the page scrolls', () => {
+  const { toc, bar } = makeContents('# First\n\n## Second\n\n### Third\n');
+  toc.open();
+  itemsOf(toc)[0].click();
+  assert.equal(headingLabelOf(bar).textContent, 'First', 'the bar names the heading that the user chose');
+});
+
 test('a click outside the panel closes it, and a click inside does not', () => {
   const { toc } = makeContents('# Alpha\n');
   toc.open();
