@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { loadModule, makeEditor } from './helpers.mjs';
 
 const { createEditor, getMarkdown, setMarkdown } = await loadModule('webview/editor.ts', 'editor');
@@ -443,12 +446,12 @@ test('the picker accepts a language that is not in the list', () => {
   const editor = makeEditor(createEditor, '```\nx\n```');
   editor.view.dom.querySelector('.rme-code-lang').click();
   const input = document.querySelector('.rme-picker input');
-  input.value = 'terraform';
+  input.value = 'blub';
   input.dispatchEvent(new window.Event('input', { bubbles: true }));
   const rows = [...document.querySelectorAll('.rme-picker-label')].map((row) => row.textContent);
-  assert.deepEqual(rows, ['Use “terraform”']);
+  assert.deepEqual(rows, ['Use “blub”']);
   input.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
-  assert.equal(getMarkdown(editor), '```terraform\nx\n```');
+  assert.equal(getMarkdown(editor), '```blub\nx\n```');
   editor.destroy();
 });
 
@@ -466,12 +469,34 @@ test('language helpers know aliases and labels', () => {
   assert.equal(canonicalLanguage('ts'), 'typescript');
   assert.equal(canonicalLanguage('JS'), 'javascript');
   assert.equal(canonicalLanguage('yml'), 'yaml');
-  assert.equal(canonicalLanguage('terraform'), 'terraform');
+  assert.equal(canonicalLanguage('tsx'), 'tsx', 'TSX is a language of its own, not TypeScript');
+  assert.equal(canonicalLanguage('jsx'), 'jsx');
+  assert.equal(canonicalLanguage('terraform'), 'hcl', 'GitHub reads terraform as HCL');
   assert.equal(canonicalLanguage(''), '');
   assert.equal(languageLabel('py'), 'Python');
   assert.equal(languageLabel(null), 'Plain text');
-  assert.equal(languageLabel('terraform'), 'terraform');
+  assert.equal(languageLabel('terraform'), 'HCL');
+  assert.equal(languageLabel('tsx'), 'TSX');
+  assert.equal(languageLabel('jsx'), 'JSX');
+  assert.equal(languageLabel('blub'), 'blub');
   assert.equal(languageName('js {1,3}'), 'js');
+});
+
+test('a tsx code block keeps TSX and colors the parts of a component', () => {
+  const editor = makeEditor(createEditor, '```tsx\nconst App = () => <Button />;\n```');
+  assert.equal(editor.view.dom.querySelector('.rme-code-lang').textContent, 'TSX');
+  assert.ok(editor.view.dom.querySelector('.hljs-keyword'), 'the keyword has its color');
+  assert.ok(editor.view.dom.querySelector('.hljs-name'), 'the name of the component has its color');
+  assert.equal(getMarkdown(editor), '```tsx\nconst App = () => <Button />;\n```');
+  editor.destroy();
+});
+
+test('a jsx code block keeps JSX and colors the parts of a component', () => {
+  const editor = makeEditor(createEditor, '```jsx\nconst App = () => <Button />;\n```');
+  assert.equal(editor.view.dom.querySelector('.rme-code-lang').textContent, 'JSX');
+  assert.ok(editor.view.dom.querySelector('.hljs-name'), 'the name of the component has its color');
+  assert.equal(getMarkdown(editor), '```jsx\nconst App = () => <Button />;\n```');
+  editor.destroy();
 });
 
 test('a code block with extra words after the language still gets colors', () => {
@@ -1056,6 +1081,35 @@ test('a mermaid code block shows the picture that the library draws', async () =
   }
 });
 
+test('the picture of a mermaid block has a small name above it, under the rule', async () => {
+  window.mermaid = {
+    initialize: () => {},
+    render: async () => ({ svg: '<svg data-test="diagram"><text>drawn</text></svg>' }),
+  };
+  try {
+    const editor = makeEditor(createEditor, '```mermaid\ngraph TD\n  A --> B\n```');
+    await wait(500);
+    const preview = editor.view.dom.querySelector('.rme-code-preview');
+    const label = preview.querySelector('.rme-code-preview-label');
+    const body = preview.querySelector('.rme-code-preview-body');
+    assert.equal(label.textContent, 'Generated output');
+    assert.equal(preview.firstElementChild, label, 'the name comes before the picture');
+    assert.ok(body.querySelector('svg[data-test="diagram"]'));
+    assert.equal(body.contains(label), false, 'the name is not part of the drawing');
+    editor.destroy();
+  } finally {
+    delete window.mermaid;
+  }
+
+  const css = readFileSync(
+    path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'webview', 'styles.css'),
+    'utf8',
+  );
+  const rule = css.match(/\.rme-code-preview-label\s*\{[^}]*\}/)?.[0] ?? '';
+  assert.match(rule, /font-size:\s*11px/, 'the name is small');
+  assert.match(rule, /text-align:\s*left/, 'the name starts at the left');
+});
+
 test('a mermaid error shows its message and keeps the text', async () => {
   window.mermaid = {
     initialize: () => {},
@@ -1066,9 +1120,9 @@ test('a mermaid error shows its message and keeps the text', async () => {
   try {
     const editor = makeEditor(createEditor, '```mermaid\nnot a diagram\n```');
     await wait(500);
-    const preview = editor.view.dom.querySelector('.rme-code-preview');
-    assert.equal(preview.classList.contains('is-error'), true);
-    assert.equal(preview.textContent, 'Parse error on line 1');
+    const body = editor.view.dom.querySelector('.rme-code-preview-body');
+    assert.equal(body.classList.contains('is-error'), true);
+    assert.equal(body.textContent, 'Parse error on line 1');
     assert.equal(getMarkdown(editor), '```mermaid\nnot a diagram\n```');
     editor.destroy();
   } finally {
@@ -1080,9 +1134,9 @@ test('without the diagram library a mermaid block still shows its text and a mes
   configureDiagrams({});
   const editor = makeEditor(createEditor, '```mermaid\ngraph TD\n```');
   await wait(450);
-  const preview = editor.view.dom.querySelector('.rme-code-preview');
-  assert.equal(preview.classList.contains('is-error'), true);
-  assert.match(preview.textContent, /not available/);
+  const body = editor.view.dom.querySelector('.rme-code-preview-body');
+  assert.equal(body.classList.contains('is-error'), true);
+  assert.match(body.textContent, /not available/);
   assert.equal(getMarkdown(editor), '```mermaid\ngraph TD\n```');
   editor.destroy();
 });

@@ -40,7 +40,13 @@
 - `documentHeadings` walks the ProseMirror document and keeps the level, the text and the position of each heading. A heading inside a quote or a list counts. Markup in the heading does not: the list shows the words. A heading with no text shows `Untitled heading`, so no row is blank.
 - The panel is not a Tiptap node view. It is a fixed panel under the button, on the page, with the filter at the top and a list that scrolls. `position` uses the box of the button, so the panel hangs below the sticky bar and stays inside a narrow page.
 - A click on a heading calls `headingElement` (the DOM heading for the position of the node) and `scrollIntoView`. The `scroll-padding-top` on `html` in `styles.css` keeps the heading below the bar. The panel closes after the jump.
-- The panel reads the headings when it opens and on each transaction while it is open; while it is closed it does no work for a key press. Escape and a click outside close it. Escape does not reach VS Code, and the focus goes back to the button when the panel had it. The arrow keys move through the headings that the filter shows.
+- The panel reads the headings when it opens and after each edit. A closed panel updates the heading next to the button and keeps its list for the next open, so typing does not build the list again. Escape and a click outside close it. Escape does not reach VS Code, and the focus goes back to the button when the panel had it. The arrow keys move through the headings that the filter shows.
+- The bar shows the text of the heading that holds the top of the page, to the right of the **Contents** button. That heading is the last one whose top is above the bottom of the bar, so it is the heading of the text under the bar; a document without headings shows nothing there. The same row in the panel has `aria-current="location"` and is bold. A `scroll` listener measures the headings on one frame of the window, and an edit measures them again.
+
+## Code languages
+
+- `webview/languageCatalog.ts` has every language of GitHub whose name a fence can hold, generated from linguist's `languages.yml`. Each row is the name that the picker shows, the word for the fence, and the other words for it. `webview/languages.ts` makes the picker list from it and adds JSX and Math. A language whose name has spaces uses an alias without spaces, because a fence holds one word.
+- `webview/highlightGrammars.ts` has every grammar of highlight.js. A fence gets colors when its word, or an alias of it, is the name of a grammar. `GRAMMAR_OF` in `languages.ts` points the words that GitHub writes in another way (`c#`, `f#`, `objective-c`, `shell`, `svelte`, `vue`) at the grammar that colors them. JavaScript has `jsx` as an alias, so that fence needs no mapping. A language without a grammar stays plain, and a block without a language is never guessed.
 
 ## Layout
 

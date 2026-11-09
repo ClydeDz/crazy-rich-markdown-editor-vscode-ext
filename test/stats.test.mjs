@@ -463,10 +463,11 @@ test('the bar uses every class that styles.css has for its items and buttons', (
     'utf8',
   );
   // `rme-stats` is the class of the bar itself. The page has it, and the code does not make it.
+  // The table of contents adds the heading of the text in view to the bar, and its test checks that class.
   const wanted = new Set(
     [...css.matchAll(/\.(rme-stat(?:s-button)?[\w-]*)/g)]
       .map((match) => match[1])
-      .filter((name) => name !== 'rme-stats'),
+      .filter((name) => name !== 'rme-stats' && name !== 'rme-stats-heading'),
   );
   const { element } = barWithFile({ modified: Date.UTC(2026, 9, 25), authors: [alice] });
   const used = new Set([...element.querySelectorAll('*')].flatMap((item) => [...item.classList]));

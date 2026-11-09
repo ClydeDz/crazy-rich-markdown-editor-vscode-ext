@@ -93,8 +93,11 @@
     const panel = document.querySelector('.rme-toc');
     const rect = panel && panel.getBoundingClientRect();
     const items = panel ? [...panel.querySelectorAll('.rme-toc-item')] : [];
+    const heading = bar && bar.querySelector('.rme-stats-heading');
     return {
       found: Boolean(button),
+      heading: heading ? heading.textContent : '',
+      current: items.filter((item) => item.getAttribute('aria-current') === 'location').map((item) => item.textContent),
       first: Boolean(button) && bar.firstElementChild === button,
       label: button ? button.getAttribute('aria-label') : '',
       text: button ? button.textContent : '',
@@ -325,7 +328,7 @@
         text: svg ? svg.textContent : preview ? preview.textContent : '',
         width: rect ? rect.width : 0,
         height: rect ? rect.height : 0,
-        error: Boolean(preview && preview.classList.contains('is-error')),
+        error: Boolean(preview && preview.querySelector('.rme-code-preview-body.is-error')),
         katexFont: document.fonts.check('16px KaTeX_Main'),
       };
     },

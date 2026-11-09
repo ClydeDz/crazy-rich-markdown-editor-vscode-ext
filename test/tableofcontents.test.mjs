@@ -44,6 +44,14 @@ const itemsOf = (toc) => [...toc.element.querySelectorAll('.rme-toc-item')];
 const visibleItemsOf = (toc) => itemsOf(toc).filter((item) => !item.parentElement.hidden);
 const emptyOf = (toc) => toc.element.querySelector('.rme-toc-empty');
 const filterOf = (toc) => toc.element.querySelector('.rme-toc-filter');
+const headingLabelOf = (bar) => bar.querySelector('.rme-stats-heading');
+const currentOf = (toc) => itemsOf(toc).map((item) => item.getAttribute('aria-current'));
+/** jsdom has no layout, so a test gives a heading the place that it would have on the page. */
+const placeHeading = (element, top) => {
+  element.getBoundingClientRect = () => ({ top, bottom: top + 20, left: 0, right: 0, width: 100, height: 20 });
+};
+const scrollPage = () => window.dispatchEvent(new window.Event('scroll'));
+const nextFrame = () => new Promise((resolve) => requestAnimationFrame(() => resolve()));
 const typeFilter = (toc, value) => {
   const filter = filterOf(toc);
   filter.value = value;
@@ -269,6 +277,62 @@ test('the panel reads the headings again when the document changes while it is o
   );
 });
 
+test('the bar shows the heading of the text under it, and follows the scroll', async () => {
+  const { toc, editor, bar } = makeContents('# One\n\n## Two\n\n## Three\n');
+  const [one, two, three] = [...editor.view.dom.querySelectorAll('h1, h2')];
+  placeHeading(one, 200);
+  placeHeading(two, 400);
+  placeHeading(three, 600);
+  scrollPage();
+  await nextFrame();
+  assert.equal(
+    headingLabelOf(bar).textContent,
+    'One',
+    'at the top of the page the first heading below the bar is in view',
+  );
+
+  placeHeading(one, 0);
+  placeHeading(two, 200);
+  placeHeading(three, 400);
+  scrollPage();
+  await nextFrame();
+  assert.equal(headingLabelOf(bar).textContent, 'One', 'the first heading is at the top of the page');
+
+  placeHeading(two, 4);
+  scrollPage();
+  await nextFrame();
+  assert.equal(headingLabelOf(bar).textContent, 'Two', 'the second heading went under the bar');
+  toc.destroy();
+});
+
+test('the heading in view is marked in the panel, and the mark follows the scroll', async () => {
+  const { toc, editor } = makeContents('# One\n\n## Two\n');
+  const [one, two] = [...editor.view.dom.querySelectorAll('h1, h2')];
+  placeHeading(one, 0);
+  placeHeading(two, 300);
+  toc.open();
+  assert.deepEqual(currentOf(toc), ['location', null]);
+
+  placeHeading(two, 4);
+  scrollPage();
+  await nextFrame();
+  assert.deepEqual(currentOf(toc), [null, 'location'], 'only one heading is current');
+  assert.equal(itemsOf(toc)[1].hasAttribute('aria-current'), true, 'the panel marks the heading in view');
+});
+
+test('a document without headings has no text next to the button', () => {
+  const { bar } = makeContents('Just text.\n');
+  assert.equal(headingLabelOf(bar).textContent, '');
+});
+
+test('the bar reads a heading again when its text changes', () => {
+  const { toc, editor, bar } = makeContents('# One\n');
+  assert.equal(headingLabelOf(bar).textContent, 'One');
+  editor.commands.setContent('# Updated\n', { contentType: 'markdown' });
+  assert.equal(headingLabelOf(bar).textContent, 'Updated');
+  toc.destroy();
+});
+
 test('headingElement finds the heading of a position, also inside a quote', () => {
   const { editor } = makeContents('# One\n\n> ## In a quote\n\n## Last\n');
   const headings = documentHeadings(editor);
@@ -302,6 +366,13 @@ test('destroy takes the button and the panel off the page, and removes the liste
   });
   assert.deepEqual(leakedOnWindow, [], 'no listener stays on the window');
   assert.equal(document.body.querySelector('[data-action="contents"]') === null, true, 'the button is off the bar');
+
+  const { editor, bar } = makeContents('# Gamma\n');
+  const leakedOnCreate = leakedListeners(window, () => {
+    const third = createTableOfContents({ bar, editor });
+    third.destroy();
+  });
+  assert.deepEqual(leakedOnCreate, [], 'the scroll listener of the bar goes away with the panel');
 });
 
 test('the panel uses every class that styles.css has for it', () => {
@@ -326,5 +397,10 @@ test('the panel uses every class that styles.css has for it', () => {
     [...used].filter((name) => !wanted.has(name)),
     [],
     'a class of the panel that styles.css does not know',
+  );
+  assert.match(
+    css,
+    /\.rme-toc-item\[aria-current='location'\][^{]*\{[^}]*font-weight:\s*700/,
+    'the heading in view is bold',
   );
 });

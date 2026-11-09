@@ -1797,6 +1797,7 @@ test("real webview: the contents button at the far left lists the headings and s
     assert.equal(closed.label, "Show the table of contents");
     assert.equal(closed.open, false);
     assert.equal(closed.visible, false, "a closed panel takes no room on the page");
+    assert.equal(closed.heading, "Start", "the bar shows the heading of the text in view");
 
     const opened = await run("contentsOpen");
     assert.equal(opened.open, true);
@@ -1813,9 +1814,11 @@ test("real webview: the contents button at the far left lists the headings and s
     assert.match(opened.activeClass, /rme-toc-filter/, "the focus is in the filter");
     assert.ok(opened.top >= 0 && opened.top < 80, `the panel hangs under the bar: ${opened.top}`);
     assert.ok(opened.left >= 0 && opened.right <= opened.width, "the panel fits the width of the page");
+    assert.deepEqual(opened.current, ["Start"], "the heading in view is marked in the list");
 
     const jumped = await run("contentsClick", { index: 6 });
     assert.equal(jumped.open, false, "the panel closes after a jump");
+    assert.equal(jumped.heading, "Section 6", "the bar shows the heading that the page jumped to");
     assert.ok(jumped.scrolled > jumped.before, `the page scrolled down: ${jumped.before} to ${jumped.scrolled}`);
     assert.ok(
       jumped.headingTop !== null && jumped.headingTop < 120,

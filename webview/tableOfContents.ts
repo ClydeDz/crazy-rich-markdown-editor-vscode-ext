@@ -15,6 +15,11 @@ export interface TocHeading {
 export const UNTITLED_HEADING = 'Untitled heading';
 
 const HEADING_SELECTOR = 'h1, h2, h3, h4, h5, h6';
+/**
+ * The line that decides which heading is in view sits this far under the bar. A jump puts the heading under the bar
+ * with the space of `scroll-padding-top` and its own top margin, and that heading must count as the one in view.
+ */
+const UNDER_BAR = 56;
 let nextId = 0;
 
 /** The headings of the document, in order. A heading inside a quote or a list counts too. */
@@ -93,6 +98,10 @@ export function createTableOfContents(options: TableOfContentsOptions): TableOfC
   buttonLabel.textContent = 'Contents';
   button.append(buttonLabel);
 
+  // The heading of the text that is under the bar. It stays empty in a document without headings.
+  const headingLabel = document.createElement('span');
+  headingLabel.className = 'rme-stats-heading';
+
   const panel = document.createElement('div');
   panel.className = 'rme-toc';
   panel.id = panelId;
@@ -121,11 +130,18 @@ export function createTableOfContents(options: TableOfContentsOptions): TableOfC
   empty.hidden = true;
 
   panel.append(filterRow, list, empty);
+  bar.prepend(headingLabel);
   bar.prepend(button);
   document.body.append(panel);
 
   let headings: TocHeading[] = [];
+  let elements: (HTMLElement | undefined)[] = [];
+  /** The index of the heading of the text at the top of the page, or -1 above the first heading. */
+  let active = -1;
   let signature = '';
+  /** The signature of the list that the panel shows. A closed panel waits for its next open. */
+  let renderedSignature = '';
+  let frame = 0;
 
   const visibleItems = (): HTMLButtonElement[] =>
     [...list.querySelectorAll<HTMLButtonElement>('.rme-toc-item')].filter(
@@ -154,6 +170,46 @@ export function createTableOfContents(options: TableOfContentsOptions): TableOfC
     close();
   }
 
+  /** Mark the heading that contains the text under the bar, in the bar and in the open panel. */
+  function applyActive(): void {
+    const text = active >= 0 ? headings[active].text : '';
+    if (headingLabel.textContent !== text) {
+      headingLabel.textContent = text;
+      headingLabel.title = text;
+    }
+    if (panel.hidden) {
+      return;
+    }
+    for (const [index, item] of [...list.querySelectorAll<HTMLButtonElement>('.rme-toc-item')].entries()) {
+      if (index === active) {
+        item.setAttribute('aria-current', 'location');
+      } else {
+        item.removeAttribute('aria-current');
+      }
+    }
+  }
+
+  /** Find the heading of the text at the top of the page. The headings are in document order. */
+  function measure(): void {
+    const limit = bar.getBoundingClientRect().bottom + UNDER_BAR;
+    let found = -1;
+    for (let index = 0; index < headings.length; index += 1) {
+      const element = elements[index];
+      if (!element) {
+        continue;
+      }
+      if (element.getBoundingClientRect().top > limit) {
+        break;
+      }
+      found = index;
+    }
+    // At the top of a page the first heading is still below the bar. It is the heading of the text in view.
+    if (found === -1 && elements[0] && elements[0].getBoundingClientRect().top < window.innerHeight) {
+      found = 0;
+    }
+    active = found;
+  }
+
   function render(): void {
     const entries = headings.map((heading) => {
       const entry = document.createElement('li');
@@ -172,7 +228,9 @@ export function createTableOfContents(options: TableOfContentsOptions): TableOfC
       return entry;
     });
     list.replaceChildren(...entries);
+    renderedSignature = signature;
     applyFilter();
+    applyActive();
   }
 
   function refresh(): void {
@@ -183,7 +241,40 @@ export function createTableOfContents(options: TableOfContentsOptions): TableOfC
     }
     signature = key;
     headings = next;
-    render();
+    elements = headings.map((heading) => headingElement(editor, heading.pos));
+    measure();
+    // A closed panel shows no list. The bar label moves, and the list follows at the next open.
+    if (panel.hidden) {
+      applyActive();
+    } else {
+      render();
+    }
+  }
+
+  /** The scroll event runs many times; one frame of work is enough to move the marks. */
+  function onScroll(): void {
+    if (frame !== 0) {
+      return;
+    }
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      measure();
+      applyActive();
+    });
+  }
+
+  /** Put the heading of the text in view at the top of the list, where the user looks first. */
+  function revealActive(): void {
+    const item = list.querySelector<HTMLElement>('.rme-toc-item[aria-current]');
+    if (!item) {
+      return;
+    }
+    const top = item.offsetTop - list.offsetTop;
+    if (top < list.scrollTop) {
+      list.scrollTop = top;
+    } else if (top + item.offsetHeight > list.scrollTop + list.clientHeight) {
+      list.scrollTop = top + item.offsetHeight - list.clientHeight;
+    }
   }
 
   /** Put the panel below the button. A narrow page keeps it inside the window. */
@@ -209,13 +300,24 @@ export function createTableOfContents(options: TableOfContentsOptions): TableOfC
     }
     filter.value = '';
     refresh();
-    applyFilter();
+    if (renderedSignature !== signature) {
+      render();
+    }
     panel.hidden = false;
     button.setAttribute('aria-expanded', 'true');
+    syncActive();
+    applyFilter();
     position();
+    revealActive();
     document.addEventListener('mousedown', onOutside, true);
     window.addEventListener('resize', position);
     filter.focus();
+  }
+
+  /** Read the page again when the panel opens, because the text may have moved since the last scroll. */
+  function syncActive(): void {
+    measure();
+    applyActive();
   }
 
   function close(): void {
@@ -262,13 +364,14 @@ export function createTableOfContents(options: TableOfContentsOptions): TableOfC
     next?.focus();
   });
 
-  const onTransaction = (): void => {
-    // A closed panel reads the headings when it opens, so there is no work for each key press.
-    if (!panel.hidden) {
-      refresh();
-    }
+  const onUpdate = (): void => {
+    // The bar shows the heading too, so a closed panel still reads the headings after an edit.
+    refresh();
+    syncActive();
   };
-  editor.on('transaction', onTransaction);
+  editor.on('update', onUpdate);
+  window.addEventListener('scroll', onScroll, { passive: true });
+  refresh();
 
   return {
     button,
@@ -279,8 +382,11 @@ export function createTableOfContents(options: TableOfContentsOptions): TableOfC
     refresh,
     destroy() {
       close();
-      editor.off('transaction', onTransaction);
+      cancelAnimationFrame(frame);
+      editor.off('update', onUpdate);
+      window.removeEventListener('scroll', onScroll);
       button.remove();
+      headingLabel.remove();
       panel.remove();
     },
   };

@@ -63,12 +63,20 @@ export function openLanguagePicker(options: LanguagePickerOptions): void {
         result.push({ value: option.id, label: option.label, hint: option.id });
       }
     }
-    const exact = LANGUAGE_OPTIONS.some(
+    const exact = LANGUAGE_OPTIONS.find(
       (option) => option.id === q || option.label.toLowerCase() === q || option.aliases?.includes(q),
     );
     if (q && !exact) {
       const typed = query.trim();
       result.push({ value: typed, label: `Use “${typed}”`, hint: 'custom' });
+    }
+    // The name of a language beats a longer alias that holds it: a search for `rust` must not put Python first,
+    // and Enter must pick the row that the user typed.
+    if (exact) {
+      const at = result.findIndex((item) => item.value === exact.id);
+      if (at > 0) {
+        result.unshift(...result.splice(at, 1));
+      }
     }
     return result;
   };

@@ -180,6 +180,14 @@ export const RichCodeBlock = CodeBlockLowlight.extend({
       preview.className = 'rme-code-preview';
       preview.contentEditable = 'false';
       preview.hidden = true;
+
+      // A small name under the rule, so the picture below the code is not a surprise.
+      const previewLabel = document.createElement('div');
+      previewLabel.className = 'rme-code-preview-label';
+      previewLabel.textContent = 'Generated output';
+      const previewBody = document.createElement('div');
+      previewBody.className = 'rme-code-preview-body';
+      preview.append(previewLabel, previewBody);
       dom.append(header, pre, preview);
 
       let drawToken = 0;
@@ -189,7 +197,7 @@ export const RichCodeBlock = CodeBlockLowlight.extend({
         const language = languageName(current.attrs.language).toLowerCase();
         if (!isDrawable(language)) {
           preview.hidden = true;
-          preview.replaceChildren();
+          previewBody.replaceChildren();
           drawnKey = '';
           return;
         }
@@ -202,7 +210,7 @@ export const RichCodeBlock = CodeBlockLowlight.extend({
         window.clearTimeout(drawTimer);
         const token = ++drawToken;
         drawTimer = window.setTimeout(() => {
-          void drawInto(preview, language, current.textContent, () => token === drawToken);
+          void drawInto(previewBody, language, current.textContent, () => token === drawToken);
         }, 250);
       };
 

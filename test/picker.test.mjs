@@ -135,8 +135,14 @@ test('typing filters the list by name, id and alias, and puts the selection on t
   assert.equal(picker.rows().indexOf(document.querySelector('.is-selected')), 0, 'the selection goes back to the top');
   picker.type('yml');
   assert.deepEqual(picker.labels(), ['YAML'], 'an alias finds the language, and an exact alias adds no custom row');
-  picker.type('  PYTHON  ');
-  assert.deepEqual(picker.labels(), ['Python'], 'spaces and capitals do not matter');
+  picker.type('  TSX  ');
+  assert.deepEqual(picker.labels(), ['TSX'], 'spaces and capitals do not matter');
+  picker.type('rust');
+  assert.deepEqual(
+    picker.labels().slice(0, 2),
+    ['Rust', 'Python'],
+    'a language that matches the whole name comes before one that holds the word in an alias',
+  );
   picker.type('');
   assert.equal(picker.rows().length, LANGUAGE_OPTIONS.length + 1, 'an empty field shows everything again');
   picker.clean();
@@ -144,12 +150,17 @@ test('typing filters the list by name, id and alias, and puts the selection on t
 
 test('a name that is not in the list gets a row of its own, with the name as the user typed it', () => {
   const picker = open('');
-  picker.type('  Terraform  ');
-  assert.deepEqual(picker.labels(), ['Use “Terraform”']);
+  picker.type('  Blub  ');
+  assert.deepEqual(picker.labels(), ['Use “Blub”']);
   assert.equal(picker.rows()[0].querySelector('.rme-picker-hint').textContent, 'custom');
   picker.key('Enter');
-  assert.deepEqual(picker.selected, ['Terraform']);
+  assert.deepEqual(picker.selected, ['Blub']);
   picker.clean();
+
+  const terraform = open('');
+  terraform.type('  Terraform  ');
+  assert.deepEqual(terraform.labels(), ['HCL'], 'GitHub reads terraform as HCL, so the list has the language');
+  terraform.clean();
 
   const partial = open('');
   partial.type('type');

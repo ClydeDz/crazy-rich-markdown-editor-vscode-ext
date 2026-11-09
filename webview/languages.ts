@@ -1,14 +1,6 @@
-import { common, createLowlight } from 'lowlight';
-import dockerfile from 'highlight.js/lib/languages/dockerfile';
-import nginx from 'highlight.js/lib/languages/nginx';
-import powershell from 'highlight.js/lib/languages/powershell';
-import elixir from 'highlight.js/lib/languages/elixir';
-import haskell from 'highlight.js/lib/languages/haskell';
-import scala from 'highlight.js/lib/languages/scala';
-import dart from 'highlight.js/lib/languages/dart';
-import protobuf from 'highlight.js/lib/languages/protobuf';
-import latex from 'highlight.js/lib/languages/latex';
-import http from 'highlight.js/lib/languages/http';
+import { createLowlight } from 'lowlight';
+import { HIGHLIGHT_GRAMMARS } from './highlightGrammars';
+import { LINGUIST_LANGUAGES } from './languageCatalog';
 
 export interface LanguageOption {
   /** The name that the editor writes after the opening code fence. */
@@ -19,63 +11,70 @@ export interface LanguageOption {
   aliases?: string[];
 }
 
-/** The languages in the picker. Any other name can still be typed in. */
-export const LANGUAGE_OPTIONS: LanguageOption[] = [
-  { id: 'bash', label: 'Bash', aliases: ['sh', 'zsh'] },
-  { id: 'shell', label: 'Shell session', aliases: ['console', 'shellsession'] },
-  { id: 'c', label: 'C', aliases: ['h'] },
-  { id: 'cpp', label: 'C++', aliases: ['c++', 'cc', 'hpp'] },
-  { id: 'csharp', label: 'C#', aliases: ['cs', 'c#'] },
-  { id: 'css', label: 'CSS' },
-  { id: 'dart', label: 'Dart' },
-  { id: 'diff', label: 'Diff', aliases: ['patch'] },
-  { id: 'dockerfile', label: 'Dockerfile', aliases: ['docker'] },
-  { id: 'elixir', label: 'Elixir', aliases: ['ex'] },
-  { id: 'go', label: 'Go', aliases: ['golang'] },
-  { id: 'graphql', label: 'GraphQL', aliases: ['gql'] },
-  { id: 'haskell', label: 'Haskell', aliases: ['hs'] },
-  { id: 'html', label: 'HTML', aliases: ['xhtml'] },
-  { id: 'http', label: 'HTTP' },
-  { id: 'ini', label: 'INI', aliases: ['toml'] },
-  { id: 'java', label: 'Java' },
-  { id: 'javascript', label: 'JavaScript', aliases: ['js', 'jsx', 'mjs', 'cjs'] },
-  { id: 'json', label: 'JSON', aliases: ['jsonc', 'json5'] },
-  { id: 'kotlin', label: 'Kotlin', aliases: ['kt'] },
-  { id: 'latex', label: 'LaTeX', aliases: ['tex'] },
-  { id: 'lua', label: 'Lua' },
-  { id: 'makefile', label: 'Makefile', aliases: ['make'] },
-  { id: 'markdown', label: 'Markdown', aliases: ['md'] },
+/** Languages that this editor adds to the languages of GitHub. */
+const EXTRA_OPTIONS: LanguageOption[] = [
+  // GitHub colors a `jsx` fence with its JavaScript grammar, and the picker says JSX like it says TSX.
+  { id: 'jsx', label: 'JSX' },
+  // Math is a picture in this editor, not a language of GitHub.
   { id: 'math', label: 'Math (TeX)' },
-  { id: 'mermaid', label: 'Mermaid' },
-  { id: 'nginx', label: 'Nginx' },
-  { id: 'objectivec', label: 'Objective-C', aliases: ['objc'] },
-  { id: 'perl', label: 'Perl', aliases: ['pl'] },
-  { id: 'php', label: 'PHP' },
-  { id: 'powershell', label: 'PowerShell', aliases: ['ps1', 'pwsh'] },
-  { id: 'protobuf', label: 'Protocol Buffers', aliases: ['proto'] },
-  { id: 'python', label: 'Python', aliases: ['py'] },
-  { id: 'r', label: 'R' },
-  { id: 'ruby', label: 'Ruby', aliases: ['rb'] },
-  { id: 'rust', label: 'Rust', aliases: ['rs'] },
-  { id: 'scala', label: 'Scala' },
-  { id: 'scss', label: 'SCSS' },
-  { id: 'sql', label: 'SQL' },
-  { id: 'swift', label: 'Swift' },
-  { id: 'typescript', label: 'TypeScript', aliases: ['ts', 'tsx', 'mts', 'cts'] },
-  { id: 'xml', label: 'XML', aliases: ['svg', 'vue'] },
-  { id: 'yaml', label: 'YAML', aliases: ['yml'] },
 ];
+
+/**
+ * Words that people write after a fence but that are not an alias in linguist, mostly file extensions.
+ * They keep the label and the colors that an older version of the picker gave them.
+ */
+const EXTRA_ALIASES: Record<string, string[]> = {
+  'c#': ['cs'],
+  'c++': ['cc', 'hpp'],
+  c: ['h'],
+  diff: ['patch'],
+  dockerfile: ['docker'],
+  elixir: ['ex', 'exs'],
+  go: ['golang'],
+  haskell: ['hs'],
+  html: ['xhtml'],
+  javascript: ['mjs', 'cjs'],
+  kotlin: ['kt', 'kts'],
+  makefile: ['make'],
+  markdown: ['md'],
+  perl: ['pl'],
+  powershell: ['ps1', 'pwsh'],
+  python: ['py'],
+  ruby: ['rb'],
+  rust: ['rs'],
+  shell: ['console', 'shellsession'],
+  typescript: ['mts', 'cts'],
+  yaml: ['yml'],
+};
+
+/** The languages in the picker, in the order that it shows them. Any other name can still be typed in. */
+export const LANGUAGE_OPTIONS: LanguageOption[] = [
+  ...LINGUIST_LANGUAGES.map(([label, id, ...aliases]) => ({
+    id,
+    label,
+    aliases: [...new Set([...aliases, ...(EXTRA_ALIASES[id] ?? [])])],
+  })),
+  ...EXTRA_OPTIONS,
+].sort((a, b) => (a.label.toLowerCase() < b.label.toLowerCase() ? -1 : 1));
 
 /** The language is the first word of the text after the opening fence. */
 export function languageName(info: string | null | undefined): string {
   return (info ?? '').trim().split(/\s+/)[0] ?? '';
 }
 
+/** The option for a name, a fence word or an alias. An exact id wins over an alias of another language. */
+function optionFor(name: string): LanguageOption | undefined {
+  const lower = name.toLowerCase();
+  return (
+    LANGUAGE_OPTIONS.find((option) => option.id.toLowerCase() === lower) ??
+    LANGUAGE_OPTIONS.find((option) => option.aliases?.some((alias) => alias.toLowerCase() === lower))
+  );
+}
+
 /** The id of the language in the picker list. An alias such as `ts` gives `typescript`. */
 export function canonicalLanguage(info: string | null | undefined): string {
-  const name = languageName(info).toLowerCase();
-  const option = LANGUAGE_OPTIONS.find((item) => item.id === name || item.aliases?.includes(name));
-  return option ? option.id : name;
+  const name = languageName(info);
+  return optionFor(name)?.id ?? name.toLowerCase();
 }
 
 /** The picker label for a language name. Unknown names show as they are written. */
@@ -84,30 +83,34 @@ export function languageLabel(info: string | null | undefined): string {
   if (!name) {
     return 'Plain text';
   }
-  const lower = name.toLowerCase();
-  const option = LANGUAGE_OPTIONS.find((item) => item.id === lower || item.aliases?.includes(lower));
-  return option ? option.label : name;
+  return optionFor(name)?.label ?? name;
 }
 
-const lowlight = createLowlight(common);
-lowlight.register({ dockerfile, nginx, powershell, elixir, haskell, scala, dart, protobuf, latex, http });
-lowlight.registerAlias({
-  xml: ['vue', 'svelte'],
-  json: ['jsonc', 'json5'],
-  ini: ['toml'],
-  dockerfile: ['docker'],
-  powershell: ['pwsh'],
-  bash: ['zsh'],
-  javascript: ['jsx'],
-});
+/** The name of the grammar for a word after a fence, when highlight.js gives it another name. */
+const GRAMMAR_OF: Record<string, string> = {
+  'c#': 'csharp',
+  'f#': 'fsharp',
+  'objective-c': 'objectivec',
+  shell: 'bash',
+  // These two are markup, and highlight.js has no grammar of its own for them.
+  svelte: 'xml',
+  vue: 'xml',
+};
+
+const lowlight = createLowlight(HIGHLIGHT_GRAMMARS);
+
+function grammarName(language: string): string {
+  const name = languageName(language).toLowerCase();
+  return GRAMMAR_OF[name] ?? name;
+}
 
 /**
  * A highlighter for the code block. It colors only the languages that the
  * block names. A block without a language stays plain, so the editor never guesses.
  */
 export const highlighter = {
-  highlight: (language: string, value: string) => lowlight.highlight(languageName(language).toLowerCase(), value),
+  highlight: (language: string, value: string) => lowlight.highlight(grammarName(language), value),
   highlightAuto: (value: string) => ({ type: 'root' as const, children: [{ type: 'text' as const, value }] }),
   listLanguages: () => lowlight.listLanguages(),
-  registered: (language: string) => lowlight.registered(languageName(language).toLowerCase()),
+  registered: (language: string) => lowlight.registered(grammarName(language)),
 };
