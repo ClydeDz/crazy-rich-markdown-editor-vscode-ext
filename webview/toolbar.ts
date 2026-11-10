@@ -47,6 +47,14 @@ const formatActions: ToolbarAction[][] = [
       run: (e) => e.chain().focus().toggleUnderline().run(),
     },
     {
+      id: 'highlight',
+      title: 'Highlight',
+      shortcut: FORMAT_KEYS.highlight,
+      icon: icons.highlight,
+      isActive: (e) => e.isActive('highlight'),
+      run: (e) => e.chain().focus().toggleHighlight().run(),
+    },
+    {
       id: 'strike',
       title: 'Strikethrough',
       shortcut: FORMAT_KEYS.strike,

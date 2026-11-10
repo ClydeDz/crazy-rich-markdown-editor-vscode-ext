@@ -500,6 +500,7 @@
           'bold',
           'italic',
           'underline',
+          'highlight',
           'strike',
           'code',
           'superscript',

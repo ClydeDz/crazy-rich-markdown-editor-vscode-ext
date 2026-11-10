@@ -19,6 +19,8 @@ export const FORMAT_KEYS = {
   bold: 'Mod-b',
   italic: 'Mod-i',
   underline: 'Mod-u',
+  // Cmd+Alt+H hides the other apps on macOS. On Windows and Linux, Ctrl+Alt+Shift+H does not reach the editor.
+  highlight: typeof navigator !== 'undefined' && /Mac/.test(navigator.platform) ? 'Mod-Alt-Shift-h' : 'Mod-Alt-h',
   strike: 'Mod-Alt-x',
   code: 'Mod-e',
   link: 'Mod-k',
@@ -53,6 +55,12 @@ export interface ShortcutGroup {
 
 export const REPLACE_KEY = typeof navigator !== 'undefined' && /Mac/.test(navigator.platform) ? 'Mod-Alt-f' : 'Mod-h';
 
+/**
+ * The footnote key. It works anywhere in a line, not only in the slash menu at the start of a line.
+ * `Mod-Alt-N` has no command in VS Code that runs while a webview has the focus.
+ */
+export const FOOTNOTE_KEY = 'Mod-Alt-n';
+
 const format = (label: string, key: string, note?: string): ShortcutItem => ({ label, keys: [key], note });
 
 /** The shortcuts of the toolbar buttons. The label of each line is the title of its button. */
@@ -60,6 +68,7 @@ const TEXT: ShortcutItem[] = [
   format('Bold', FORMAT_KEYS.bold),
   format('Italic', FORMAT_KEYS.italic),
   format('Underline', FORMAT_KEYS.underline),
+  format('Highlight', FORMAT_KEYS.highlight),
   format('Strikethrough', FORMAT_KEYS.strike),
   format('Inline code', FORMAT_KEYS.code),
   format('Link', FORMAT_KEYS.link, 'Select text first'),
@@ -95,6 +104,7 @@ const EDITING: ShortcutItem[] = [
   { label: 'Type a tab in a code block', keys: ['Tab'], note: 'With several lines selected, it indents each line' },
   { label: 'Take a tab out of a code block', keys: ['Shift-Tab'] },
   { label: 'Take the text out of an alert', keys: ['Backspace'], note: 'At the start of the alert' },
+  { label: 'Insert footnote', keys: [FOOTNOTE_KEY], note: 'Works in the middle of a line' },
   { label: 'Save the file', keys: ['Mod-s'] },
 ];
 

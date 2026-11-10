@@ -41,7 +41,7 @@ To hide the whole bar, set `crazyRichMarkdown.showInfoBar` to `false`. The chang
 Click **Shortcuts** in the bar to see every keyboard shortcut of the editor. The window shows the keys that fit your system: `⌘` on macOS, and `Ctrl` on Windows and Linux. The groups are:
 
 - Text, Headings, Lists and Blocks: the shortcuts of the floating toolbar. One table in `webview/shortcuts.ts` gives the keys to the toolbar buttons, to the editor, and to this window, so the three always agree.
-- Editing: find and replace, undo and redo, a new line in the same paragraph, `Tab` in lists and tables, `Backspace` at the start of an alert, and save.
+- Editing: find and replace, undo and redo, a new line in the same paragraph, `Tab` in lists and tables, `Backspace` at the start of an alert, the footnote key, and save.
 - Menus: the keys of the block menu (`/`) and the emoji menu (`:`).
 - Links: `Cmd` or `Ctrl` plus click opens a link, or goes to the note of a footnote.
 
@@ -56,7 +56,7 @@ Find and replace covers editable rich-text content, including code blocks. It do
 The editor lives inside VS Code, so a key can mean two things. The rules are:
 
 1. A key that other rich text editors use stays, when VS Code has no command on that key that can run while a webview has the focus.
-2. VS Code uses some keys for commands of the whole window. The editor does not take those. It uses the same letter with the `Alt` key: Strikethrough is `Cmd+Alt+X` (not `Cmd+Shift+S`, which is Save As), Quote is `Cmd+Alt+Q` (not `Cmd+Shift+B`, which runs the build task), and Subscript is `Cmd+Alt+,` (not `Cmd+,`, which opens Settings). Code block is `Cmd+Alt+E`, the block form of Inline code (`Cmd+E`). Tiptap's own key for it, `Cmd+Alt+C`, is Copy Path of Active File in VS Code.
+2. VS Code uses some keys for commands of the whole window. The editor does not take those. It uses the same letter with the `Alt` key: Strikethrough is `Cmd+Alt+X` (not `Cmd+Shift+S`, which is Save As), Quote is `Cmd+Alt+Q` (not `Cmd+Shift+B`, which runs the build task), and Subscript is `Cmd+Alt+,` (not `Cmd+,`, which opens Settings). Code block is `Cmd+Alt+E`, the block form of Inline code (`Cmd+E`). Tiptap's own key for it, `Cmd+Alt+C`, is Copy Path of Active File in VS Code. Highlight is `Cmd+Alt+Shift+H` on macOS, where `Cmd+Alt+H` hides the other apps, and `Ctrl+Alt+H` on Windows and Linux, where Chrome does not give `Ctrl+Alt+Shift+H` to the page. The footnote key is `Cmd+Alt+N` (`Ctrl+Alt+N` on Windows and Linux).
 3. Bold, Italic, Underline, Inline code, Link, Undo and Redo keep the usual key, although VS Code has a command on it (for example `Cmd+B` hides the side bar). The editor handles these keys only while the text has the focus. Everywhere else they work as before.
 4. The editor handles no key that the window does not list, except the keys that move or change the text at the cursor (Enter, Escape, Backspace, Delete, the arrows, select all). Tiptap binds more keys by itself, for example `Cmd+Alt+4` for a heading of level 4 and `Cmd+Shift+U`. The editor switches these off, so VS Code gets them.
 
@@ -109,6 +109,7 @@ Run `yarn capture:menu` after a change to see the menu that VS Code makes.
 | **B**       | Bold                         | `Cmd+B` / `Ctrl+B`                  |
 | _I_         | Italic                       | `Cmd+I` / `Ctrl+I`                  |
 | U           | Underline (`<ins>`)          | `Cmd+U` / `Ctrl+U`                  |
+| Highlight   | Highlight (`<mark>`)         | `Cmd+Option+Shift+H` / `Ctrl+Alt+H` |
 | ~~S~~       | Strikethrough                | `Cmd+Option+X` / `Ctrl+Alt+X`       |
 | `<>`        | Inline code                  | `Cmd+E` / `Ctrl+E`                  |
 | Link        | Add, change or remove a link | `Cmd+K` / `Ctrl+K`                  |
@@ -146,7 +147,7 @@ The `...` button opens a menu:
 - **Diagram**: the selected lines become the text of one `mermaid` code block, and the diagram shows under it.
 - **Clear formatting**.
 
-Use **Math block** and **Diagram** when the TeX or the diagram text is already in the file as plain lines. The menu has only these two blocks of the slash menu. The others (table, footnote, divider, image or video) work only from the slash menu.
+Use **Math block** and **Diagram** when the TeX or the diagram text is already in the file as plain lines. The menu has only these two blocks of the slash menu. The others (table, footnote, divider, image or video) work only from the slash menu, and a footnote also has its own key.
 
 ### Alerts
 
@@ -247,7 +248,7 @@ The mermaid library is 5 MB, so the editor loads it only when a page has a diagr
 
 Write `[^1]` in the text and `[^1]: The note.` anywhere in the file. The editor shows the mark as a small number and the note as a numbered list at the place where it sits in the file. The numbers follow the order of the marks in the text, as on GitHub. A note without a mark shows a `?`.
 
-To add a footnote, choose **Footnote** in the slash menu. The editor puts a mark at the cursor, adds the note at the end of the file, and moves the cursor into the note. A note can have more than one paragraph and can hold lists. Indent the lines after the first by four spaces. Hold `Cmd` (macOS) or `Ctrl` and click a mark to scroll to its note.
+To add a footnote, choose **Footnote** in the slash menu, or press `Cmd+Option+N` (macOS) or `Ctrl+Alt+N` (Windows and Linux) anywhere in a line. The editor puts a mark at the cursor, adds the note at the end of the file, and moves the cursor into the note. A note can have more than one paragraph and can hold lists. Indent the lines after the first by four spaces. Hold `Cmd` (macOS) or `Ctrl` and click a mark to scroll to its note.
 
 ## Emoji
 

@@ -1,3 +1,4 @@
+import { Mark } from '@tiptap/core';
 import Subscript from '@tiptap/extension-subscript';
 import Superscript from '@tiptap/extension-superscript';
 import Underline from '@tiptap/extension-underline';
@@ -45,6 +46,35 @@ function markdownFor(name: string, tag: string): any {
     },
   };
 }
+
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    highlight: {
+      /** Turn the highlight mark on or off. The file keeps the text in `<mark>`. */
+      toggleHighlight: () => ReturnType;
+    };
+  }
+}
+
+/** Highlight. It is written as `<mark>text</mark>`, the form that GitHub shows with a yellow background. */
+export const HighlightMark = Mark.create({
+  name: 'highlight',
+  parseHTML() {
+    return [{ tag: 'mark' }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['mark', HTMLAttributes, 0];
+  },
+  addCommands() {
+    return {
+      toggleHighlight:
+        () =>
+        ({ commands }) =>
+          commands.toggleMark('highlight'),
+    };
+  },
+  ...markdownFor('highlight', 'mark'),
+});
 
 /** Underline. It is written as `<ins>text</ins>`, the form that GitHub shows as underlined text. */
 export const UnderlineMark = withoutKeys(Underline).extend({

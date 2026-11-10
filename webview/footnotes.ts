@@ -2,6 +2,7 @@ import { Extension, Node } from '@tiptap/core';
 import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import type { Node as ProseNode } from '@tiptap/pm/model';
+import { FOOTNOTE_KEY } from './shortcuts';
 
 const DEFINITION_START = /^\[\^([^\]\s]+)\]:[ \t]*/;
 
@@ -161,11 +162,21 @@ export const FootnoteDefinition = Node.create({
     return out.join('\n');
   },
 
+  addKeyboardShortcuts() {
+    return {
+      [FOOTNOTE_KEY]: () => this.editor.commands.insertFootnote(),
+    };
+  },
+
   addCommands() {
     return {
       insertFootnote:
         () =>
         ({ state, dispatch, tr }) => {
+          // A code block or another block that holds no inline text cannot take a mark.
+          if (!state.selection.$from.parent.inlineContent || state.selection.$from.parent.type.spec.code) {
+            return false;
+          }
           const ids = new Set<string>();
           state.doc.descendants((node) => {
             if (node.type.name === 'footnoteRef' || node.type.name === 'footnoteDefinition') {

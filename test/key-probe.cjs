@@ -15,7 +15,7 @@ const KEY_PUNCTUATION = ['.', ',', '/', ';', "'", '[', ']', '\\\\', '-', '=', '\
 const KEY_NAMED = ['Enter', 'Tab', 'Backspace', 'Delete', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown', 'Escape', ' '];
 const KEY_SHIFTED = { '\`': '~', 1: '!', 2: '@', 3: '#', 4: '\\u0024', 5: '%', 6: '^', 7: '&', 8: '*', 9: '(', 0: ')', '-': '_', '=': '+', '[': '{', ']': '}', '\\\\': '|', ';': ':', "'": '"', ',': '<', '.': '>', '/': '?' };
 const KEY_CODES = { Enter: 13, Tab: 9, Backspace: 8, Delete: 46, ArrowUp: 38, ArrowDown: 40, ArrowLeft: 37, ArrowRight: 39, Home: 36, End: 35, PageUp: 33, PageDown: 34, Escape: 27, ' ': 32, '.': 190, ',': 188, '/': 191, ';': 186, "'": 222, '[': 219, ']': 221, '\\\\': 220, '-': 189, '=': 187, '\`': 192 };
-const MODIFIER_SETS = [[], ['Mod'], ['Shift'], ['Alt'], ['Mod', 'Shift'], ['Mod', 'Alt'], ['Shift', 'Alt'], ['Mod', 'Shift', 'Alt']];
+const MODIFIER_SETS = [[], ['Mod'], ['Shift'], ['Alt'], ['Mod', 'Shift'], ['Mod', 'Alt'], ['Shift', 'Alt'], ['Mod', 'Alt', 'Shift']];
 
 /** 'Mod-Alt-,' becomes { mods: ['Mod', 'Alt'], base: ',' }. */
 function parseChord(chord) {
@@ -98,6 +98,7 @@ const FORMAT_OF = {
   Bold: 'bold',
   Italic: 'italic',
   Underline: 'underline',
+  Highlight: 'highlight',
   Strikethrough: 'strike',
   'Inline code': 'code',
   Superscript: 'superscript',

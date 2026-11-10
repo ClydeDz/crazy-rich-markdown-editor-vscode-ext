@@ -34,8 +34,17 @@ graph TD; A-->B;
 > [!NOTE]
 > Useful information that users should know, even when skimming content.
 
+> [!TIP]
+> Helpful advice for doing things better or more easily.
+
+> [!IMPORTANT]
+> Key information users need to know to achieve their goal.
+
 > [!WARNING]
 > Urgent info that needs immediate user attention to avoid problems.
+
+> [!CAUTION]
+> Advises about risks or negative outcomes of certain actions.
 
 Chemistry: H<sub>2</sub>O, math: E=mc<sup>2</sup>, and <ins>underlined text</ins>. Press <kbd>Ctrl</kbd> + <kbd>C</kbd>.
 

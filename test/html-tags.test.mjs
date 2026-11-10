@@ -18,7 +18,7 @@ const nodesNamed = (editor, name) => {
   return found;
 };
 
-// An element in a line of text. `<ins>`, `<sub>` and `<sup>` are marks, and other tests cover them.
+// An element in a line of text. `<ins>`, `<sub>`, `<sup>` and `<mark>` are marks, and other tests cover them.
 const INLINE = [
   ['a', '<a href="#top">top</a>'],
   ['abbr', '<abbr title="HyperText Markup Language">HTML</abbr>'],
@@ -32,7 +32,6 @@ const INLINE = [
   ['i', '<i>italic</i>'],
   ['img', '<img src="badge.svg" alt="Badge">'],
   ['kbd', '<kbd>Ctrl</kbd>'],
-  ['mark', '<mark>highlight</mark>'],
   ['q', '<q>quote</q>'],
   ['ruby', '<ruby>漢<rp>(</rp><rt>kan</rt><rp>)</rp></ruby>'],
   ['s', '<s>old</s>'],
@@ -61,6 +60,18 @@ test('every inline HTML element that GitHub allows is drawn, and the file keeps 
     editor.destroy();
   }
   assert.deepEqual(broken, [], 'these inline elements are not drawn, or the file does not keep them');
+});
+
+test('a mark is a highlight mark in the document, and the file keeps it', () => {
+  const markdown = 'Start <mark>highlight **bold**</mark> end';
+  const editor = makeEditor(createEditor, markdown);
+  const marks = new Set();
+  editor.state.doc.descendants((node) => node.marks.forEach((mark) => marks.add(mark.type.name)));
+  assert.deepEqual([...marks].sort(), ['bold', 'highlight']);
+  const drawn = [...editor.view.dom.querySelectorAll('mark')].map((mark) => mark.textContent).join('');
+  assert.equal(drawn, 'highlight bold');
+  assert.equal(getMarkdown(editor), markdown);
+  editor.destroy();
 });
 
 test('an HTML line break is a line break in the page, and the file keeps it', () => {
@@ -134,6 +145,14 @@ test('the demo page uses every HTML element that GitHub allows', async () => {
   const sample = await readFile(new URL('./harness/sample.md', import.meta.url), 'utf8');
   const missing = ALL_TAGS.filter((tag) => !new RegExp(`<${tag}(?=[\\s/>])`, 'i').test(sample));
   assert.deepEqual(missing, [], 'these elements are missing from the demo page');
+});
+
+test('the demo page uses every GitHub alert', async () => {
+  const sample = await readFile(new URL('./harness/sample.md', import.meta.url), 'utf8');
+  const missing = ['NOTE', 'TIP', 'IMPORTANT', 'WARNING', 'CAUTION'].filter(
+    (type) => !new RegExp(`^> \\[!${type}\\]`, 'm').test(sample),
+  );
+  assert.deepEqual(missing, [], 'these alerts are missing from the demo page');
 });
 
 test('a picture keeps its source, and every address points at the file', () => {

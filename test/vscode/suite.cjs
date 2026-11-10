@@ -2113,7 +2113,7 @@ test("real webview: each formatting shortcut works with each supported keyboard 
         }
       }
     }
-    assert.equal(checked, 15 * REAL_KEYBOARD_SHAPES.length, "fifteen formats for each supported keyboard layout");
+    assert.equal(checked, 16 * REAL_KEYBOARD_SHAPES.length, "sixteen formats for each supported keyboard layout");
   } finally {
     await restoreRealDocument();
   }

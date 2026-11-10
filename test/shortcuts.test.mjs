@@ -14,7 +14,7 @@ const { keyEventInit, parseChord, probeChords, EDITOR_STATES } = new Function(
   `${SOURCE}; return { keyEventInit, parseChord, probeChords, EDITOR_STATES };`,
 )();
 
-const { shortcutGroups, FORMAT_KEYS } = await loadModule('webview/shortcuts.ts', 'shortcuts');
+const { shortcutGroups, FORMAT_KEYS, FOOTNOTE_KEY } = await loadModule('webview/shortcuts.ts', 'shortcuts');
 const { toolbarShortcutGroups, LINK_SHORTCUT } = await loadModule('webview/toolbar.ts', 'toolbar');
 const { createEditor, getMarkdown, setMarkdown } = await loadModule('webview/editor.ts', 'editor');
 
@@ -57,6 +57,7 @@ function activeFormats(editor) {
     'bold',
     'italic',
     'underline',
+    'highlight',
     'strike',
     'code',
     'superscript',
@@ -137,7 +138,7 @@ test('shortcutGroups gives a copy, so a change to the result does not change the
   const second = shortcutGroups();
   assert.equal(second.length, 7);
   assert.deepEqual(second[0].items[0].keys, [FORMAT_KEYS.bold]);
-  assert.equal(second[0].items.length, 8);
+  assert.equal(second[0].items.length, 9);
 });
 
 test('FORMAT_KEYS and the list agree: each key of the table is on one line, and each formatting line has a key of the table', () => {
@@ -298,6 +299,21 @@ test('Backspace at the start of an alert takes the text out of the alert, and on
   assert.equal(press(inside, 'Backspace'), false, 'inside the text, Backspace is left to the editor');
   assert.equal(hasNode(inside, 'alert'), true);
   inside.destroy();
+});
+
+test('the footnote key adds a mark in the middle of a line, and a note at the end', () => {
+  assert.deepEqual(item('Editing', 'Insert footnote').keys, [FOOTNOTE_KEY]);
+  const editor = makeEditor(createEditor, 'One two three');
+  editor.commands.setTextSelection(8);
+  assert.equal(press(editor, FOOTNOTE_KEY), true);
+  assert.equal(getMarkdown(editor), 'One two[^1] three\n\n[^1]:');
+  assert.equal(editor.state.selection.$from.node(1).type.name, 'footnoteDefinition');
+  editor.destroy();
+
+  const code = makeEditor(createEditor, '```\ntext\n```');
+  code.commands.setTextSelection(2);
+  assert.equal(press(code, FOOTNOTE_KEY), false, 'a code block has no place for a mark');
+  code.destroy();
 });
 
 test('the other lines of the list name the keys that the menus, the links and the save use', () => {

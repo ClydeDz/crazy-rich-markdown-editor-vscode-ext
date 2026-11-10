@@ -14,7 +14,7 @@ import { RichCodeBlock } from './codeBlock';
 import { ColorSwatches } from './colorSwatches';
 import { Emoji, createEmojiMenu } from './emoji';
 import { FootnoteDefinition, FootnoteNumbers, FootnoteRef } from './footnotes';
-import { SubscriptMark, SuperscriptMark, UnderlineMark } from './htmlMarks';
+import { HighlightMark, SubscriptMark, SuperscriptMark, UnderlineMark } from './htmlMarks';
 import { patchEntities } from './entities';
 import { HtmlInline, patchInlineHtml } from './inlineHtml';
 import { SeparateBulletList, SeparateOrderedList, patchEmptyListItems } from './lists';
@@ -212,6 +212,7 @@ export function createEditor(options: CreateEditorOptions): Editor {
       }),
       Markdown,
       createPasteMarkdown(),
+      HighlightMark,
       UnderlineMark,
       SubscriptMark,
       SuperscriptMark,

@@ -88,6 +88,17 @@ function select(editor, text) {
   editor.commands.setTextSelection(found);
 }
 
+test('the Highlight button marks the selected text, and the file keeps it', () => {
+  const { editor, button } = setup('a word here');
+  select(editor, 'word');
+  button('highlight').click();
+  assert.equal(getMarkdown(editor), 'a <mark>word</mark> here');
+  assert.equal(button('highlight').classList.contains('is-active'), true, 'the button shows the state');
+  button('highlight').click();
+  assert.equal(getMarkdown(editor), 'a word here');
+  editor.destroy();
+});
+
 const keydown = (init) => new window.KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init });
 const mousedown = (target) => {
   const event = new window.MouseEvent('mousedown', { bubbles: true, cancelable: true });
