@@ -2618,6 +2618,8 @@ test("the rich command without a Markdown file shows a message", async () => {
   const messages = spy(vscode.window, "showInformationMessage");
   try {
     await vscode.commands.executeCommand("workbench.action.closeAllEditors");
+    // A key test can leave the Output panel focused, and the panel then counts as an active editor.
+    await vscode.commands.executeCommand("workbench.action.closePanel");
     await waitFor(() => vscode.window.activeTextEditor === undefined, "there is no active text editor");
     await vscode.commands.executeCommand("crazyRichMarkdown.openRich");
     assert.equal(messages.calls.length, 1);

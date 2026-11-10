@@ -35,7 +35,7 @@ const HIDDEN_TAGS = new Set([
 ]);
 
 /** Elements that show something even when they hold no text. Anything else needs text. */
-const SHOWING_TAGS = ['img', 'picture', 'video', 'audio', 'canvas', 'svg', 'hr', 'table'];
+const SHOWING_TAGS = ['img', 'picture', 'video', 'audio', 'canvas', 'svg', 'hr', 'table', 'br', 'wbr'];
 
 /** Attributes that hold an address. */
 const URL_ATTRIBUTES = new Set(['action', 'formaction', 'href', 'poster', 'src', 'srcset']);

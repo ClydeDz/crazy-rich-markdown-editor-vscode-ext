@@ -54,7 +54,8 @@ export const HtmlInline = Node.create<HtmlInlineOptions>({
       const preview = document.createElement('span');
       preview.className = 'rme-html-inline-preview';
       const show = (raw: string): void => {
-        const shown = fillHtmlPreview(preview, raw, { resolveSrc });
+        // A line break keeps the new line that follows it in the file, but the page must not draw it a second time.
+        const shown = fillHtmlPreview(preview, raw.endsWith('\n') ? raw.slice(0, -1) : raw, { resolveSrc });
         dom.replaceChildren(shown ? preview : document.createTextNode(raw));
         dom.classList.toggle('is-rendered', shown);
         dom.classList.toggle('is-comment', !shown && raw.startsWith('<!--'));
@@ -87,7 +88,7 @@ const LINE_BREAK = /^<br\s*\/?>$/i;
 /**
  * Change how the Markdown parser reads HTML inside a line.
  * The built-in parser changes HTML tags into formatting, and it drops tags that it does not know.
- * This change keeps every tag as it is, except `<br>`, which is a line break.
+ * This change keeps every tag as it is, including `<br>`, so that the file gets the text back as written.
  * Call this before the editor reads Markdown.
  */
 export function patchInlineHtml(editor: Editor): void {
@@ -95,22 +96,30 @@ export function patchInlineHtml(editor: Editor): void {
   if (!manager || typeof manager.parseHTMLToken !== 'function') {
     return;
   }
-  // A line break tag that ends a line is followed by a new line in the text. The new line must not make a second break.
+  // A line break tag that ends a line is followed by a new line in the text. The new line stays in the tag, so the
+  // page draws one break and the file gets the tag and its new line back as they were written.
   const readTokens = manager.parseInlineTokens.bind(manager);
-  manager.parseInlineTokens = (tokens: any[]) =>
-    readTokens(
-      tokens.map((token, index) => {
-        const before = tokens[index - 1];
-        return index > 0 &&
-          token.type === 'text' &&
-          typeof token.text === 'string' &&
-          token.text.startsWith('\n') &&
-          before.type === 'html' &&
-          LINE_BREAK.test(String(before.raw ?? '').trim())
-          ? { ...token, text: token.text.slice(1) }
-          : token;
-      }),
-    );
+  manager.parseInlineTokens = (tokens: any[]) => {
+    const next = tokens.map((token) => ({ ...token }));
+    next.forEach((token, index) => {
+      if (index === 0 || token.type !== 'text' || typeof token.text !== 'string') {
+        return;
+      }
+      const before = next[index - 1];
+      if (!token.text.startsWith('\n') || before.type !== 'html') {
+        return;
+      }
+      if (!LINE_BREAK.test(String(before.raw ?? '').trim())) {
+        return;
+      }
+      before.raw = `${String(before.raw ?? '')}\n`;
+      if (typeof before.text === 'string') {
+        before.text = `${before.text}\n`;
+      }
+      token.text = token.text.slice(1);
+    });
+    return readTokens(next);
+  };
 
   const original = manager.parseHTMLToken.bind(manager);
   manager.parseHTMLToken = (token: any) => {
@@ -118,7 +127,7 @@ export function patchInlineHtml(editor: Editor): void {
       return original(token);
     }
     const raw = String(token.raw ?? token.text ?? '');
-    if (!raw.trim() || LINE_BREAK.test(raw.trim())) {
+    if (!raw.trim()) {
       return original(token);
     }
     return { type: 'htmlInline', attrs: { raw } };

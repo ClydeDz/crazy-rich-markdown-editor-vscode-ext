@@ -241,11 +241,11 @@ test('typing in the text box of the block changes the colors and the file, and t
   editor.destroy();
 });
 
-test('HTML blocks keep their label and have no colors', () => {
+test('HTML blocks keep their own label and get the colors of HTML', () => {
   const editor = makeEditor(createEditor, '<details>\n<summary>x</summary>\n</details>\n');
   const dom = editor.view.dom.querySelector('.rme-raw');
-  assert.equal(dom.querySelector('.rme-raw-label').textContent, 'HTML');
-  assert.equal(dom.querySelector('.rme-raw-colors'), null);
+  assert.equal(dom.querySelector('.rme-raw-label').textContent, 'HTML output');
+  assert.ok(dom.querySelector('.rme-raw-colors .hljs-tag'), 'the HTML has colors');
   editor.destroy();
 });
 

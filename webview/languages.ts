@@ -92,7 +92,7 @@ const GRAMMAR_OF: Record<string, string> = {
   'f#': 'fsharp',
   'objective-c': 'objectivec',
   shell: 'bash',
-  // These two are markup, and highlight.js has no grammar of its own for them.
+  // These are markup, and highlight.js has no grammar of its own for them.
   svelte: 'xml',
   vue: 'xml',
 };

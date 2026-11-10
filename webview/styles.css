@@ -697,7 +697,8 @@ html.rme-has-line-numbers #app {
   outline: 2px solid var(--vscode-focusBorder);
   outline-offset: 1px;
 }
-.rme-raw-label {
+.rme-raw-label,
+.rme-raw-code-label {
   display: block;
   margin-bottom: 4px;
   color: var(--rme-muted);
@@ -706,6 +707,10 @@ html.rme-has-line-numbers #app {
   line-height: 1.2;
   text-transform: uppercase;
   user-select: none;
+}
+.rme-raw-code-label,
+.rme-raw-divider {
+  display: none;
 }
 .rme-raw-input {
   display: block;
@@ -738,7 +743,8 @@ html.rme-has-line-numbers #app {
 .rme-raw.has-preview.is-selected {
   padding: 6px 10px 8px;
   border-color: var(--rme-border);
-  background: var(--rme-code-bg);
+  /* The page copy sits on the page itself. Only the code gets the paper of a code block. */
+  background: none;
 }
 .rme-raw.has-preview .rme-raw-label,
 .rme-raw.has-preview .rme-raw-field {
@@ -749,16 +755,83 @@ html.rme-has-line-numbers #app {
 }
 .rme-raw.has-preview.is-selected .rme-raw-field {
   display: block;
+  margin-top: 4px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--rme-code-bg);
+}
+.rme-raw.has-preview.is-selected .rme-raw-divider {
+  display: block;
+  margin: 10px 0 6px;
+  border-top: 1px dotted var(--rme-border);
+}
+.rme-raw.has-preview.is-selected .rme-raw-code-label {
+  display: block;
+}
+.rme-raw.has-preview .rme-raw-label,
+.rme-raw.has-preview .rme-raw-code-label {
+  /* The labels of the page copy keep their words as written: "HTML output" and "HTML code". */
+  text-transform: none;
+  font-family: var(--vscode-font-family, system-ui, sans-serif);
+}
+/* A block whose page copy shows nothing, such as an HTML comment, stays one line until it is selected. */
+.rme-raw-hidden {
+  display: none;
+  color: var(--rme-muted);
+  font-size: 11px;
+  font-style: italic;
+  line-height: 1.5;
+  user-select: none;
+}
+.rme-raw.is-collapsed {
+  padding: 2px 8px;
+  background: none;
+}
+.rme-raw.is-collapsed .rme-raw-hidden {
+  display: block;
+}
+.rme-raw.is-collapsed > .rme-raw-label,
+.rme-raw.is-collapsed > .rme-raw-field {
+  display: none;
+}
+.rme-raw.is-collapsed.is-selected {
+  padding: 6px 10px 8px;
+  background: var(--rme-code-bg);
+}
+.rme-raw.is-collapsed.is-selected .rme-raw-hidden {
+  display: none;
+}
+.rme-raw.is-collapsed.is-selected > .rme-raw-label,
+.rme-raw.is-collapsed.is-selected > .rme-raw-field {
+  display: block;
 }
 .rme-raw-preview img,
 .rme-raw-preview video {
   max-width: 100%;
   height: auto;
 }
-.rme-raw.has-colors .rme-raw-label {
+/* A definition list looks the way GitHub draws one: the term has weight, and the definition is indented. */
+.rme-raw-preview dl {
+  margin: 0 0 1em;
+  padding: 0;
+}
+.rme-raw-preview dt {
+  margin-top: 1em;
+  font-weight: 600;
+  font-style: italic;
+}
+.rme-raw-preview dd {
+  margin: 0 0 1em;
+  padding: 0 16px;
+}
+.rme-raw.has-colors:not(.has-preview) .rme-raw-label {
   /* A component name keeps its case. */
   text-transform: none;
   font-family: var(--vscode-editor-font-family, monospace);
+}
+/* The colored copy of the code lines up with the text of the text box, inside the paper of the field. */
+.rme-raw.has-preview.is-selected .rme-raw-colors {
+  padding: 8px 10px;
 }
 .rme-raw-input.has-colors {
   position: relative;

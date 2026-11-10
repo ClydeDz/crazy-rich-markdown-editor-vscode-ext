@@ -1,4 +1,5 @@
 import { Node } from '@tiptap/core';
+import { NodeSelection, Selection } from '@tiptap/pm/state';
 import { highlightInto } from './highlightDom';
 import { fillHtmlPreview } from './htmlPreview';
 
@@ -13,6 +14,12 @@ export interface RawBlockOptions {
   placeholder?: string;
   /** A language of the code highlighter. The text of the block then has its colors. */
   language?: string;
+  /** Text above the page copy when the block is selected, for example `HTML output`. */
+  outputLabel?: string;
+  /** Text above the text box when the block is selected, for example `HTML code`. */
+  codeLabel?: string;
+  /** A short name for a block whose page copy shows nothing and that stays one line until it is selected. */
+  collapsedLabel?: (raw: string) => string | undefined;
   /** A tokenizer that finds the block in the Markdown. Without it, the node keeps a token that the Markdown parser makes. */
   tokenizer?: {
     name: string;
@@ -34,7 +41,18 @@ export interface RawBlockOptionsForEditor {
  * It keeps the original Markdown text and writes it back without a change.
  * The user can edit the text in a small text box.
  */
-export function createRawBlock({ name, tokenName, label, placeholder, language, tokenizer, render }: RawBlockOptions) {
+export function createRawBlock({
+  name,
+  tokenName,
+  label,
+  placeholder,
+  language,
+  outputLabel,
+  codeLabel,
+  collapsedLabel,
+  tokenizer,
+  render,
+}: RawBlockOptions) {
   const labelOf = (raw: string): string => (typeof label === 'function' ? label(raw) : label);
   return Node.create<RawBlockOptionsForEditor>({
     name,
@@ -99,6 +117,23 @@ export function createRawBlock({ name, tokenName, label, placeholder, language, 
 
         // The page shows the text itself. The text box opens when the block is selected, so it can be changed.
         const preview = render ? document.createElement('div') : undefined;
+
+        // Put the cursor outside the selected block, so that its text box closes and the page shows the block again.
+        const closeTextBox = (): void => {
+          const view = editor.view;
+          const { selection } = view.state;
+          if (!(selection instanceof NodeSelection)) {
+            return;
+          }
+          const { from, to } = selection;
+          // The text before the block, then the text after it. A block alone in the file has neither.
+          let next = Selection.near(view.state.doc.resolve(from), -1);
+          if (next instanceof NodeSelection) {
+            next = Selection.near(view.state.doc.resolve(to), 1);
+          }
+          view.dispatch(view.state.tr.setSelection(next));
+        };
+
         // The summary of a details element opens and closes it. The page does it, so that it works the same in every
         // page, and the click does not select the block and open its text box.
         const onPreviewClick = (event: Event): void => {
@@ -108,17 +143,27 @@ export function createRawBlock({ name, tokenName, label, placeholder, language, 
             event.preventDefault();
             owner.toggleAttribute('open', !owner.hasAttribute('open'));
           }
+          // The click belongs to the page, and it closes the text box of a selected block with one click.
+          closeTextBox();
         };
         if (preview) {
           preview.className = 'rme-raw-preview';
           preview.addEventListener('click', onPreviewClick);
         }
-        // A click on a summary belongs to the details element, not to the selection of the block.
-        const onSummary = (target: EventTarget | null): boolean =>
-          preview !== undefined &&
-          target instanceof Element &&
-          preview.contains(target) &&
-          target.closest('summary') !== null;
+        // A click on the HTML that the page draws belongs to the page: it selects text or toggles a details element.
+        // It must not select the block and open its text box.
+        const inPreview = (target: EventTarget | null): boolean =>
+          preview !== undefined && target instanceof Element && preview.contains(target);
+
+        // A block whose page copy shows nothing, such as an HTML comment, stays one line until it is selected.
+        const hiddenElement = document.createElement('span');
+        hiddenElement.className = 'rme-raw-hidden';
+
+        const divider = document.createElement('div');
+        divider.className = 'rme-raw-divider';
+
+        const codeLabelElement = document.createElement('span');
+        codeLabelElement.className = 'rme-raw-code-label';
 
         const field = document.createElement('div');
         field.className = 'rme-raw-field';
@@ -155,15 +200,15 @@ export function createRawBlock({ name, tokenName, label, placeholder, language, 
           if (area.value !== raw) {
             area.value = raw;
           }
-          labelElement.textContent = labelOf(raw);
           area.setAttribute('aria-label', labelOf(raw));
           if (colors && language) {
             highlightInto(colors, language, raw);
           }
+          let shown = false;
           if (preview) {
             // The copy in the page is made again, and the user should keep the details elements that they opened.
             const opened = [...preview.querySelectorAll('details')].map((element) => element.hasAttribute('open'));
-            const shown = fillHtmlPreview(preview, raw, { resolveSrc });
+            shown = fillHtmlPreview(preview, raw, { resolveSrc });
             [...preview.querySelectorAll('details')].forEach((element, index) => {
               // The first copy has no state of the user. The file then says which elements are open.
               if (index < opened.length && opened[index] !== element.hasAttribute('open')) {
@@ -173,6 +218,12 @@ export function createRawBlock({ name, tokenName, label, placeholder, language, 
             preview.hidden = !shown;
             dom.classList.toggle('has-preview', shown);
           }
+          // A comment shows nothing in the page. It stays one line, and the text box opens when it is selected.
+          const collapsed = !shown && collapsedLabel?.(raw) !== undefined;
+          labelElement.textContent = shown && outputLabel ? outputLabel : labelOf(raw);
+          codeLabelElement.textContent = codeLabel ?? labelOf(raw);
+          hiddenElement.textContent = collapsed ? (collapsedLabel?.(raw) ?? '') : '';
+          dom.classList.toggle('is-collapsed', collapsed);
           autosize();
         };
         show(String(node.attrs.raw ?? ''));
@@ -187,11 +238,11 @@ export function createRawBlock({ name, tokenName, label, placeholder, language, 
         });
 
         field.append(area);
-        dom.append(labelElement);
+        dom.append(labelElement, hiddenElement);
         if (preview) {
           dom.append(preview);
         }
-        dom.append(field);
+        dom.append(divider, codeLabelElement, field);
         // The block is not in the page yet. Measure it again each time its width changes.
         let lastWidth = 0;
         const observer =
@@ -207,7 +258,7 @@ export function createRawBlock({ name, tokenName, label, placeholder, language, 
 
         return {
           dom,
-          stopEvent: (event) => event.target === area || onSummary(event.target),
+          stopEvent: (event) => event.target === area || inPreview(event.target),
           ignoreMutation: () => true,
           update(updated) {
             if (updated.type !== current.type) {
@@ -235,15 +286,25 @@ export function createRawBlock({ name, tokenName, label, placeholder, language, 
 }
 
 /**
- * The whole `<details>` element at the start of `src`, with the elements inside it, or undefined when it has no end
- * tag. The Markdown parser ends an HTML block at a blank line, which would cut the element off from its content.
+ * Elements whose blank lines belong to the element: the page draws one element, and a cut at a blank line would draw
+ * it in pieces. A wrapper such as `<div>` stays out, because the Markdown after its blank lines is still text of the
+ * page.
  */
-function detailsElement(src: string): string | undefined {
-  if (!/^<details\b/i.test(src)) {
+const WHOLE_ELEMENTS = new Set(['details', 'dl', 'table']);
+
+/**
+ * The whole element at the start of `src`, with the elements inside it, or undefined when the tag is not one of
+ * `WHOLE_ELEMENTS` or has no end tag. The Markdown parser ends an HTML block at a blank line, which would cut the
+ * element off from its content.
+ */
+function wholeElement(src: string): string | undefined {
+  const start = /^ {0,3}<([a-z][\w-]*)\b/i.exec(src);
+  const tag = start?.[1]?.toLowerCase();
+  if (!tag || !WHOLE_ELEMENTS.has(tag)) {
     return undefined;
   }
   let depth = 0;
-  for (const found of src.matchAll(/<\/?details\b/gi)) {
+  for (const found of src.matchAll(new RegExp(`</?${tag}\\b`, 'gi'))) {
     if (found[0].startsWith('</')) {
       depth -= 1;
       if (depth === 0) {
@@ -258,19 +319,36 @@ function detailsElement(src: string): string | undefined {
   return undefined;
 }
 
+/**
+ * Block-level elements of the GFM spec that the Markdown parser does not know. Without this, the parser keeps the tag
+ * as inline HTML in a paragraph, and the lines after it become text of that paragraph.
+ */
+const UNKNOWN_BLOCK_TAGS = /^ {0,3}<\/?(?:source)(?=[\s/>]|$)/i;
+
+/** The lines of an HTML block of a block-level element. The GFM spec ends it at a blank line. */
+function linesUntilBlank(src: string): string {
+  const blank = /\n[ \t]*\n/.exec(src);
+  return (blank ? src.slice(0, blank.index) : src).replace(/\s+$/, '');
+}
+
 /** HTML blocks such as `<details>`, `<div>` and `<!-- comments -->`. */
 export const HtmlBlock = createRawBlock({
   name: 'htmlBlock',
   tokenName: 'html',
   label: 'HTML',
+  outputLabel: 'HTML output',
+  codeLabel: 'HTML code',
+  language: 'html',
   render: true,
+  // A comment shows nothing in the page, so it stays one line until the user opens it.
+  collapsedLabel: (raw) => (/^\s*<!--[\s\S]*-->\s*$/.test(raw) ? 'HTML comment' : undefined),
   tokenizer: {
-    name: 'detailsBlock',
+    name: 'htmlBlockStart',
     level: 'block',
     // The block starts a line, never in the middle of a paragraph.
     start: () => -1,
     tokenize: (src: string) => {
-      const raw = detailsElement(src);
+      const raw = wholeElement(src) ?? (UNKNOWN_BLOCK_TAGS.test(src) ? linesUntilBlank(src) : undefined);
       return raw ? { type: 'html', raw, text: raw } : undefined;
     },
   },

@@ -598,9 +598,12 @@ test('an escaped entity stays literal text', () => {
   editor.destroy();
 });
 
-test('a line break tag is still a line break', () => {
+test('a line break tag is a line break in the page, and the file keeps the tag', () => {
   const editor = makeEditor(createEditor, 'one<br>two<br/>three');
-  assert.equal(getMarkdown(editor), 'one  \ntwo  \nthree');
+  const chips = [...editor.view.dom.querySelectorAll('.rme-html-inline.is-rendered')];
+  assert.equal(chips.length, 2, 'two line breaks');
+  assert.equal(chips[0].querySelectorAll('br').length, 1, 'one break in the page');
+  assert.equal(getMarkdown(editor), 'one<br>two<br/>three', 'the file keeps the tags');
   editor.destroy();
 });
 
@@ -1145,13 +1148,15 @@ test('without the diagram library a mermaid block still shows its text and a mes
 
 test('a line break tag at the end of a line makes one break, not two', () => {
   const editor = makeEditor(createEditor, 'This example<br/>\nWill span two lines');
-  let breaks = 0;
-  editor.state.doc.descendants((node) => {
-    if (node.type.name === 'hardBreak') breaks++;
-  });
-  assert.equal(breaks, 1);
+  const chips = [...editor.view.dom.querySelectorAll('.rme-html-inline.is-rendered')];
+  assert.equal(chips.length, 1, 'one line break tag');
+  assert.equal(chips[0].querySelectorAll('br').length, 1, 'one break in the page');
   assert.equal(editor.state.doc.textContent, 'This exampleWill span two lines', 'no new line character in the text');
-  assert.equal(getMarkdown(editor), 'This example  \nWill span two lines');
+  assert.equal(
+    getMarkdown(editor),
+    'This example<br/>\nWill span two lines',
+    'the file keeps the tag and its new line',
+  );
   editor.destroy();
 });
 

@@ -2,6 +2,7 @@
 // the code block, images, and the settings of the editor extensions.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { loadModule, makeEditor } from './helpers.mjs';
 
 const { createEditor, getMarkdown } = await loadModule('webview/editor.ts', 'editor');
@@ -34,7 +35,7 @@ test('a raw block has a label and a text area with the text that the editor keep
   const editor = makeEditor(createEditor, '<details>\n<summary>More</summary>\n</details>\n\n[d]: https://example.com');
   const [html, definition] = [...dom(editor).querySelectorAll('.rme-raw')];
   assert.ok(html && definition, 'two raw blocks');
-  assert.equal(html.querySelector('.rme-raw-label').textContent, 'HTML');
+  assert.equal(html.querySelector('.rme-raw-label').textContent, 'HTML output');
   assert.equal(definition.querySelector('.rme-raw-label').textContent, 'Link definition');
   const area = html.querySelector('textarea.rme-raw-input');
   assert.equal(area.value, '<details>\n<summary>More</summary>\n</details>');
@@ -116,11 +117,213 @@ test('a details element without its end tag stays the HTML block of the Markdown
   editor.destroy();
 });
 
-test('an HTML comment block keeps its text box, because the page shows nothing for it', () => {
-  const editor = makeEditor(createEditor, '<!-- hidden -->');
+// The block-level elements of the GFM spec, section 4.6, start condition 6.
+const GFM_BLOCK_TAGS =
+  'address article aside base basefont blockquote body caption center col colgroup dd details dialog dir div dl dt fieldset figcaption figure footer form frame frameset h1 h2 h3 h4 h5 h6 head header hr html iframe legend li link main menu menuitem nav noframes ol optgroup option p param section source summary table tbody td tfoot th thead title tr track ul'.split(
+    ' ',
+  );
+
+test('every block-level element of the GFM spec starts one HTML block, and the file keeps it', () => {
+  const broken = [];
+  for (const tag of GFM_BLOCK_TAGS) {
+    const markdown = `<${tag}>text</${tag}>`;
+    const editor = makeEditor(createEditor, markdown);
+    const blocks = nodesNamed(editor, 'htmlBlock');
+    const out = getMarkdown(editor);
+    if (blocks.length !== 1 || blocks[0].node.attrs.raw !== markdown || out !== markdown) {
+      broken.push({ tag, blocks: blocks.length, out });
+    }
+    editor.destroy();
+  }
+  assert.deepEqual(broken, [], 'these elements do not start one block that the file gets back');
+});
+
+test('an HTML block that ends at its own end tag keeps blank lines, as the GFM spec says', () => {
+  const kinds = [
+    ['script', '<script>\nlet a = 1;\n\nlet b = 2;\n</script>'],
+    ['pre', '<pre>\nline one\n\nline two\n</pre>'],
+    ['style', '<style>\np { color: red; }\n\nb { color: blue; }\n</style>'],
+    ['comment', '<!-- one\n\ntwo -->'],
+    ['processing instruction', '<?php\necho 1;\n\necho 2;\n?>'],
+    ['declaration', '<!DOCTYPE html>'],
+    ['CDATA', '<![CDATA[\nx < y\n\nx > y\n]]>'],
+  ];
+  for (const [name, markdown] of kinds) {
+    const editor = makeEditor(createEditor, markdown);
+    const blocks = nodesNamed(editor, 'htmlBlock');
+    assert.equal(blocks.length, 1, `${name}: one block`);
+    assert.equal(blocks[0].node.attrs.raw, markdown, `${name}: the text of the block`);
+    assert.equal(getMarkdown(editor), markdown, `${name}: the file comes back as it was`);
+    editor.destroy();
+  }
+});
+
+test('an element block ends at a blank line, and its Markdown stays as written', () => {
+  const markdown = '<div>\n*not Markdown*\n\nA paragraph.';
+  const editor = makeEditor(createEditor, markdown);
+  assert.deepEqual(
+    nodesNamed(editor, 'htmlBlock').map(({ node }) => node.attrs.raw),
+    ['<div>\n*not Markdown*'],
+  );
+  assert.equal(editor.state.doc.lastChild.textContent, 'A paragraph.', 'the text after the blank line is a paragraph');
+  assert.equal(getMarkdown(editor), markdown);
+  editor.destroy();
+});
+
+test('a tag that is not a block element starts a block only when it stands on a line of its own', () => {
+  const markdown = '<span>\n*one*\n</span>';
+  const editor = makeEditor(createEditor, markdown);
+  assert.deepEqual(
+    nodesNamed(editor, 'htmlBlock').map(({ node }) => node.attrs.raw),
+    [markdown],
+  );
+  assert.equal(getMarkdown(editor), markdown);
+  editor.destroy();
+
+  const inline = makeEditor(createEditor, 'A <span>span</span> in a paragraph.');
+  assert.equal(nodesNamed(inline, 'htmlBlock').length, 0, 'a tag in a paragraph is not a block');
+  assert.ok(dom(inline).querySelector('.rme-html-inline'), 'the page shows the inline HTML');
+  inline.destroy();
+});
+
+test('a block-level element that the Markdown parser does not know still starts a block', () => {
+  const markdown = '<source src="clip.mp4">\nText after the tag.\n\nA paragraph.';
+  const editor = makeEditor(createEditor, markdown);
+  assert.deepEqual(
+    nodesNamed(editor, 'htmlBlock').map(({ node }) => node.attrs.raw),
+    ['<source src="clip.mp4">\nText after the tag.'],
+  );
+  assert.equal(getMarkdown(editor), markdown);
+  editor.destroy();
+});
+
+test('a pre block keeps its blank lines and a table shows its cells, as the GFM page shows them', () => {
+  const markdown = '<pre>\nline one\n\nline two\n</pre>\n\n<table>\n<tr><td>one</td><td>two</td></tr>\n</table>';
+  const editor = makeEditor(createEditor, markdown);
+  const previews = [...dom(editor).querySelectorAll('.rme-raw-preview')];
+  assert.equal(previews.length, 2);
+  // The page drops the first newline of a pre element.
+  assert.equal(previews[0].querySelector('pre').textContent, 'line one\n\nline two\n');
+  assert.deepEqual(
+    [...previews[1].querySelectorAll('td')].map((cell) => cell.textContent),
+    ['one', 'two'],
+  );
+  assert.equal(getMarkdown(editor), markdown);
+  editor.destroy();
+});
+
+test('a definition list with blank lines stays one block, and the page shows its terms', () => {
+  const markdown =
+    '<dl>\n  <dt>Markdown</dt>\n  <dd>A lightweight markup language.</dd>\n\n  <dt>HTML</dt>\n  <dd>A markup language for web pages.</dd>\n</dl>';
+  const editor = makeEditor(createEditor, markdown);
+  assert.equal(nodesNamed(editor, 'htmlBlock').length, 1, 'one block, not one for each term');
+  const preview = dom(editor).querySelector('.rme-raw-preview');
+  assert.deepEqual(
+    [...preview.querySelectorAll('dt')].map((term) => term.textContent),
+    ['Markdown', 'HTML'],
+  );
+  assert.deepEqual(
+    [...preview.querySelectorAll('dd')].map((definition) => definition.textContent),
+    ['A lightweight markup language.', 'A markup language for web pages.'],
+  );
+  assert.equal(getMarkdown(editor), markdown, 'the file comes back as it was');
+  editor.destroy();
+});
+
+test('a definition list in the page has the weight, the indent and the spacing of the GitHub page', async () => {
+  const css = await readFile(new URL('../webview/styles.css', import.meta.url), 'utf8');
+  const rule = (selector) => {
+    const start = css.indexOf(`\n${selector} {`);
+    assert.ok(start >= 0, `${selector} has a rule in styles.css`);
+    return css.slice(start, css.indexOf('}', start));
+  };
+  const term = rule('.rme-raw-preview dt');
+  assert.match(term, /font-weight:\s*600/, 'the term is bold');
+  assert.match(term, /font-style:\s*italic/, 'the term is italic');
+  assert.match(term, /margin-top:\s*1em/, 'a term has room above it');
+  const definition = rule('.rme-raw-preview dd');
+  assert.match(definition, /margin:\s*0 0 1em/, 'a definition has no large browser margin');
+  assert.match(definition, /padding:\s*0 16px/, 'a definition is indented like GitHub indents it');
+
+  const selected = rule('.rme-raw.has-preview.is-selected');
+  assert.match(selected, /background:\s*none/, 'the page copy stays on the page, not on the paper of code');
+  const field = rule('.rme-raw.has-preview.is-selected .rme-raw-field');
+  assert.match(field, /background:\s*var\(--rme-code-bg\)/, 'the code sits on the paper of a code block');
+  assert.match(field, /padding:\s*8px 10px/, 'the code has the room of a code block');
+});
+
+test('a script block keeps its text box, because the page shows nothing for it', () => {
+  const markdown = '<script>\nalert(1);\n</script>';
+  const editor = makeEditor(createEditor, markdown);
+  const block = dom(editor).querySelector('.rme-raw');
+  assert.equal(block.classList.contains('has-preview'), false, 'the page shows no script');
+  assert.equal(block.querySelector('textarea').value, markdown);
+  assert.equal(getMarkdown(editor), markdown);
+  editor.destroy();
+});
+
+test('an HTML comment block stays one line until it is selected, and its text box holds the comment', () => {
+  const editor = makeEditor(createEditor, '<!-- hidden -->\n\ntext');
   const block = dom(editor).querySelector('.rme-raw');
   assert.equal(block.classList.contains('has-preview'), false);
   assert.equal(block.querySelector('.rme-raw-preview').hidden, true);
+  assert.equal(block.classList.contains('is-collapsed'), true, 'a comment shows a line, not a code box');
+  assert.equal(block.querySelector('.rme-raw-hidden').textContent, 'HTML comment');
+  assert.equal(block.querySelector('textarea').value, '<!-- hidden -->');
+
+  const [{ pos }] = nodesNamed(editor, 'htmlBlock');
+  editor.commands.setNodeSelection(pos);
+  assert.equal(block.classList.contains('is-selected'), true, 'the code opens when the block is selected');
+  editor.commands.setTextSelection(editor.state.doc.content.size - 2);
+  assert.equal(block.classList.contains('is-selected'), false);
+  assert.equal(block.classList.contains('is-collapsed'), true, 'the code goes, and the line comes back');
+  editor.destroy();
+});
+
+test('a selected HTML block labels the page copy and the code, and the code has colors', () => {
+  const markdown = '<details><summary>More</summary>Shown</details>';
+  const editor = makeEditor(createEditor, markdown);
+  const block = dom(editor).querySelector('.rme-raw');
+  const [{ pos }] = nodesNamed(editor, 'htmlBlock');
+  editor.commands.setNodeSelection(pos);
+
+  assert.equal(block.querySelector('.rme-raw-label').textContent, 'HTML output');
+  assert.equal(block.querySelector('.rme-raw-code-label').textContent, 'HTML code');
+  assert.ok(block.querySelector('.rme-raw-divider'), 'a dotted rule between the page copy and the code');
+  assert.ok(block.querySelector('.rme-raw-preview details'), 'the page copy stays above the code');
+  assert.ok(block.querySelector('.rme-raw-colors .hljs-tag'), 'the HTML in the text box has colors');
+  assert.equal(getMarkdown(editor), markdown);
+  editor.destroy();
+});
+
+test('a click on the page copy of a selected HTML block closes its text box', () => {
+  const markdown = 'Before\n\n<details><summary>More</summary>Shown</details>\n\nAfter';
+  const editor = makeEditor(createEditor, markdown);
+  const [{ pos }] = nodesNamed(editor, 'htmlBlock');
+  const block = dom(editor).querySelector('.rme-raw');
+  editor.commands.setNodeSelection(pos);
+  assert.equal(block.classList.contains('is-selected'), true);
+
+  block.querySelector('.rme-raw-preview').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+  assert.equal(editor.state.selection.empty, true, 'the cursor leaves the block');
+  assert.equal(block.classList.contains('is-selected'), false, 'the code box closes, and the page copy stays');
+  assert.equal(getMarkdown(editor), markdown, 'the file is unchanged');
+  editor.destroy();
+});
+
+test('a click on the page copy of another HTML block closes an open text box', () => {
+  const markdown = 'Before\n\n<details><summary>One</summary>A</details>\n\n<details><summary>Two</summary>B</details>';
+  const editor = makeEditor(createEditor, markdown);
+  const blocks = [...dom(editor).querySelectorAll('.rme-raw')];
+  const [{ pos }] = nodesNamed(editor, 'htmlBlock');
+  editor.commands.setNodeSelection(pos);
+  assert.equal(blocks[0].classList.contains('is-selected'), true);
+
+  blocks[1].querySelector('.rme-raw-preview').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+  assert.equal(editor.state.selection.empty, true, 'no block stays selected');
+  assert.equal(blocks[0].classList.contains('is-selected'), false);
+  assert.equal(blocks[1].classList.contains('is-selected'), false, 'the click does not open the other block');
+  assert.equal(getMarkdown(editor), markdown);
   editor.destroy();
 });
 

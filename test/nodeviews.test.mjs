@@ -133,6 +133,11 @@ test('the fields inside a node view get their own events, and the rest of the no
     assert.equal(views[name].spec.stopEvent(event(inside(views[name], 'textarea'))), true, `${name}: the text area`);
     assert.equal(views[name].spec.stopEvent(event(inside(views[name], '.rme-raw-label'))), false, `${name}: the label`);
   }
+  assert.equal(
+    views.htmlBlock.spec.stopEvent(event(inside(views.htmlBlock, '.rme-raw-preview'))),
+    true,
+    'the HTML that the page draws keeps a click to itself, so the text box does not open',
+  );
 
   assert.equal(
     views.video.spec.stopEvent(event(inside(views.video, 'video'))),
