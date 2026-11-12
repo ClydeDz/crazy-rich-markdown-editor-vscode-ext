@@ -29,7 +29,8 @@ function setup(markdown) {
   toolbars.bind(editor);
   const bar = toolbars.textBar;
   const imageBar = toolbars.imageBar;
-  for (const toolbar of [bar, imageBar]) {
+  const imageLinkBar = toolbars.imageLinkBar;
+  for (const toolbar of [bar, imageBar, imageLinkBar]) {
     if (!toolbar.isConnected) document.body.append(toolbar);
     created.push(toolbar);
   }
@@ -38,6 +39,7 @@ function setup(markdown) {
     editor,
     bar,
     imageBar,
+    imageLinkBar,
     button: (id) => bar.querySelector(`[data-action="${id}"]`),
     menu: () => bar.querySelector('.rme-menu'),
     more: () => bar.querySelector('[data-action="more"]'),
@@ -464,6 +466,37 @@ test('the Remove link button removes the link and ends the link mode', () => {
   bar.querySelector('[data-unlink]').click();
   assert.equal(getMarkdown(editor), 'see the docs now');
   assert.equal(bar.classList.contains('is-link-mode'), false);
+  editor.destroy();
+});
+
+test('an image link has an Embed image button, which replaces the link with the picture', () => {
+  const href = 'https://media.giphy.com/media/x/giphy.gif';
+  const { editor, imageLinkBar } = setup(`see [cute cat](${href}) now`);
+  const button = imageLinkBar.querySelector('button');
+  assert.equal(imageLinkBar.getAttribute('role'), 'toolbar');
+  assert.equal(imageLinkBar.getAttribute('aria-label'), 'Image link');
+  assert.equal(button.getAttribute('aria-label'), 'Embed image');
+  assert.equal(button.title, 'Embed this link as an image');
+  assert.equal(mousedown(button).defaultPrevented, true, 'the cursor stays in the text');
+
+  let to;
+  editor.state.doc.descendants((node, pos) => {
+    if (to === undefined && node.isText && node.marks.some((mark) => mark.type.name === 'link')) {
+      to = pos + node.nodeSize;
+    }
+  });
+  editor.commands.setTextSelection(to);
+  button.click();
+  assert.equal(getMarkdown(editor), `see ![cute cat](${href}) now`);
+  assert.equal(editor.state.selection.node?.type.name, 'image');
+  editor.destroy();
+});
+
+test('the Embed image button leaves a link to a page alone', () => {
+  const { editor, imageLinkBar } = setup('see [the GIF](https://giphy.com/gifs/cat-123) now');
+  editor.commands.setTextSelection(editor.state.doc.content.size - 2);
+  imageLinkBar.querySelector('button').click();
+  assert.equal(getMarkdown(editor), 'see [the GIF](https://giphy.com/gifs/cat-123) now');
   editor.destroy();
 });
 

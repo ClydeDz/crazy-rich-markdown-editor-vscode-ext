@@ -3,6 +3,7 @@ import { BubbleMenu } from '@tiptap/extension-bubble-menu';
 import { NodeSelection, TextSelection } from '@tiptap/pm/state';
 import { ALERT_TITLES, ALERT_TYPES, AlertType } from './alert';
 import { icons } from './icons';
+import { embedImageLink, imageLinkAt } from './imageLinks';
 import { formatShortcut } from './keys';
 import { FORMAT_KEYS } from './shortcuts';
 
@@ -319,7 +320,8 @@ function createDivider(): HTMLElement {
 }
 
 function isFocusInside(editor: Editor, element: HTMLElement): boolean {
-  return editor.view.hasFocus() || element.contains(document.activeElement);
+  // A bubble can be asked to show once more while the editor is being destroyed.
+  return !editor.isDestroyed && (editor.view.hasFocus() || element.contains(document.activeElement));
 }
 
 function selectedImage(editor: Editor) {
@@ -336,6 +338,8 @@ export interface FloatingToolbars {
   textBar: HTMLElement;
   /** The element of the image toolbar. */
   imageBar: HTMLElement;
+  /** The element of the toolbar for a link that points at an image. */
+  imageLinkBar: HTMLElement;
   /** Extensions that mount the floating toolbars on an editor. */
   extensions: Extension[];
   /** Connect the toolbars to the editor after it exists. */
@@ -361,6 +365,31 @@ export function createFloatingToolbars(): FloatingToolbars {
   imageBar.className = 'rme-toolbar rme-image-toolbar';
   imageBar.setAttribute('role', 'toolbar');
   imageBar.setAttribute('aria-label', 'Image');
+
+  const imageLinkBar = document.createElement('div');
+  imageLinkBar.className = 'rme-toolbar rme-image-link-toolbar';
+  imageLinkBar.setAttribute('role', 'toolbar');
+  imageLinkBar.setAttribute('aria-label', 'Image link');
+  const imageLinkButton = document.createElement('button');
+  imageLinkButton.type = 'button';
+  imageLinkButton.className = 'rme-btn rme-btn-text';
+  imageLinkButton.title = 'Embed this link as an image';
+  imageLinkButton.setAttribute('aria-label', 'Embed image');
+  imageLinkButton.innerHTML = icons.image;
+  const imageLinkLabel = document.createElement('span');
+  imageLinkLabel.textContent = 'Embed image';
+  imageLinkButton.append(imageLinkLabel);
+  imageLinkButton.addEventListener('mousedown', (event) => event.preventDefault());
+  imageLinkButton.addEventListener('click', () => {
+    if (!boundEditor) {
+      return;
+    }
+    const link = imageLinkAt(boundEditor.state);
+    if (link) {
+      embedImageLink(boundEditor, link);
+    }
+  });
+  imageLinkBar.append(imageLinkButton);
 
   const imageFields = document.createElement('div');
   imageFields.className = 'rme-image-fields';
@@ -669,6 +698,21 @@ export function createFloatingToolbars(): FloatingToolbars {
     },
   });
 
+  const imageLinkBubble = BubbleMenu.extend({ name: 'imageLinkBubbleMenu' }).configure({
+    element: imageLinkBar,
+    pluginKey: 'rmeImageLinkBar',
+    updateDelay: 40,
+    options: {
+      placement: 'top',
+      offset: 8,
+      flip: true,
+      shift: { padding: 8 },
+    },
+    shouldShow: ({ editor, state, element }) => {
+      return editor.isEditable && imageLinkAt(state) !== undefined && isFocusInside(editor, element);
+    },
+  });
+
   // Cmd+K and Ctrl+K open the link field when text is selected.
   const linkShortcut = Extension.create({
     name: 'rmeLinkShortcut',
@@ -688,7 +732,8 @@ export function createFloatingToolbars(): FloatingToolbars {
   return {
     textBar,
     imageBar,
-    extensions: [textBubble, tableBubble, imageBubble, linkShortcut],
+    imageLinkBar,
+    extensions: [textBubble, tableBubble, imageBubble, imageLinkBubble, linkShortcut],
     bind(editor: Editor) {
       boundEditor = editor;
       const syncImageFields = (): void => {

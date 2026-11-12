@@ -8,6 +8,7 @@ const { createMediaInput, isMediaFile } = await loadModule('webview/mediaInput.t
 const { escapeMarkdownText } = await loadModule('webview/markdownText.ts', 'markdownText');
 const { markdownSlice } = await loadModule('webview/pasteMarkdown.ts', 'pasteMarkdown');
 const { searchEmoji, EMOJI } = await loadModule('webview/emoji.ts', 'emoji');
+const { imageLinkAt } = await loadModule('webview/imageLinks.ts', 'imageLinks');
 
 const press = (editor, key) =>
   Boolean(
@@ -191,6 +192,17 @@ test('one paragraph of pasted Markdown joins the line, and a block lands beside 
 test('Markdown that holds no block gives no slice, so the paste is not taken', () => {
   const editor = makeEditor(createEditor, 'Some text.');
   assert.equal(markdownSlice({ type: 'doc', content: [] }, editor.state.schema), null);
+  editor.destroy();
+});
+
+test('a pasted link to an image is ready to embed', () => {
+  const href = 'https://media.giphy.com/media/x/giphy.gif';
+  const editor = makeEditor(createEditor, '');
+  editor.commands.focus('end');
+  pasteClipboard(editor, { text: href });
+  const link = imageLinkAt(editor.state);
+  assert.ok(link, 'the cursor is in or after the pasted link');
+  assert.equal(link.href, href);
   editor.destroy();
 });
 

@@ -214,13 +214,16 @@ If the code contains a line of three backticks, the editor writes a longer fence
 
 ## Images and videos
 
-You can add images and videos in three ways:
+You can add images and videos in four ways:
 
 - Choose **Image or video** in the slash menu. A file picker opens. You can choose more than one file.
 - Paste an image from the clipboard.
 - Drop a file on the editor. A drop works on the whole page, also on the margins. VS Code opens a dropped file as a new editor unless the page has handled the drag, and the editor handles it for you.
+- Paste a link that ends in an image file, then choose **Embed image** in the bubble above it.
 
 The editor copies the file into an **asset folder** and writes a relative link. It does not link to the original path. A video is written as an HTML `video` tag with a relative `src` and the `controls` attribute. GitHub shows this tag as a player.
+
+A link whose address ends in an image file is also a picture waiting to happen. Paste a Giphy media address (it ends in `.gif`), or put the cursor in or right after an existing image link, and an **Embed image** button appears above it. Click it to turn `[cute cat](https://media.giphy.com/.../giphy.gif)` into `![cute cat](https://media.giphy.com/.../giphy.gif)`. The text of the link becomes the alt text, and a link title becomes the image title. A Giphy page address, such as `https://giphy.com/gifs/cat-123`, does not end in an image extension, so it stays a link. Nothing changes until you click the button.
 
 Select an image to open its floating toolbar. Use **Alt text** to edit the text shown to assistive technology and **Title text** to set an optional title. The fields stay in the toolbar instead of taking up space below the image, so they do not change its preview size. Changes are saved in the image's Markdown attributes. Videos do not have these fields.
 

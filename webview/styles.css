@@ -1041,6 +1041,16 @@ html.rme-has-line-numbers #app {
   font-weight: 600;
   letter-spacing: 0.01em;
 }
+
+/* A picture icon and a label, in a toolbar that holds one action. */
+.rme-image-link-toolbar .rme-btn {
+  gap: 5px;
+  padding: 0 9px;
+}
+.rme-image-link-toolbar .rme-btn svg {
+  width: 14px;
+  height: 14px;
+}
 .rme-btn:hover {
   background: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.2));
 }

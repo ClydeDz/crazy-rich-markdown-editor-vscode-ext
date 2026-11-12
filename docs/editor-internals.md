@@ -21,6 +21,7 @@
 - A selected `htmlBlock` shows the page copy under the label `HTML output`, a dotted rule, the label `HTML code`, and the HTML in a code block with its colors.
 - A `<details>`, `<dl>` or `<table>` element keeps the blank lines inside it, so that the page draws one element. Without that, the Markdown parser would end the HTML block at the first blank line and draw the rest as separate pieces.
 - A paste of text is read as Markdown (`webview/pasteMarkdown.ts`): plain text and a pasted code block in the language `markdown` (or `md`) land as Markdown, and one paragraph joins the line at the cursor (`markdownSlice` gives an open slice). Rich text, a code block of another language, files, and a paste inside a raw box (code block, MDX box, table cell) keep the paste they had before.
+- A link whose address ends in an image extension is offered as a picture (`webview/imageLinks.ts`). The **Embed image** bubble shows when the cursor is inside the link or just after it, which is where a paste leaves it; a selection inside a link is not offered, because the whole link would change. The action replaces the link with the existing `image` node, keeps the link text as `alt` (an address used as its own text gives an empty `alt`) and keeps the link title. Nothing changes until the user clicks the button.
 
 ## Parts outside the document
 
