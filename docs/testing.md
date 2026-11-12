@@ -13,6 +13,10 @@
   Hand-made changes are in `scripts/mutations.mjs`. A survivor that no test can see goes there with its reason. Do not write a test for it.
 - Code that talks to VS Code (a fake panel, a captured listener) needs a test in `test/vscode/suite.cjs` and a hand-made mutant. Logic that can leave the provider goes to a small module (for example `src/refreshQueue.ts`), so a unit test sees it.
 
+## The demo page
+
+`test/harness/sample.md` is also test data. Two tests in `test/html-tags.test.mjs` read it: one fails when an HTML element that GitHub allows is missing from it (`ALL_TAGS`), and one fails when one of the five alert types is missing. Prose, footnotes, layout and whitespace are not asserted. `test/harness/sample.mdx` is only for the browser harness.
+
 ## Table of contents tests
 
 - `test/tableofcontents.test.mjs`: the headings of the document (also in a quote, with marks, and without text), the button at the far left of the bar, the panel that opens and closes, the filter, the arrow keys, Escape and a click outside, the jump to a heading (with the `scrollIntoView` stub of `test/helpers.mjs`), the list following the document while it is open, and the listeners that `destroy` removes.
@@ -29,6 +33,7 @@
 ## Which VS Code, and CI
 
 - `test/vscode/run.mjs` picks VS Code in this order: `VSCODE_EXECUTABLE`; the app in `/Applications`; on CI (`CI` is set) or with `RME_DOWNLOAD_VSCODE=1`, a download into `.vscode-test` (`VSCODE_VERSION`, default `stable`). On Linux CI it adds `--no-sandbox`, `--disable-gpu` and `--disable-dev-shm-usage`.
+- If the run exits at launch with `Code is currently being updated`, an installer holds VS Code's update lock and no test ran. This is not a test failure. Let the update finish, or point `VSCODE_EXECUTABLE` at another install, and run it again.
 - `.github/workflows/test.yml`: the `unit` job (`yarn typecheck`, `yarn test`) runs on every pull request push and on `main`. The `vscode` job (`xvfb-run -a yarn test:vscode`) runs only on `main` and by hand (`workflow_dispatch`). `publish.yml` also runs the unit tests and builds the package.
 - The VS Code job has not been shown to pass on a GitHub runner yet. The key tests compare against the default key bindings of the VS Code in use, and Linux keys differ from macOS keys. If a key test fails only on CI, check the key bindings before you change the editor.
 - A pull request does not run the real VS Code tests. Run `yarn test:vscode` yourself when the change touches `src/`, the real webview, keys or focus.
@@ -49,6 +54,6 @@
 - `vsce package` fails when the README has a relative link to a file. `test/publish.test.mjs` checks this.
 - GitHub page examples are fetched at run time. Do not store a copy. See [decisions.md](decisions.md).
 
-## No Git: recover a broken file
+## Recover a broken file
 
-`dist/webview.js.map` (made by `yarn build`) holds `sourcesContent`: the text of every `webview/*.ts` file at the last build. Read it with node to restore a file. When a script edits a file, make each replace assert that its anchor occurs exactly once.
+`git diff` shows what changed, and `git checkout -- <file>` restores a committed file. Do not throw away the user's uncommitted work. If the file was never committed, `dist/webview.js.map` (made by `yarn build`) holds `sourcesContent`: the text of every `webview/*.ts` file at the last build. Read it with node to restore a file. When a script edits a file, make each replace assert that its anchor occurs exactly once.

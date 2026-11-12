@@ -8,13 +8,11 @@ disable-model-invocation: true
 
 The template is `.github/pull_request_template.md`. Its checklist is the list of checks that every change must pass. Fill it with facts, not hopes.
 
-**This project folder has no Git repository, on purpose.** Never run `git init` here. A pull request needs a repository, so do step 1 first.
+This folder is a Git repository. Never run `git init`. A pull request goes from a branch of this repository.
 
 ## Steps
 
-1. Find out where you are: `git rev-parse --is-inside-work-tree`.
-   - **No repository** (this folder): do not run Git commands that make one. Do steps 3 to 5 and write the title and the body to `pr-description.md` in the scratchpad folder. Tell the user that there is no repository here, and give them the path. Ask whether they want to open the pull request from their other repository. Stop there.
-   - **A repository** (for example the user's other repo with a copy of this code): go on.
+1. Find out where you are: `git rev-parse --is-inside-work-tree`. It must print `true`. If it does not, stop and tell the user that the folder has no repository to open a pull request from.
 2. Check the branch and the base:
    - `git branch --show-current` must not be the default branch. If it is, ask the user for a branch name, and create it.
    - Find the default branch: `gh repo view --json defaultBranchRef -q .defaultBranchRef.name`.
@@ -32,7 +30,7 @@ The template is `.github/pull_request_template.md`. Its checklist is the list of
    - Never remove the checklist. Never tick a box to make the description look better.
    - Delete the Screenshots section if there is no UI change.
 5. Write the title as `Taxonomy: Short title`, with the taxonomy `Feat`, `Fix`, `Chore`, `Docs` or `Test`. If there is a ticket, use `[TICKET] Taxonomy: Short title`. Keep it under 70 characters.
-   End the body with this line: `🤖 Generated with [Claude Code](https://claude.com/claude-code)`
+   Do not add an AI attribution footer by default: the commits in this repository have none. If the user or the session asks for one, use that exact line.
 6. **Show the title and the full body to the user and ask for approval.** A pull request is public and cannot be fully taken back. Do not create it before the user says yes.
 7. After approval:
    - Push the branch: `git push -u origin <branch>`.

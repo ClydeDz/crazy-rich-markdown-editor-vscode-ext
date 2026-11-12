@@ -28,11 +28,11 @@ Tell the user, in short sentences:
 - The new version is built and installed.
 - They must run **Developer: Reload Window** in VS Code. An old window keeps the old editor.
 - How many unit tests passed. Say if you did not run `yarn test:vscode`.
-- Nothing is committed, because this folder has no Git repository.
+- Nothing is committed unless you asked for a commit.
 
 ## Rules
 
 - Use Yarn, never npm.
-- Never run `git init`.
+- Never run `git init`. This folder is already a Git repository.
 - Do not delete the older `.vsix` files unless the user asks.
 - If the change touched code that talks to VS Code, suggest `yarn test:vscode` before the release.

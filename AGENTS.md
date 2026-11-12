@@ -5,7 +5,7 @@ Crazy Rich Markdown Editor: A VS Code extension that opens `.md` files (and `.md
 ## Always
 
 - Use **Yarn 1** (`yarn`, never `npm`). Do not delete `.npmrc` or `.yarnrc`. See [docs/packaging.md](docs/packaging.md).
-- Never run `git init` here. This folder has no Git repository on purpose. Tests that need Git use temporary repos (`test/git-helper.cjs`).
+- This folder is a Git repository (`origin` is `github.com/ClydeDz/crazy-rich-markdown-editor-vscode-ext`). Never run `git init`. Tests that need Git use temporary repos (`test/git-helper.cjs`), never a repo in the project root. Do not commit or push unless the user asks.
 - Do not edit `dist/` or the `.vsix` files. `yarn build` makes `dist/`.
 - A file that the user wrote must come back from the editor exactly as it was, unless the user changed that part. This holds for Markdown and for MDX. A change to parsing or writing needs a round trip test.
 
@@ -37,6 +37,7 @@ Before you claim that a job is done, run `yarn lint`, `yarn test` and `yarn test
 - Style, naming, comments, DOM and CSS rules: [docs/coding-standards.md](docs/coding-standards.md)
 - Tests, the mutation tool, test pitfalls: [docs/testing.md](docs/testing.md)
 - Editor code (Tiptap commands, Markdown parsing, front matter, block handle, MDX): [docs/editor-internals.md](docs/editor-internals.md)
+- How the extension host and the webview fit together: [docs/architecture.md](docs/architecture.md)
 - Keyboard shortcuts: [docs/shortcuts.md](docs/shortcuts.md)
 - Version bump, package, install, publish: [docs/packaging.md](docs/packaging.md)
 - Decisions that are final: [docs/decisions.md](docs/decisions.md)
@@ -50,4 +51,4 @@ Before you claim that a job is done, run `yarn lint`, `yarn test` and `yarn test
 - `test-quality-audit`: check the tests with the mutation tool (`yarn mutate`).
 - `real-vscode-test`: write or run a test in a real VS Code (`yarn test:vscode`).
 - `prove-test-fails`: after you write or change a test, break the code on purpose and check that the test fails, then restore the code.
-- `/create-pr`: run the checks, fill `.github/pull_request_template.md` and open a draft pull request. This folder has no Git repository, so it needs the user's other repo.
+- `/create-pr`: run the checks, fill `.github/pull_request_template.md` and open a draft pull request from a branch of this repository.

@@ -457,6 +457,8 @@ To look at the editor in a normal browser, run `node test/harness/server.mjs` an
 
 ### How it works
 
+See [architecture.md](architecture.md) for a diagram of the extension host, the webview and the messages between them.
+
 - `src/markdownEditorProvider.ts` is a VS Code custom text editor. The `TextDocument` is the single source of truth. The webview sends the new Markdown text. The provider replaces only the changed range, so undo history and diffs stay small. A change from outside (for example a git checkout) goes to the webview.
 - `src/assets.ts` finds the asset folder and saves pasted, dropped and picked files in it.
 - `webview/` is the editor. It uses [Tiptap](https://tiptap.dev) (ProseMirror) with the `@tiptap/markdown` package to read and write Markdown.

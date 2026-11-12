@@ -15,8 +15,8 @@ Do this every time you add a test or change what a test checks. Do it before you
    `node --test test/<file>.test.mjs --test-name-pattern="<part of the name>"`
    (A VS Code test runs with `RME_ONLY="<part of the name>" yarn test:vscode`.)
 2. Choose a **small break** in the code that the test covers. It must break the exact behavior the test name claims. Examples: turn off the handler, return the wrong value, flip a condition, delete the line that does the work. Do not break something the test does not claim.
-3. Save a copy of the file first. This folder has no Git, so a broken file has no undo.
-   `cp <file> "$TMPDIR/<name>.orig"` (or use the scratchpad folder)
+3. Save a copy of the file first, so a break has a known way back even when the file has uncommitted work.
+   `cp <file> "$TMPDIR/<name>.orig"` (or use the scratchpad folder). This folder is a Git repository, but do not use `git checkout` on work that the user has not committed.
 4. Make the break with Edit. Keep it to one place.
 5. Run the same test again. It must **fail**.
 6. Read the failure. It must fail for the right reason: your assertion, with a message that matches the break.
