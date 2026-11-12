@@ -532,16 +532,16 @@ test('a fence is longer than any run of backticks in the code', () => {
 });
 
 test('HTML in a line shows as the page shows it, and the file keeps the HTML as it is', () => {
-  const editor = makeEditor(createEditor, 'a <kbd>Ctrl</kbd> b');
+  const editor = makeEditor(createEditor, 'a <cite>Ctrl</cite> b');
   const chip = editor.view.dom.querySelector('.rme-html-inline');
   assert.equal(chip.classList.contains('is-rendered'), true, 'the HTML is drawn, not its text');
-  assert.equal(chip.querySelector('kbd')?.textContent, 'Ctrl');
+  assert.equal(chip.querySelector('cite')?.textContent, 'Ctrl');
   let raw = '';
   editor.state.doc.descendants((node) => {
     if (node.type.name === 'htmlInline') raw = node.attrs.raw;
   });
-  assert.equal(raw, '<kbd>Ctrl</kbd>', 'the text of the HTML stays');
-  assert.equal(getMarkdown(editor), 'a <kbd>Ctrl</kbd> b');
+  assert.equal(raw, '<cite>Ctrl</cite>', 'the text of the HTML stays');
+  assert.equal(getMarkdown(editor), 'a <cite>Ctrl</cite> b');
   editor.destroy();
 });
 
@@ -767,37 +767,47 @@ function type(editor, text) {
   }
 }
 
-test('footnote marks are numbered in the order they appear', () => {
+test('a footnote mark shows the number the file writes, and a named label gets the number of its place', () => {
   const editor = makeEditor(
     createEditor,
-    'Second[^b] then first[^a] then second again[^b].\n\n[^a]: Text A.\n\n[^b]: Text B.\n\n[^c]: Unused.',
+    'Second[^2] then first[^1] then a key[^key] and second again[^2].\n\n[^1]: Text 1.\n\n[^2]: Text 2.\n\n[^key]: Key.\n\n[^unused]: Unused.',
   );
-  const refs = [...editor.view.dom.querySelectorAll('.rme-fn-ref')].map((el) => el.getAttribute('data-n'));
-  assert.deepEqual(refs, ['1', '2', '1']);
+  const refs = [...editor.view.dom.querySelectorAll('.rme-fn-ref')].map((el) => [
+    el.getAttribute('data-footnote-ref'),
+    el.getAttribute('data-n'),
+    el.title,
+  ]);
+  assert.deepEqual(refs, [
+    ['2', '2', 'Footnote 2'],
+    ['1', '1', 'Footnote 1'],
+    ['key', '3', 'Footnote 3'],
+    ['2', '2', 'Footnote 2'],
+  ]);
   const defs = [...editor.view.dom.querySelectorAll('.rme-fn-def')].map((el) => [
     el.getAttribute('data-footnote-definition'),
     el.getAttribute('data-n'),
     el.classList.contains('is-unused'),
   ]);
   assert.deepEqual(defs, [
-    ['a', '2', false],
-    ['b', '1', false],
-    ['c', '', true],
+    ['1', '1', false],
+    ['2', '2', false],
+    ['key', '3', false],
+    ['unused', '', true],
   ]);
   editor.destroy();
 });
 
-test('footnote numbers update when the document changes', () => {
+test('a footnote mark shows its number when the document changes, and a named label gets the next free number', () => {
   const editor = makeEditor(createEditor, 'One[^a].\n\n[^a]: A.');
   editor.commands.focus('start');
-  editor.commands.insertContentAt(1, { type: 'footnoteRef', attrs: { id: 'z' } });
+  editor.commands.insertContentAt(1, { type: 'footnoteRef', attrs: { id: '9' } });
   const refs = [...editor.view.dom.querySelectorAll('.rme-fn-ref')].map((el) => [
     el.getAttribute('data-footnote-ref'),
     el.getAttribute('data-n'),
   ]);
   assert.deepEqual(refs, [
-    ['z', '1'],
-    ['a', '2'],
+    ['9', '9'],
+    ['a', '1'],
   ]);
   editor.destroy();
 });

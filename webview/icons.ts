@@ -56,6 +56,9 @@ export const icons = {
   highlight: svg(
     '<path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/>',
   ),
+  kbd: svg(
+    '<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01"/><path d="M8 14h8"/>',
+  ),
   superscript: svg(
     '<path d="m4 19 8-8"/><path d="m12 19-8-8"/><path d="M20 12h-4c0-1.5.44-2 1.5-2.5S20 8.33 20 7.2c0-1.1-.9-2.2-2.2-2.2-1.1 0-1.9.6-2.1 1.5"/>',
   ),

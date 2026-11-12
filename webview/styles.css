@@ -492,6 +492,16 @@ html.rme-has-line-numbers #app {
   border-radius: 4px;
 }
 
+.ProseMirror kbd {
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.85em;
+  padding: 0.1em 0.4em;
+  border: 1px solid var(--rme-border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--rme-code-bg);
+}
+
 .ProseMirror pre {
   tab-size: 2;
   background: var(--rme-code-bg);

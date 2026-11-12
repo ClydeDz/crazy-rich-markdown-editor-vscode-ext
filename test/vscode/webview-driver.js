@@ -503,6 +503,7 @@
           'highlight',
           'strike',
           'code',
+          'kbd',
           'superscript',
           'subscript',
           'bulletList',

@@ -60,6 +60,7 @@ function activeFormats(editor) {
     'highlight',
     'strike',
     'code',
+    'kbd',
     'superscript',
     'subscript',
     'bulletList',
@@ -138,7 +139,7 @@ test('shortcutGroups gives a copy, so a change to the result does not change the
   const second = shortcutGroups();
   assert.equal(second.length, 7);
   assert.deepEqual(second[0].items[0].keys, [FORMAT_KEYS.bold]);
-  assert.equal(second[0].items.length, 9);
+  assert.equal(second[0].items.length, 10);
 });
 
 test('FORMAT_KEYS and the list agree: each key of the table is on one line, and each formatting line has a key of the table', () => {

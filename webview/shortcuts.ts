@@ -23,6 +23,8 @@ export const FORMAT_KEYS = {
   highlight: typeof navigator !== 'undefined' && /Mac/.test(navigator.platform) ? 'Mod-Alt-Shift-h' : 'Mod-Alt-h',
   strike: 'Mod-Alt-x',
   code: 'Mod-e',
+  // The block form of Inline code is Cmd+Alt+E, so the key form gets Cmd+Alt+K.
+  kbd: 'Mod-Alt-k',
   link: 'Mod-k',
   superscript: 'Mod-.',
   subscript: 'Mod-Alt-,',
@@ -74,6 +76,7 @@ const TEXT: ShortcutItem[] = [
   format('Link', FORMAT_KEYS.link, 'Select text first'),
   format('Superscript', FORMAT_KEYS.superscript),
   format('Subscript', FORMAT_KEYS.subscript, 'Without Alt, the key opens VS Code Settings'),
+  format('Keyboard key', FORMAT_KEYS.kbd),
 ];
 
 const HEADINGS: ShortcutItem[] = [

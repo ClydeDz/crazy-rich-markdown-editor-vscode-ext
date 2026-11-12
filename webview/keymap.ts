@@ -19,6 +19,7 @@ export const FormatKeymap = Extension.create({
       [FORMAT_KEYS.highlight]: () => commands().toggleHighlight(),
       [FORMAT_KEYS.strike]: () => commands().toggleStrike(),
       [FORMAT_KEYS.code]: () => commands().toggleCode(),
+      [FORMAT_KEYS.kbd]: () => commands().toggleKbd(),
       [FORMAT_KEYS.superscript]: () => commands().toggleSuperscript(),
       [FORMAT_KEYS.subscript]: () => commands().toggleSubscript(),
       [FORMAT_KEYS.h1]: () => commands().toggleHeading({ level: 1 }),

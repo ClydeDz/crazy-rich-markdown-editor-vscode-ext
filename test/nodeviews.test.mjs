@@ -13,7 +13,7 @@ const { createEditor } = await loadModule('webview/editor.ts', 'editor');
 const MARKDOWN = [
   '> [!NOTE]\n> alert text',
   '```ts\nconst x = 1;\n```',
-  'Inline $x$ and <kbd>k</kbd> here.',
+  'Inline $x$ and <samp>k</samp> here.',
   '$$\ny\n$$',
   '<div>raw</div>',
   '[d]: https://example.com',

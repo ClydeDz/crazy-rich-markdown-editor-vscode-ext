@@ -101,6 +101,7 @@ const FORMAT_OF = {
   Highlight: 'highlight',
   Strikethrough: 'strike',
   'Inline code': 'code',
+  'Keyboard key': 'kbd',
   Superscript: 'superscript',
   Subscript: 'subscript',
   'Heading 1': 'h1',

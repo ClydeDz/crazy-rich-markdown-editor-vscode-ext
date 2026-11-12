@@ -14,7 +14,7 @@ import { RichCodeBlock } from './codeBlock';
 import { ColorSwatches } from './colorSwatches';
 import { Emoji, createEmojiMenu } from './emoji';
 import { FootnoteDefinition, FootnoteNumbers, FootnoteRef } from './footnotes';
-import { HighlightMark, SubscriptMark, SuperscriptMark, UnderlineMark } from './htmlMarks';
+import { HighlightMark, KbdMark, SubscriptMark, SuperscriptMark, UnderlineMark } from './htmlMarks';
 import { patchEntities } from './entities';
 import { HtmlInline, patchInlineHtml } from './inlineHtml';
 import { SeparateBulletList, SeparateOrderedList, patchEmptyListItems } from './lists';
@@ -195,6 +195,9 @@ export function createEditor(options: CreateEditorOptions): Editor {
       FormatKeymap,
       FindReplace,
       KeymapStarterKit.configure({
+        // A note is the last block of the file. The empty paragraph that Tiptap adds after the last block
+        // would sit below the notes, so a footnote definition gets none.
+        trailingNode: { notAfter: ['footnoteDefinition'] },
         // These come from the files in this folder.
         codeBlock: false,
         underline: false,
@@ -213,6 +216,7 @@ export function createEditor(options: CreateEditorOptions): Editor {
       Markdown,
       createPasteMarkdown(),
       HighlightMark,
+      KbdMark,
       UnderlineMark,
       SubscriptMark,
       SuperscriptMark,

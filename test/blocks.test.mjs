@@ -422,12 +422,12 @@ test('a raw block that changes keeps its element, and the text area gets the new
 });
 
 test('an HTML element inside a sentence is kept as it is, and it is not a raw block', () => {
-  const editor = makeEditor(createEditor, 'A sentence with <kbd>Ctrl</kbd> in it.');
+  const editor = makeEditor(createEditor, 'A sentence with <samp>Ctrl</samp> in it.');
   assert.equal(nodesNamed(editor, 'htmlBlock').length, 0);
   const inline = nodesNamed(editor, 'htmlInline');
   assert.equal(inline.length, 1);
-  assert.equal(inline[0].node.attrs.raw, '<kbd>Ctrl</kbd>', 'the whole element is kept');
-  assert.equal(getMarkdown(editor), 'A sentence with <kbd>Ctrl</kbd> in it.');
+  assert.equal(inline[0].node.attrs.raw, '<samp>Ctrl</samp>', 'the whole element is kept');
+  assert.equal(getMarkdown(editor), 'A sentence with <samp>Ctrl</samp> in it.');
   editor.destroy();
 });
 

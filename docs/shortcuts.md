@@ -4,7 +4,7 @@ The editor must not take keys that VS Code needs, and the keys must stay intuiti
 
 - `FORMAT_KEYS` in `webview/shortcuts.ts` is the one key table. The toolbar, `FormatKeymap` (`webview/keymap.ts`) and the shortcuts window read it. To add or change a key, edit `FORMAT_KEYS` or the lists in that file.
 - These keys stay free for VS Code: Save As (Cmd+Shift+S), Settings (Cmd+,), Run Build Task (Cmd+Shift+B).
-- Strikethrough is Cmd+Alt+X, Quote is Cmd+Alt+Q, Code block is Cmd+Alt+E, Subscript is Cmd+Alt+, and Superscript is Cmd+.
+- Strikethrough is Cmd+Alt+X, Quote is Cmd+Alt+Q, Code block is Cmd+Alt+E, Keyboard key is Cmd+Alt+K (the key form of Inline code, whose block form is Cmd+Alt+E), Subscript is Cmd+Alt+, and Superscript is Cmd+.
 - Highlight is Cmd+Alt+Shift+H on macOS, where Cmd+Alt+H hides the other apps, and Ctrl+Alt+H on Windows and Linux, where Chrome does not give Ctrl+Alt+Shift+H to the page. Cmd+Shift+H is Replace in Files in VS Code.
 - Insert footnote is Cmd+Alt+N. It works in the middle of a line, where the slash menu cannot open. (Tiptap's Cmd+Alt+C is Copy Path of Active File in VS Code, so the code block drops it).
 - Bold, Italic, Underline, Inline code, Link, Undo and Redo keep the usual key on purpose (`SHADOWED_ON_PURPOSE` in `test/vscode/suite.cjs`).

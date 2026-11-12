@@ -88,6 +88,32 @@ function select(editor, text) {
   editor.commands.setTextSelection(found);
 }
 
+test('the Keyboard key item of the More menu wraps the selected text in <kbd>, and the file keeps it', () => {
+  const { editor, bar, more } = setup('a word here');
+  select(editor, 'word');
+  more().click();
+  const item = bar.querySelector('[data-action="kbd"]');
+  assert.ok(item, 'the More menu has the keyboard key');
+  item.click();
+  assert.equal(getMarkdown(editor), 'a <kbd>word</kbd> here');
+  assert.equal(item.getAttribute('aria-checked'), 'true', 'the item shows the state');
+  select(editor, 'word');
+  bar.querySelector('[data-action="kbd"]').click();
+  assert.equal(getMarkdown(editor), 'a word here');
+  editor.destroy();
+});
+
+test('the Footnote item adds a mark after the selected text and a note at the end', () => {
+  const { editor, bar } = setup('a word here');
+  select(editor, 'word');
+  const item = bar.querySelector('[data-action="footnote"]');
+  assert.ok(item, 'the More menu has the footnote');
+  item.click();
+  assert.equal(getMarkdown(editor), 'a word[^1] here\n\n[^1]:');
+  assert.equal(editor.state.doc.lastChild.type.name, 'footnoteDefinition');
+  editor.destroy();
+});
+
 test('the Highlight button marks the selected text, and the file keeps it', () => {
   const { editor, button } = setup('a word here');
   select(editor, 'word');
@@ -174,6 +200,8 @@ test('the items of the More menu are checkboxes that show their state, with a la
     [
       'superscript',
       'subscript',
+      'footnote',
+      'kbd',
       'alert-note',
       'alert-tip',
       'alert-important',
@@ -193,12 +221,14 @@ test('the items of the More menu are checkboxes that show their state, with a la
   const superscript = items[0];
   assert.equal(superscript.querySelector('.rme-menu-label').textContent, 'Superscript');
   assert.match(superscript.querySelector('.rme-menu-hint').textContent, /^(⌘\.|Ctrl\+\.)$/);
-  assert.equal(items[2].querySelector('.rme-menu-hint'), null, 'an alert has no shortcut');
+  assert.equal(items[2].querySelector('.rme-menu-hint'), null, 'the footnote has no shortcut on its button');
+  assert.equal(items[3].querySelector('.rme-menu-label').textContent, 'Keyboard key');
+  assert.match(items[3].querySelector('.rme-menu-hint').textContent, /^(⌘⌥K|Ctrl\+Alt\+K)$/);
   assert.deepEqual(
-    items.slice(7, 9).map((item) => item.querySelector('.rme-menu-label').textContent),
+    items.slice(9, 11).map((item) => item.querySelector('.rme-menu-label').textContent),
     ['Math block', 'Diagram'],
   );
-  for (const item of items.slice(7, 9))
+  for (const item of items.slice(9, 11))
     assert.equal(item.querySelector('.rme-menu-hint'), null, `${item.dataset.action} has no shortcut`);
   assert.equal(menu().querySelectorAll('[role="separator"]').length, 3, 'three lines between the groups');
   editor.destroy();
@@ -549,7 +579,7 @@ test('the Diagram item of the More menu puts all selected lines in one diagram, 
 test('the More menu has math and diagram, and no other block that the slash menu has', () => {
   const { editor, menu } = setup('x');
   const labels = [...menu().querySelectorAll('.rme-menu-label')].map((label) => label.textContent);
-  for (const absent of ['Table', 'Footnote', 'Divider', 'Image or video', 'Code block']) {
+  for (const absent of ['Table', 'Divider', 'Image or video', 'Code block']) {
     assert.equal(labels.includes(absent), false, absent);
   }
   assert.deepEqual(

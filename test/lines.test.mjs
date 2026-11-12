@@ -143,11 +143,11 @@ test('the text of a line is what the user sees: a line break is a new line, mark
 });
 
 test('the parts of a line that are not text give the Markdown that made them, and a formula gives its TeX for a math block', () => {
-  const editor = makeEditor(createEditor, 'x $E=mc^2$ y $`a_b`$ :tada: [^1] <kbd>K</kbd>\n\n[^1]: note');
+  const editor = makeEditor(createEditor, 'x $E=mc^2$ y $`a_b`$ :tada: [^1] <samp>K</samp>\n\n[^1]: note');
   selectBetween(editor, 'x ', 'y ');
   editor.commands.setTextSelection({ from: 1, to: 3 });
-  assert.equal(selectedLineGroups(editor.state, 'source')[0].text, 'x $E=mc^2$ y $`a_b`$ :tada: [^1] <kbd>K</kbd>');
-  assert.equal(selectedLineGroups(editor.state, 'tex')[0].text, 'x E=mc^2 y a_b :tada: [^1] <kbd>K</kbd>');
+  assert.equal(selectedLineGroups(editor.state, 'source')[0].text, 'x $E=mc^2$ y $`a_b`$ :tada: [^1] <samp>K</samp>');
+  assert.equal(selectedLineGroups(editor.state, 'tex')[0].text, 'x E=mc^2 y a_b :tada: [^1] <samp>K</samp>');
   editor.destroy();
 });
 

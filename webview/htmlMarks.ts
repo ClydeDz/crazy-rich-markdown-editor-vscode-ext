@@ -53,6 +53,10 @@ declare module '@tiptap/core' {
       /** Turn the highlight mark on or off. The file keeps the text in `<mark>`. */
       toggleHighlight: () => ReturnType;
     };
+    kbd: {
+      /** Turn the keyboard key mark on or off. The file keeps the text in `<kbd>`. */
+      toggleKbd: () => ReturnType;
+    };
   }
 }
 
@@ -74,6 +78,30 @@ export const HighlightMark = Mark.create({
     };
   },
   ...markdownFor('highlight', 'mark'),
+});
+
+/**
+ * A keyboard key. It is written as `<kbd>text</kbd>`, the form that GitHub shows as a key of a keyboard.
+ * A `<kbd>` that is already in the file is this mark, so the text can be selected and the key taken away again.
+ * The tags around other HTML, such as `<kbd class="x">`, stay an `htmlInline` chip as written.
+ */
+export const KbdMark = Mark.create({
+  name: 'kbd',
+  parseHTML() {
+    return [{ tag: 'kbd' }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['kbd', HTMLAttributes, 0];
+  },
+  addCommands() {
+    return {
+      toggleKbd:
+        () =>
+        ({ commands }) =>
+          commands.toggleMark('kbd'),
+    };
+  },
+  ...markdownFor('kbd', 'kbd'),
 });
 
 /** Underline. It is written as `<ins>text</ins>`, the form that GitHub shows as underlined text. */

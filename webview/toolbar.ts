@@ -169,6 +169,20 @@ const moreItems: (ToolbarAction | null)[] = [
     isActive: (e) => e.isActive('subscript'),
     run: (e) => e.chain().focus().toggleSubscript().run(),
   },
+  {
+    id: 'footnote',
+    title: 'Footnote',
+    icon: icons.footnote,
+    run: (e) => e.chain().focus().insertFootnote().run(),
+  },
+  {
+    id: 'kbd',
+    title: 'Keyboard key',
+    shortcut: FORMAT_KEYS.kbd,
+    icon: icons.kbd,
+    isActive: (e) => e.isActive('kbd'),
+    run: (e) => e.chain().focus().toggleKbd().run(),
+  },
   null,
   ...ALERT_TYPES.map((type): ToolbarAction => ({
     id: `alert-${type}`,

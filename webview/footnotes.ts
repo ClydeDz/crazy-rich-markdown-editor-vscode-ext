@@ -194,9 +194,26 @@ export const FootnoteDefinition = Node.create({
           if (!dispatch) {
             return true;
           }
-          tr.replaceSelectionWith(refType.create({ id }), false);
-          const end = tr.doc.content.size;
-          tr.insert(end, defType.create({ id }, paragraph.create()));
+          if (tr.selection.empty) {
+            tr.replaceSelectionWith(refType.create({ id }), false);
+          } else {
+            // Selected text stays: the mark goes after it, like a note marker on paper.
+            tr.replaceWith(tr.selection.to, tr.selection.to, refType.create({ id }, null, []));
+          }
+          // The notes go after every other block. The notes that are already in the file move there too,
+          // in the order they have, and the new note is last. The text of a note does not change.
+          const notes: ProseNode[] = [];
+          const places: { pos: number; size: number }[] = [];
+          tr.doc.forEach((child, offset) => {
+            if (child.type.name === 'footnoteDefinition') {
+              notes.push(child);
+              places.push({ pos: offset, size: child.nodeSize });
+            }
+          });
+          for (let i = places.length - 1; i >= 0; i--) {
+            tr.delete(places[i].pos, places[i].pos + places[i].size);
+          }
+          tr.insert(tr.doc.content.size, [...notes, defType.create({ id }, paragraph.create())]);
           // The cursor goes into the new footnote, ready for the text.
           tr.setSelection(TextSelection.near(tr.doc.resolve(tr.doc.content.size - 2), -1));
           dispatch(tr.scrollIntoView());
@@ -209,26 +226,61 @@ export const FootnoteDefinition = Node.create({
 const numbering = new PluginKey<DecorationSet>('rmeFootnoteNumbers');
 
 function buildDecorations(doc: ProseNode): DecorationSet {
-  // The first mark of an id gets the next number. This is how GitHub counts footnotes.
-  const numbers = new Map<string, number>();
-  const decorations: Decoration[] = [];
+  // A number that the file writes is shown as it is, so `[^2]` shows 2: the page, the tooltip and the file agree.
+  // A named label such as `[^note]` has no number to show, so it gets the number of its place in the text, as on GitHub.
+  const order: string[] = [];
+  const numbers = new Set<string>();
+  doc.descendants((node) => {
+    if (node.type.name === 'footnoteRef') {
+      const id = String(node.attrs.id);
+      if (/^\d+$/.test(id)) {
+        numbers.add(id);
+      }
+      if (!order.includes(id)) {
+        order.push(id);
+      }
+    }
+  });
+  const shown = new Map<string, string>();
+  for (const id of order) {
+    if (/^\d+$/.test(id)) {
+      shown.set(id, id);
+    }
+  }
+  let next = 1;
+  for (const id of order) {
+    if (shown.has(id)) {
+      continue;
+    }
+    while (numbers.has(String(next))) {
+      next++;
+    }
+    shown.set(id, String(next++));
+  }
 
+  const used = new Set<string>();
+  const decorations: Decoration[] = [];
   doc.descendants((node, pos) => {
     if (node.type.name === 'footnoteRef') {
       const id = String(node.attrs.id);
-      if (!numbers.has(id)) {
-        numbers.set(id, numbers.size + 1);
-      }
-      decorations.push(Decoration.node(pos, pos + node.nodeSize, { 'data-n': String(numbers.get(id)) }));
+      used.add(id);
+      const number = shown.get(id) ?? id;
+      decorations.push(
+        Decoration.node(pos, pos + node.nodeSize, {
+          'data-n': number,
+          title: `Footnote ${number}`,
+        }),
+      );
     }
   });
   doc.descendants((node, pos) => {
     if (node.type.name === 'footnoteDefinition') {
-      const number = numbers.get(String(node.attrs.id));
+      const id = String(node.attrs.id);
+      const hasRef = used.has(id);
       decorations.push(
         Decoration.node(pos, pos + node.nodeSize, {
-          'data-n': number === undefined ? '' : String(number),
-          class: number === undefined ? 'is-unused' : '',
+          'data-n': hasRef ? (shown.get(id) ?? id) : '',
+          class: hasRef ? '' : 'is-unused',
         }),
       );
     }

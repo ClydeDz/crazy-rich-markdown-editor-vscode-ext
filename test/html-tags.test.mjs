@@ -18,7 +18,7 @@ const nodesNamed = (editor, name) => {
   return found;
 };
 
-// An element in a line of text. `<ins>`, `<sub>`, `<sup>` and `<mark>` are marks, and other tests cover them.
+// An element in a line of text. `<ins>`, `<sub>`, `<sup>`, `<mark>` and `<kbd>` are marks, and other tests cover them.
 const INLINE = [
   ['a', '<a href="#top">top</a>'],
   ['abbr', '<abbr title="HyperText Markup Language">HTML</abbr>'],
@@ -31,7 +31,6 @@ const INLINE = [
   ['em', '<em>emphasis</em>'],
   ['i', '<i>italic</i>'],
   ['img', '<img src="badge.svg" alt="Badge">'],
-  ['kbd', '<kbd>Ctrl</kbd>'],
   ['q', '<q>quote</q>'],
   ['ruby', '<ruby>漢<rp>(</rp><rt>kan</rt><rp>)</rp></ruby>'],
   ['s', '<s>old</s>'],
@@ -71,6 +70,26 @@ test('a mark is a highlight mark in the document, and the file keeps it', () => 
   const drawn = [...editor.view.dom.querySelectorAll('mark')].map((mark) => mark.textContent).join('');
   assert.equal(drawn, 'highlight bold');
   assert.equal(getMarkdown(editor), markdown);
+  editor.destroy();
+});
+
+test('the keyboard key mark wraps the selection, and the file keeps it', () => {
+  const editor = makeEditor(createEditor, 'Press Ctrl now');
+  editor.commands.setTextSelection({ from: 7, to: 11 });
+  editor.commands.toggleKbd();
+  assert.equal(getMarkdown(editor), 'Press <kbd>Ctrl</kbd> now');
+  assert.equal(editor.view.dom.querySelector('kbd').textContent, 'Ctrl');
+  editor.commands.toggleKbd();
+  assert.equal(getMarkdown(editor), 'Press Ctrl now', 'the same command takes the key away');
+  editor.destroy();
+});
+
+test('a keyboard key that is already in the file is a mark, and the key can be taken away again', () => {
+  const editor = makeEditor(createEditor, 'Press <kbd>Ctrl</kbd> now');
+  assert.equal(nodesNamed(editor, 'htmlInline').length, 0, 'the key is a mark, not a raw HTML chip');
+  editor.commands.setTextSelection({ from: 7, to: 11 });
+  editor.commands.toggleKbd();
+  assert.equal(getMarkdown(editor), 'Press Ctrl now');
   editor.destroy();
 });
 

@@ -383,12 +383,12 @@ test('insertFootnote takes the first free number, and puts the cursor in the new
     [
       'footnoteRef:1',
       'footnoteRef:3',
+      'footnoteRef:2',
       'footnoteDefinition:1',
       'footnoteDefinition:3',
-      'footnoteRef:2',
       'footnoteDefinition:2',
     ],
-    'the number 2 is free',
+    'the number 2 is free, and the notes come after every other block',
   );
   const { $from } = editor.state.selection;
   assert.equal($from.node(1).type.name, 'footnoteDefinition');
@@ -406,6 +406,40 @@ test('insertFootnote takes the first free number, and puts the cursor in the new
   assert.deepEqual(numbers, ['1']);
   assert.equal(getMarkdown(first), 'Text[^1]\n\n[^1]:');
   first.destroy();
+});
+
+test('insertFootnote keeps the selected text, puts the mark after it, and adds the note at the bottom', () => {
+  const editor = makeEditor(createEditor, 'One two three\n\nEnd');
+  const at = positionOf(editor, 'two');
+  editor.commands.setTextSelection({ from: at, to: at + 3 });
+  editor.commands.insertFootnote();
+  assert.equal(getMarkdown(editor), 'One two[^1] three\n\nEnd\n\n[^1]:');
+  assert.equal(editor.state.doc.lastChild.type.name, 'footnoteDefinition', 'nothing comes after the note');
+  assert.equal(editor.state.doc.lastChild.attrs.id, '1');
+  editor.destroy();
+});
+
+test('insertFootnote moves every note to the bottom of the file, in their order', () => {
+  const editor = makeEditor(createEditor, 'One[^1] two[^2].\n\n[^1]: First.\n\nMiddle text.\n\n[^2]: Second.');
+  editor.commands.setTextSelection(positionOf(editor, 'Middle') + 6);
+  editor.commands.insertFootnote();
+  assert.equal(getMarkdown(editor), 'One[^1] two[^2].\n\nMiddle[^3] text.\n\n[^1]: First.\n\n[^2]: Second.\n\n[^3]:');
+  assert.equal(editor.state.doc.lastChild.type.name, 'footnoteDefinition', 'nothing comes after the notes');
+  assert.equal(editor.state.doc.lastChild.attrs.id, '3');
+  editor.destroy();
+});
+
+test('the footnote mark of a bold selection is not bold itself', () => {
+  const editor = makeEditor(createEditor, '**bold text**');
+  editor.commands.setTextSelection({ from: 1, to: 5 });
+  editor.commands.insertFootnote();
+  let ref;
+  editor.state.doc.descendants((node) => {
+    if (node.type.name === 'footnoteRef') ref = node;
+  });
+  assert.equal(ref.marks.length, 0);
+  assert.equal(getMarkdown(editor), '**bold**[^1] **text**\n\n[^1]:');
+  editor.destroy();
 });
 
 test('insertFootnote scrolls the new note into view', () => {
