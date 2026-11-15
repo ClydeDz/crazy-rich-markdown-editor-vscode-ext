@@ -11,8 +11,8 @@ Edit Markdown as formatted text in VS Code. Your files stay plain Markdown.
 - **Write without the markup in your way.** Format text with a floating toolbar, use the slash menu to add blocks, and move blocks as you write.
 - **Keep portable files.** Work with GitHub Flavored Markdown, including tables, task lists, alerts, footnotes, math and Mermaid diagrams. Save as Markdown that works with your existing tools.
 - **Work with MDX, too.** Open an `.mdx` file with the editor, format its Markdown, and keep imports, JSX and expressions intact.
-- **Add media quickly.** Paste or drop images and videos; the editor saves them alongside your project and inserts Markdown links. Select an image to edit its alt text and optional title without changing its preview size.
-- **Paste Markdown and see it formatted.** Paste `# big reveal` or a shields.io badge and it lands as a heading or a badge, not a code block. Code in other languages still pastes as a code block.
+- **Add media quickly.** Paste or drop images and videos; the editor saves them alongside your project and inserts Markdown links. Select an image to edit its alt text and optional title without changing its preview size. You can also add a link to an image or GIF and you'll see a button to embed the link as an image.
+- **Paste Markdown and see it formatted.** Paste `# A heading`  or a shields.io badge and it lands as a heading or a badge, not a code block. Code in other languages still pastes as a code block.
 - **Find the line a reader means.** Turn on `crazyRichMarkdown.showLineNumbers` to show the line numbers of the Markdown file at the left, at every block, list item, table row and line of text.
 - **See the structure of a long document.** Open the table of contents at the far left of the top bar to list every heading from level 1 to 6, filter the list, and click a heading to scroll to its section.
 - **Add selections as chat context.** Right-click selected text to attach its source range to Copilot Chat or Claude Code without sending a prompt.
@@ -21,11 +21,11 @@ Edit Markdown as formatted text in VS Code. Your files stay plain Markdown.
 
 Install [Crazy Rich Markdown Editor from the Visual Studio Marketplace](https://bit.ly/crmdxe), then open a `.md` file. It opens in the rich editor by default. To open an `.mdx` file, choose **Open in Crazy Rich Markdown Editor**. To edit the raw Markdown, click the **Text Editor** option from dropdown.
 
-![md editor](docs/images/md-editor.png)
+![md editor new](docs/images/md-editor-new.png)
 
 Start typing just like you would write a blog post in Medium or Confluence. You can highlight text to open the context menu which shows all the formatting options available. This editor supports  GitHub Flavored Markdown. Save with `Ctrl+S` on Windows and Linux or `Cmd+S` on macOS. 
 
-![context menu](docs/images/context-menu.png)
+![context menu new](docs/images/context-menu-new.png)
 
 In a new line, you can also type a forward slash (i.e. `/`) to see the formatting options.
 
